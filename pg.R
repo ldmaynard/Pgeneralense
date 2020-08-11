@@ -6,14 +6,6 @@ pg <- pg[order(pg$percent_herbivory),]
 
 pg <- pg[1:98,] #removing 2 rows with NAs, herbivory wasn't measured
 
-##summary stats
-library(plyr)
-cdata <- ddply(pg, c("weight", "compound"), summarise,
-			   N    = length(props),
-			   mean = mean(props),
-			   sd   = sd(props),
-			   se   = sd / sqrt(N))
-
 library(ggplot2)
 #Plot with all data, 98 leaves n = 20/treatment
 ggplot(pg, aes(x=treatment, y=percent_herbivory))+
