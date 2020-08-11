@@ -1,101 +1,101 @@
-ID,chamber,treatment,state of leaf,leaf age,sample,total area cm2,real area cm2,percent_herbivory,wt_mg
-PG-1,G,T°C,young,M,Y1,0,0,0,7.101
-PG-10,A,T°C + CO2,young,M,Y2,0,0,0,10.068
-PG-101,PL2,natural control,young,M,Y1,34.7,34.5,0.58,9.416
-PG-102,PL2,natural control,young,M,Y2,42,38.9,7.38,10.194
-PG-103,PL2,natural control,mature,M,M1,0,0,0,27.318
-PG-104,PL2,natural control,mature,M,M2,0,0,0,27.064
-PG-106,O,control chamber,young,M,Y1,0,0,0,5.634
-PG-107,O,control chamber,young,M,Y2,0,0,0,12.595
-PG-108,O,control chamber,mature,M,M1,0,0,0,23.144
-PG-109,O,control chamber,mature,M,M2,65.7,65.3,0.61,17.65
-PG-11,A,T°C + CO2,mature,M,M1,41.4,30.2,27.05,13.061
-PG-111,J,control chamber,young,M,Y1,67,66.6,0.60,14.294
-PG-112,J,control chamber,young,M,Y2,50.9,48.5,4.72,11.906
-PG-113,J,control chamber,mature,M,M1,87.1,81.7,6.20,31.733
-PG-114,J,control chamber,mature,M,M2,98.4,95.5,2.95,35.758
-PG-115,N,CO2,young,M,Y1,44.3,43.5,1.81,11.484
-PG-116,N,CO2,young,M,Y2,0,0,0,5.949
-PG-117,N,CO2,mature,M,M1,31.7,31.3,1.26,14.615
-PG-118,N,CO2,mature,M,M2,0,0,0,14.044
-PG-12,A,T°C + CO2,mature,M,M2,67.8,55.6,17.99,23.004
-PG-121,I,T°C + CO2,young,M,Y1,0,0,0,22.515
-PG-122,I,T°C + CO2,young,M,Y2,0,0,0,13.964
-PG-123,I,T°C + CO2,mature,M,M1,42.8,42.3,1.17,16.034
-PG-124,I,T°C + CO2,mature,M,M2,94.5,94.2,0.32,32.736
-PG-13,D,CO2,young,M,Y1,45,44.8,0.44,10.447
-PG-14,D,CO2,young,M,Y2,0,0,0,9.486
-PG-15,D,CO2,mature,M,M1,0,0,0,17.485
-PG-16,D,CO2,mature,M,M2,58.6,57.1,2.56,21.949
-PG-17,E,control chamber,young,M,Y1,0,0,,1.743
-PG-18,E,control chamber,young,M,Y2,0,0,,10.819
-PG-19,E,control chamber,mature,M,M1,66.7,66,1.05,22.803
-PG-2,G,T°C,young,M,Y2,0,0,0,11.833
-PG-20,E,control chamber,mature,M,M2,69.8,63.3,9.31,22.091
-PG-21,T,T°C,young,M,Y1,0,0,0,4.356
-PG-22,T,T°C,young,M,Y2,0,0,0,5.38
-PG-23,T,T°C,mature,M,M1,52,51.4,1.15,15.608
-PG-24,T,T°C,mature,M,M2,0,0,0,19.529
-PG-27,PL3,natural control,young,M,Y1,0,0,0,13.955
-PG-28,PL3,natural control,young,M,Y2,62.8,60.9,3.03,16.834
-PG-29,PL3,natural control,mature,M,M1,63.9,62.7,1.88,23.295
-PG-3,G,T°C,mature,M,M1,84.6,84.5,0.12,28.154
-PG-30,PL3,natural control,mature,M,M2,51.6,49.1,4.84,17.506
-PG-32,C,control chamber,young,M,Y1,0,0,0,4.494
-PG-33,C,control chamber,young,M,Y2,52.3,48.4,7.46,14.437
-PG-34,C,control chamber,mature,M,M1,78,76.9,1.41,30.21
-PG-35,C,control chamber,mature,M,M2,68.6,60.2,12.24,23.535
-PG-38,PL4,natural control,young,M,Y1,0,0,0,8.181
-PG-39,PL4,natural control,young,M,Y2,21.7,20.7,4.61,6.022
-PG-4,G,T°C,mature,M,M2,47.2,46.1,2.33,16.778
-PG-40,PL4,natural control,mature,M,M1,48.1,46.4,3.53,15.82
-PG-41,PL4,natural control,mature,M,M2,67.2,66.6,0.89,23.259
-PG-43,S,T°C + CO2,young,M,Y1,0,0,0,11.017
-PG-44,S,T°C + CO2,young,M,Y2,38.7,29,25.06,9.754
-PG-45,S,T°C + CO2,mature,M,M1,34.8,29,16.67,11.836
-PG-46,S,T°C + CO2,mature,M,M2,44,37.4,15.00,16.009
-PG-48,B,CO2,young,M,Y1,0,0,0,2.318
-PG-49,B,CO2,young,M,Y2,0,0,0,17.421
-PG-5,F,T°C,young,M,Y1,0,0,0,7.234
-PG-50,B,CO2,mature,M,M1,50.9,46.7,8.25,18.126
-PG-51,B,CO2,mature,M,M2,88.9,85,4.39,33.962
-PG-54,PL5,natural control,young,M,Y1,0,0,0,6.034
-PG-55,PL5,natural control,young,M,Y2,38.3,35.9,6.27,11.528
-PG-56,PL5,natural control,mature,M,M1,0,0,0,39.137
-PG-57,PL5,natural control,mature,M,M2,0,0,0,40.794
-PG-6,F,T°C,young,M,Y2,0,0,0,4.447
-PG-61,R,CO2,young,M,Y1,0,0,0,11.068
-PG-62,R,CO2,young,M,Y2,0,0,0,14.159
-PG-63,R,CO2,mature,M,M1,0,0,0,20.096
-PG-64,R,CO2,mature,M,M2,32.36,24.8,23.36,9.948
-PG-66,M,control chamber,young,M,Y1,0,0,0,2.671
-PG-67,M,control chamber,young,M,Y2,0,0,0,12.781
-PG-68,M,control chamber,mature,M,M1,78.07,77.8,0.35,30.3
-PG-69,M,control chamber,mature,M,M2,49.8,49.5,0.60,19.282
-PG-7,F,T°C,mature,M,M1,0,0,0,20.195
-PG-71,PL1,natural control,young,M,Y1,50,48.2,3.60,13.71
-PG-72,PL1,natural control,young,M,Y2,47.4,44.4,6.33,11.829
-PG-73,PL1,natural control,mature,M,M1,47.8,31.8,33.47,13.079
-PG-74,PL1,natural control,mature,M,M2,34.8,30.6,12.07,11.012
-PG-77,H,T°C + CO2,young,M,Y1,0,0,0,15.383
-PG-78,H,T°C + CO2,young,M,Y2,0,0,0,15.343
-PG-79,H,T°C + CO2,mature,M,M1,69,67.5,2.17,25.785
-PG-8,F,T°C,mature,M,M2,41.8,41.6,0.48,15.766
-PG-80,H,T°C + CO2,mature,M,M2,61.5,59.3,3.58,22.797
-PG-82,K,CO2,young,M,Y1,0,0,0,5.829
-PG-83,K,CO2,young,M,Y2,54.6,54.4,0.37,16.529
-PG-84,K,CO2,mature,M,M1,86.3,83,3.82,37.315
-PG-85,K,CO2,mature,M,M2,69.8,56.8,18.62,22.809
-PG-86,L,T°C,young,M,Y1,0,0,0,14.354
-PG-87,L,T°C,young,M,Y2,0,0,0,11.922
-PG-88,L,T°C,mature,M,M1,72.5,72.1,0.55,30.314
-PG-89,L,T°C,mature,M,M2,92.6,89.7,3.13,37.692
-PG-9,A,T°C + CO2,young,M,Y1,0,0,0,3.478
-PG-91,P,T°C,young,M,Y1,0,0,0,7.396
-PG-92,P,T°C,young,M,Y2,38.5,38.2,0.78,8.393
-PG-93,P,T°C,mature,M,M1,0,0,0,26.643
-PG-94,P,T°C,mature,M,M2,88.1,87.2,1.02,31.225
-PG-96,Q,T°C,young,M,Y1,0,0,0,13.369
-PG-97,Q,T°C,young,M,Y2,0,0,0,8.228
-PG-98,Q,T°C,mature,M,M1,68,60.4,11.18,26.003
-PG-99,Q,T°C,mature,M,M2,85.4,76.5,10.42,33.511
+ID,age,chamber,treatment,total area cm2,real area cm2,percent_herbivory,wt_mg
+PG-1,Y,G,T°C,0,0,0,7.101
+PG-10,Y,A,T°C + CO2,0,0,0,10.068
+PG-101,Y,PL2,natural control,34.7,34.5,0.58,9.416
+PG-102,Y,PL2,natural control,42,38.9,7.38,10.194
+PG-103,M,PL2,natural control,0,0,0,27.318
+PG-104,M,PL2,natural control,0,0,0,27.064
+PG-106,Y,O,control chamber,0,0,0,5.634
+PG-107,Y,O,control chamber,0,0,0,12.595
+PG-108,M,O,control chamber,0,0,0,23.144
+PG-109,M,O,control chamber,65.7,65.3,0.61,17.65
+PG-11,M,A,T°C + CO2,41.4,30.2,27.05,13.061
+PG-111,Y,J,control chamber,67,66.6,0.6,14.294
+PG-112,Y,J,control chamber,50.9,48.5,4.72,11.906
+PG-113,M,J,control chamber,87.1,81.7,6.2,31.733
+PG-114,M,J,control chamber,98.4,95.5,2.95,35.758
+PG-115,Y,N,CO2,44.3,43.5,1.81,11.484
+PG-116,Y,N,CO2,0,0,0,5.949
+PG-117,M,N,CO2,31.7,31.3,1.26,14.615
+PG-118,M,N,CO2,0,0,0,14.044
+PG-12,M,A,T°C + CO2,67.8,55.6,17.99,23.004
+PG-121,Y,I,T°C + CO2,0,0,0,22.515
+PG-122,Y,I,T°C + CO2,0,0,0,13.964
+PG-123,M,I,T°C + CO2,42.8,42.3,1.17,16.034
+PG-124,M,I,T°C + CO2,94.5,94.2,0.32,32.736
+PG-13,Y,D,CO2,45,44.8,0.44,10.447
+PG-14,Y,D,CO2,0,0,0,9.486
+PG-15,M,D,CO2,0,0,0,17.485
+PG-16,M,D,CO2,58.6,57.1,2.56,21.949
+PG-17,Y,E,control chamber,0,0,,1.743
+PG-18,Y,E,control chamber,0,0,,10.819
+PG-19,M,E,control chamber,66.7,66,1.05,22.803
+PG-2,Y,G,T°C,0,0,0,11.833
+PG-20,M,E,control chamber,69.8,63.3,9.31,22.091
+PG-21,Y,T,T°C,0,0,0,4.356
+PG-22,Y,T,T°C,0,0,0,5.38
+PG-23,M,T,T°C,52,51.4,1.15,15.608
+PG-24,M,T,T°C,0,0,0,19.529
+PG-27,Y,PL3,natural control,0,0,0,13.955
+PG-28,Y,PL3,natural control,62.8,60.9,3.03,16.834
+PG-29,M,PL3,natural control,63.9,62.7,1.88,23.295
+PG-3,M,G,T°C,84.6,84.5,0.12,28.154
+PG-30,M,PL3,natural control,51.6,49.1,4.84,17.506
+PG-32,Y,C,control chamber,0,0,0,4.494
+PG-33,Y,C,control chamber,52.3,48.4,7.46,14.437
+PG-34,M,C,control chamber,78,76.9,1.41,30.21
+PG-35,M,C,control chamber,68.6,60.2,12.24,23.535
+PG-38,Y,PL4,natural control,0,0,0,8.181
+PG-39,Y,PL4,natural control,21.7,20.7,4.61,6.022
+PG-4,M,G,T°C,47.2,46.1,2.33,16.778
+PG-40,M,PL4,natural control,48.1,46.4,3.53,15.82
+PG-41,M,PL4,natural control,67.2,66.6,0.89,23.259
+PG-43,Y,S,T°C + CO2,0,0,0,11.017
+PG-44,Y,S,T°C + CO2,38.7,29,25.06,9.754
+PG-45,M,S,T°C + CO2,34.8,29,16.67,11.836
+PG-46,M,S,T°C + CO2,44,37.4,15,16.009
+PG-48,Y,B,CO2,0,0,0,2.318
+PG-49,Y,B,CO2,0,0,0,17.421
+PG-5,Y,F,T°C,0,0,0,7.234
+PG-50,M,B,CO2,50.9,46.7,8.25,18.126
+PG-51,M,B,CO2,88.9,85,4.39,33.962
+PG-54,Y,PL5,natural control,0,0,0,6.034
+PG-55,Y,PL5,natural control,38.3,35.9,6.27,11.528
+PG-56,M,PL5,natural control,0,0,0,39.137
+PG-57,M,PL5,natural control,0,0,0,40.794
+PG-6,Y,F,T°C,0,0,0,4.447
+PG-61,Y,R,CO2,0,0,0,11.068
+PG-62,Y,R,CO2,0,0,0,14.159
+PG-63,M,R,CO2,0,0,0,20.096
+PG-64,M,R,CO2,32.36,24.8,23.36,9.948
+PG-66,Y,M,control chamber,0,0,0,2.671
+PG-67,Y,M,control chamber,0,0,0,12.781
+PG-68,M,M,control chamber,78.07,77.8,0.35,30.3
+PG-69,M,M,control chamber,49.8,49.5,0.6,19.282
+PG-7,M,F,T°C,0,0,0,20.195
+PG-71,Y,PL1,natural control,50,48.2,3.6,13.71
+PG-72,Y,PL1,natural control,47.4,44.4,6.33,11.829
+PG-73,M,PL1,natural control,47.8,31.8,33.47,13.079
+PG-74,M,PL1,natural control,34.8,30.6,12.07,11.012
+PG-77,Y,H,T°C + CO2,0,0,0,15.383
+PG-78,Y,H,T°C + CO2,0,0,0,15.343
+PG-79,M,H,T°C + CO2,69,67.5,2.17,25.785
+PG-8,M,F,T°C,41.8,41.6,0.48,15.766
+PG-80,M,H,T°C + CO2,61.5,59.3,3.58,22.797
+PG-82,Y,K,CO2,0,0,0,5.829
+PG-83,Y,K,CO2,54.6,54.4,0.37,16.529
+PG-84,M,K,CO2,86.3,83,3.82,37.315
+PG-85,M,K,CO2,69.8,56.8,18.62,22.809
+PG-86,Y,L,T°C,0,0,0,14.354
+PG-87,Y,L,T°C,0,0,0,11.922
+PG-88,M,L,T°C,72.5,72.1,0.55,30.314
+PG-89,M,L,T°C,92.6,89.7,3.13,37.692
+PG-9,Y,A,T°C + CO2,0,0,0,3.478
+PG-91,Y,P,T°C,0,0,0,7.396
+PG-92,Y,P,T°C,38.5,38.2,0.78,8.393
+PG-93,M,P,T°C,0,0,0,26.643
+PG-94,M,P,T°C,88.1,87.2,1.02,31.225
+PG-96,Y,Q,T°C,0,0,0,13.369
+PG-97,Y,Q,T°C,0,0,0,8.228
+PG-98,M,Q,T°C,68,60.4,11.18,26.003
+PG-99,M,Q,T°C,85.4,76.5,10.42,33.511

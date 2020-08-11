@@ -4,22 +4,45 @@ pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
 pg$treatment<-as.character(pg$treatment)
 pg <- pg[order(pg$percent_herbivory),]
 
-#pg <- pg[1:98,] #removing 2 rows with NAs
+pg <- pg[1:98,] #removing 2 rows with NAs, herbivory wasn't measured
 
-ggplot(pg, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
+##summary stats
+library(plyr)
+cdata <- ddply(pg, c("weight", "compound"), summarise,
+			   N    = length(props),
+			   mean = mean(props),
+			   sd   = sd(props),
+			   se   = sd / sqrt(N))
+
+library(ggplot2)
+#Plot with all data, 98 leaves n = 20/treatment
+ggplot(pg, aes(x=treatment, y=percent_herbivory))+
+	geom_boxplot()+geom_point()
+
+#sep by age
+ggplot(pg, aes(x=treatment, y=percent_herbivory, color=age))+
+	geom_boxplot()+geom_point()
 
 hist(pg$percent_herbivory)#skewed, zero-inflated
 shapiro.test(pg$percent_herbivory)#very not normal
 
+#create column with proportion herbivory
 pg$prop_herb<-(pg$percent_herbivory/100)
 pg$prop_herb<-as.numeric(pg$prop_herb)
 
 library(betareg)
+#betaregression
 beta.pg<-betareg(prop_herb~treatment, data = pg)
 #won't run bc zero-inflated
 
-pgag<-aggregate(prop_herb~chamber+treatment, data=pg, FUN=mean)
+#summarize herbivory on all (four) leaves of each indiv plant
+pgag<-aggregate(prop_herb~chamber+treatment+age, data=pg, FUN=mean)
+
+#plot with summarized data, average of 25 plants, n=5/treatment
 ggplot(pgag, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
+
+#sep by age
+ggplot(pgag, aes(x=treatment, y=prop_herb, color=age))+geom_boxplot()+geom_point()
 
 betaa<-betareg(prop_herb~treatment, data=pgag)
 summary(betaa)
@@ -48,23 +71,31 @@ summary(pg2)
 library(car)
 Anova(pg2)
 
+pg$treatment<-as.factor(pg$treatment)
+levels(pg$treatment)
+
 lm1<-lm(prop_herb~treatment, data=pg)
 summary(lm1)
 
+lm2<-lm(prop_herb~treatment+age, data=pg)
+summary(lm2)
+#age sig p=0.0023, mixed treatment marginally sig p=0.0845
+
+
 library(multcomp)
-summary(glht(lm1, linfct=mcp(treatment="Tukey")))
+summary(glht(lm2, linfct=mcp(treatment="Tukey")))
+#temp+CO2 sig diff from temp p=0.0481
 
 
-library(ggplot2)
 library(Rmisc)
-sebars <- summarySE(pgag, measurevar="prop_herb", groupvars=c("treatment"))
+sebars <- summarySE(pgag, measurevar="prop_herb", groupvars=c("treatment", "age"))
 
-pgplot_bar<-ggplot(sebars, aes(x=treatment, y=prop_herb))+geom_bar(stat = "identity")+
+pgplot_bar<-ggplot(sebars, aes(x=treatment, y=prop_herb, color=age))+geom_bar(stat = "identity")+
 	geom_errorbar(aes(ymin=prop_herb-se, ymax=prop_herb+se), width=.2,
 				  position=position_dodge(.9))
 pgplot_bar
 
-pgplot_point<-ggplot(sebars, aes(x=treatment, y=prop_herb))+geom_point(stat = "identity")+
+pgplot_point<-ggplot(sebars, aes(x=treatment, y=prop_herb, color=age))+geom_point(stat = "identity")+
 	geom_errorbar(aes(ymin=prop_herb-se, ymax=prop_herb+se), width=.2,
 				  position=position_dodge(.9))+
 	theme_classic()
@@ -96,7 +127,6 @@ sebars3 <- summarySE(pa.ag, measurevar="herb_pa", groupvars=c("treatment"))
 ggplot(sebars3, aes(x=treatment, y=herb_pa))+geom_point(stat = "identity")+
 	geom_errorbar(aes(ymin=herb_pa-se, ymax=herb_pa+se), width=.2,
 				  position=position_dodge(.9))
-pgplot_bar
 
 pg$prop_herb<-(pg$percent_herbivory/100)
 pg$prop_herb<-as.numeric(pg$prop_herb)
