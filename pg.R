@@ -13,7 +13,7 @@ ggplot(pg, aes(x=treatment, y=percent_herbivory))+
 
 #sep by age
 ggplot(pg, aes(x=treatment, y=percent_herbivory, color=age))+
-	geom_boxplot()+geom_point()
+	geom_boxplot()+geom_point()+theme_classic()
 
 hist(pg$percent_herbivory)#skewed, zero-inflated
 shapiro.test(pg$percent_herbivory)#very not normal
@@ -147,3 +147,9 @@ ggplot(New, aes(x=treatment, y=prop_herb))+geom_boxplot()
 a1<-aov(prop_herb~treatment,data=New)
 summary.aov(a1)
 summary(glht(a1, linfct=mcp(treatment="Tukey")))
+
+grow<-read.csv(file="Piper_growth.csv",head=TRUE)
+ggplot(grow, aes(x=Treatment, y=Growth.rate..cm.cm.))+geom_boxplot()
+a.grow<-aov(Growth.rate..cm.cm.~Treatment,data=grow)
+summary.aov(a.grow)
+summary(glht(a.grow, linfct=mcp(Treatment="Tukey")))
