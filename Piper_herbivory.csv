@@ -27,8 +27,8 @@ PG-13,Y,D,CO2,45,44.8,0.44,10.447
 PG-14,Y,D,CO2,0,0,0,9.486
 PG-15,M,D,CO2,0,0,0,17.485
 PG-16,M,D,CO2,58.6,57.1,2.56,21.949
-PG-17,Y,E,control chamber,0,0,,1.743
-PG-18,Y,E,control chamber,0,0,,10.819
+PG-17,Y,E,control chamber,0,0,0,1.743
+PG-18,Y,E,control chamber,0,0,0,10.819
 PG-19,M,E,control chamber,66.7,66,1.05,22.803
 PG-2,Y,G,T°C,0,0,0,11.833
 PG-20,M,E,control chamber,69.8,63.3,9.31,22.091
