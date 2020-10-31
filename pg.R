@@ -5,8 +5,12 @@ library(viridis)
 library(ggsignif)
 
 pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
-pg$treatment<-as.character(pg$treatment)
+
 pg <- pg[order(pg$percent_herbivory),]
+
+pg$age<-as.character(pg$age)
+pg$age[pg$age=="Y"]="Young"
+pg$age[pg$age=="M"]="Old"
 
 ggplot(pg, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
 
@@ -52,9 +56,19 @@ pg4<-aov(pg$prop_herb~pg$treatment+pg$age)
 summary.aov(pg4)
 ##
 
+
 ggplot(pgag, aes(x=treatment, y=prop_herb, fill=age))+geom_boxplot()+geom_point()
 
 ggplot(pg, aes(x=treatment, y=prop_herb, fill=age))+geom_boxplot()+geom_point()
+
+ggplot(pg, aes(treatment, prop_herb, color=age))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Proportion herbivorized")
 
 
 library(lme4)
@@ -72,17 +86,21 @@ summary(glht(lm1, linfct=mcp(treatment="Tukey")))
 
 library(ggplot2)
 library(Rmisc)
-sebars <- summarySE(pgag, measurevar="prop_herb", groupvars=c("treatment"))
+sebars <- summarySE(pgag, measurevar="prop_herb", groupvars=c("treatment", "age"))
 
-pgplot_bar<-ggplot(sebars, aes(x=treatment, y=prop_herb))+geom_bar(stat = "identity")+
+pgplot_bar<-ggplot(sebars, aes(x=treatment, y=prop_herb, color=age))+geom_bar(stat = "identity")+
 	geom_errorbar(aes(ymin=prop_herb-se, ymax=prop_herb+se), width=.2,
 				  position=position_dodge(.9))
 pgplot_bar
 
-pgplot_point<-ggplot(sebars, aes(x=treatment, y=prop_herb))+geom_point(stat = "identity")+
+pgplot_point<-ggplot(sebars, aes(x=treatment, y=prop_herb, color=age))+geom_point(stat = "identity")+
 	geom_errorbar(aes(ymin=prop_herb-se, ymax=prop_herb+se), width=.2,
 				  position=position_dodge(.9))+
-	theme_classic()
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Proportion herbivorized")
 pgplot_point
 
 
