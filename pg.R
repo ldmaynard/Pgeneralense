@@ -68,6 +68,16 @@ ggplot(pg, aes(treatment, prop_herb, color=age))+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Proportion herbivorized")+ 
+	facet_wrap(~ age)
+
+ggplot(pg, aes(treatment, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Proportion herbivorized")
 
 
@@ -185,6 +195,16 @@ summary.aov(pg5)
 
 ##
 
+ggplot(phen_ag, aes(treat, concen))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Concentration (mg/mL)")+ 
+	facet_wrap(~ stage)
+
 ggplot(phen_ag, aes(treat, concen, color=stage))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
@@ -192,6 +212,14 @@ ggplot(phen_ag, aes(treat, concen, color=stage))+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Concentration (mg/mL)")+ 
+	facet_wrap(~ stage)
+
+ggplot(phen_ag, aes(treat, concen))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Concentration (mg/mL)")
-
-
