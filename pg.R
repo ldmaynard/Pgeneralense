@@ -113,6 +113,16 @@ pgplot_point<-ggplot(sebars, aes(x=treatment, y=prop_herb, color=age))+geom_poin
 	labs(x = "", y = "Proportion herbivorized")
 pgplot_point
 
+ggplot(sebars, aes(x=treatment, y=prop_herb, color=age))+geom_point(stat = "identity")+
+	geom_errorbar(aes(ymin=prop_herb-se, ymax=prop_herb+se), width=.2,
+				  position=position_dodge(.9))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.position = "none", text = element_text(size=12), 
+		  axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Proportion herbivorized")+
+	facet_wrap(~age)
+
 
 pg$herb_pa[pg$percent_herbivory==0] <- 0
 pg$herb_pa[pg$percent_herbivory>0] <- 1
@@ -171,7 +181,39 @@ summary(glht(a1, linfct=mcp(treatment="Tukey")))
 
 #Phenolics
 
+ga <- read.csv(file = "GA_StandardCurve.csv", head=T)
+
+ga.ab<-lm(ga$abs_avg~ga$ab_val_mg)
+summary(ga.ab)
+plot(ga$abs_avg~ga$ab_val_mg)
+#y=mx+b, y=3.511354x+0.056570, R^2=0.9974
+
+ga.conc<-lm(ga$abs_avg~ga$concen_mgml)
+summary(ga.conc)
+plot(ga$abs_avg~ga$concen_mgml)
+#y=mx+b, y=0.702271 +0.056570 , R^2=0.9974
+
+#x=(y-b)/m
+
 phen <- read.csv(file = "Piper_phenolics.csv", head=T)
+
+#delete blanks/negative controls
+phen <- phen[order(phen$sample),]
+phen<-phen[-c(1:4),]
+
+#create new col for abs value in well
+phen$ab_val_mg<-(phen$abs_avg-0.056570)/3.511354
+phen$ab_val_mg<-as.numeric(phen$ab_val_mg)
+phen$abs_avg<-as.numeric(phen$abs_avg)
+phen$start_wt<-as.character(phen$start_wt)
+phen$start_wt<-as.numeric(phen$start_wt)
+
+#ab_val/0.2mL (vol in well) = y/1.1mL (total volume in tube)
+
+phen$pdw<-(((phen$ab_val_mg/0.2)*1.1)/(phen$start_wt))*100
+
+#create new col for concentration
+phen$concen<-(phen$abs_avg-0.056570)/0.702271
 
 phen$stage<-as.character(phen$stage)
 phen$stage[phen$stage=="y"]="Young"
@@ -187,13 +229,27 @@ phen$treat[phen$treat=="TC+CO2"]="Temp + CO2"
 ggplot(phen, aes(x=treat, y=concen))+geom_boxplot()+geom_point()
 
 phen_ag<-aggregate(concen~treat+sample+stage, data=phen, FUN=mean)
-phen_ag<-phen_ag[-c(1:28),]
+
+phen_ag2<-aggregate(pdw~treat+sample+stage, data=phen, FUN=mean)
+
 
 
 pg5<-aov(phen_ag$concen~phen_ag$treat+phen_ag$stage)
 summary.aov(pg5)
 
+pg6<-aov(pdw~treat+stage, data=phen_ag2)
+summary.aov(pg6)
+
 ##
+
+ggplot(phen_ag2, aes(treat, pdw, color=stage))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "%dw in gallic acid equivalents")
 
 ggplot(phen_ag, aes(treat, concen))+
 	geom_boxplot(outlier.shape = NA)+
@@ -212,8 +268,7 @@ ggplot(phen_ag, aes(treat, concen, color=stage))+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "Concentration (mg/mL)")+ 
-	facet_wrap(~ stage)
+	labs(x = "", y = "Concentration (mg/mL)")
 
 ggplot(phen_ag, aes(treat, concen))+
 	geom_boxplot(outlier.shape = NA)+
