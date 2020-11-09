@@ -8,40 +8,21 @@ pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
 
 pg <- pg[order(pg$percent_herbivory),]
 
-pg$age<-as.character(pg$age)
-pg$age[pg$age=="Y"]="Young"
-pg$age[pg$age=="M"]="Old"
-
 ggplot(pg, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
 
 hist(pg$percent_herbivory)#skewed, zero-inflated
-shapiro.test(pg$percent_herbivory)#very not normal
 
+#creating col for proportion herbivory
 pg$prop_herb<-(pg$percent_herbivory/100)
 pg$prop_herb<-as.numeric(pg$prop_herb)
 
-library(betareg)
-beta.pg<-betareg(prop_herb~treatment, data = pg)
-#won't run bc zero-inflated
-
+#summarizing data by age and not by individual leaf, n=100->n=50
 pgag<-aggregate(prop_herb~chamber+treatment+age, data=pg, FUN=mean)
 ggplot(pgag, aes(x=treatment, y=prop_herb, fill=age))+geom_boxplot()+geom_point()
 
-betaa<-betareg(prop_herb~treatment, data=pgag)
-summary(betaa)
-library(car)
-Anova(betaa)
-library(emmeans)
-emmeans(betaa,pairwise~treatment,type="response")
+pgag2<-aggregate(percent_herbivory~chamber+treatment+age, data=pg, FUN=mean)
 
 
-#figure out how to load these to library
-#library(rjags)
-#library(zoib)
-#zo<-zoib(prop_herb~treatment, data = pg)
-#zero-inflated models
-
-	
 pg1<-aov(pgag$prop_herb~pgag$treatment)
 summary.aov(pg1)
 
@@ -56,29 +37,86 @@ pg4<-aov(pg$prop_herb~pg$treatment+pg$age)
 summary.aov(pg4)
 ##
 
+pg10<-aov(percent_herbivory~treatment+age+chamber, data = pgag2)
+summary.aov(pg10)
 
-ggplot(pgag, aes(x=treatment, y=prop_herb, fill=age))+geom_boxplot()+geom_point()
+pg11<-aov(percent_herbivory~treatment+age, data = pgag2)
+
+pg12<-aov(percent_herbivory~treatment, data = pgag2)
+
+pg13<-aov(percent_herbivory~age, data = pgag2)
+
+pg14<-aov(percent_herbivory~chamber, data = pgag2)
+
+pg15<-aov(percent_herbivory~1, data = pgag2)
+
+library(AICcmodavg)
+modcomp<-aictab(cand.set=list(pg10,pg11,pg12,pg13, pg14, pg15),
+				modnames=c("all","t+a","treat", "age", "chamber", "null"))#AIC table
+
+modcomp
+
+summary.aov(pg13)
+summary.aov(pg11)
+
+#summarizing % herb by age to add row to data
+library(plyr)
+sumtab <- ddply(pg, c("age"), summarise,
+				N    = length(percent_herbivory),
+				mean = mean(percent_herbivory),
+				sd   = sd(percent_herbivory),
+				se   = sd / sqrt(N))
+sumtab
+
+#adding summary rows to data
+library(tidyverse)
+#pg<-pg %>% add_row(chamber = "ALL", treatment = "All", age = "Y", percent_herbivory = 1.4608)
+#pg<-pg %>% add_row(chamber = "ALL", treatment = "All", age = "M", percent_herbivory = 5.3598)
+
+#changing names for plot
+pg$age<-as.character(pg$age)
+pg$age[pg$age=="Y"]="Young"
+pg$age[pg$age=="M"]="Old"
+
+pg$treatment<-as.character(pg$treatment)
+pg$treatment[pg$treatment=="control chamber"]="Control (chamber)"
+pg$treatment[pg$treatment=="natural control"]="Control (no chamber)"
+pg$treatment[pg$treatment=="T°C"]="Temperature"
+pg$treatment[pg$treatment=="T°C + CO2"]="Temp + CO2"
+
+ggplot(pgag2, aes(x=treatment, y=percent_herbivory, fill=age))+geom_boxplot()+geom_point()
 
 ggplot(pg, aes(x=treatment, y=prop_herb, fill=age))+geom_boxplot()+geom_point()
 
-ggplot(pg, aes(treatment, prop_herb, color=age))+
+perherb_treat<-ggplot(pg, aes(treatment, percent_herbivory, color=age))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
 	theme_classic()+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
-	theme(legend.title = element_blank(),
+	theme(legend.position = "none",
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "Proportion herbivorized")+ 
+	labs(x = "", y = "% herbivorized")+ 
 	facet_wrap(~ age)
+perherb_treat
 
-ggplot(pg, aes(treatment, prop_herb))+
+#EXPORT PLOT
+tiff('perherb_treat.tiff', units="in", width=6, height=5, res=400)
+perherb_treat
+dev.off()
+
+perherb_all<-ggplot(pg, aes(age, percent_herbivory, color=age))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
 	theme_classic()+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
-	theme(legend.title = element_blank(),
-		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "Proportion herbivorized")
+	theme(legend.position = "none",
+		  text = element_text(size=15), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "% herbivorized")
+perherb_all
+
+tiff('perherb_all.tiff', units="in", width=6, height=5, res=400)
+perherb_all
+dev.off()
 
 
 library(lme4)
@@ -247,11 +285,22 @@ ggplot(phen_ag2, aes(treat, pdw, color=stage))+
 	geom_jitter(position=position_jitter(width =0.04))+
 	theme_classic()+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
-	theme(legend.title = element_blank(),
+	theme(legend.position = "none",
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "%dw in gallic acid equivalents")+
+	facet_wrap(~stage)
+
+ggplot(phen_ag2, aes(stage, pdw, color=stage))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
 	labs(x = "", y = "%dw in gallic acid equivalents")
 
-ggplot(phen_ag, aes(treat, concen))+
+
+ggplot(phen_ag, aes(treat, concen, color=stage))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
 	theme_classic()+
@@ -278,3 +327,27 @@ ggplot(phen_ag, aes(treat, concen))+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Concentration (mg/mL)")
+
+grow <- read.csv(file="Piper_growth.csv",head=TRUE)
+
+gro1<-aov(grow$Growth..cm.~grow$Treatment)
+summary.aov(gro1)
+
+gro2<-aov(grow$Growth.rate..cm.cm.~grow$Treatment)
+summary.aov(gro2)
+
+ggplot(grow, aes(Treatment, Growth..cm.))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Total growth (cm)")
+
+ggplot(grow, aes(Treatment, Growth.rate..cm.cm.))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Growth rate")
