@@ -61,7 +61,7 @@ chisq.test(tbl)
 #not working
 
 pg1 <- pg1[order(pg1$pa_herb),]
-pg.herb.pres<-pg1[-c(1:39),]#removing control (no chamber)
+pg.herb.pres<-pg1[-c(1:39),]#removing no herb
 
 herb5<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
 summary(herb5)
@@ -69,6 +69,10 @@ Anova(herb5)
 
 shapiro.test(resid(herb5))#normal dist
 hist(pg.herb.pres$prop_herb)#skewed, zero-inflated
+
+library(betareg)
+betaherb<-betareg(prop_herb ~ treatment + age, dat=pg.herb.pres)
+summary(betaherb)
 
 ggplot(pg.herb.pres, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
 ggplot(pg.herb.pres, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()

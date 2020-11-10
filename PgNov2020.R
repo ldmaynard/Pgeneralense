@@ -98,6 +98,7 @@ Anova(phen1)
 phen2<-lmer(pdw ~ treat + stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
 summary(phen2)
 Anova(phen2)
+shapiro.test(resid(phen2))
 
 phen3<-lmer(pdw ~ treat + (1|chamber), data=phen_ag2, na.action = "na.omit")
 phen4<-lmer(pdw ~ stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
@@ -143,5 +144,107 @@ ggplot(phen_ag2, aes(treat, pdw))+
 	labs(x = "", y = "%dw in gallic acid equivalents")
 
 #HERBIVORY----
+pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
+#creating col for proportion herbivory
+pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
+pg$prop_herb<-(pg$percent_herbivory/100)
+pg$prop_herb<-as.numeric(pg$prop_herb)
 
+herb1<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg, na.action = "na.omit")
+summary(herb1)#warning messages
+Anova(herb1)#age signif
+shapiro.test(resid(herb1))#residuals not normally distributed
+hist(pg$prop_herb)#skewed, zero-inflated
+
+ggplot(pg, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
+
+pg <- pg[order(pg$treatment),]
+pg1<-pg[-c(41:60),]#removing control (no chamber)
+
+herb2<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
+summary(herb2)#warnings
+Anova(herb2)#age signif
+
+shapiro.test(resid(herb2))#residuals not normally distributed
+hist(pg$prop_herb)#skewed, zero-inflated
+
+ggplot(pg1, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
+ggplot(pg1, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
+
+#create col for herbivory pres/abs
+pg1$pa_herb <- NA
+for(i in 1:length(pg1$percent_herbivory)){
+	if(pg1$percent_herbivory[i]==0){pg1$pa_herb[i]=0}
+	if(pg1$percent_herbivory[i]>0){pg1$pa_herb[i]=1}
+}
+hist(pg1$pa_herb)
+
+herb.pa.mod <- glmer(pa_herb ~ treatment * age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
+#singular, overfitting
+?isSingular
+summary(herb.pa.mod)
+Anova(herb.pa.mod)
+shapiro.test(resid(herb.pa.mod))#not normal
+
+herb.pa.mod2 <- glmer(pa_herb ~ treatment + age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
+#still singular, overfitting
+summary(herb.pa.mod2)
+Anova(herb.pa.mod2)
+shapiro.test(resid(herb.pa.mod2))#not normal
+
+#all data, including non herb
+herb5<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
+summary(herb5)
+Anova(herb5)#age signif
+shapiro.test(resid(herb5))#not normal
+
+#zero skewed wont run
+library(betareg)
+betaherb<-betareg(prop_herb ~ treatment + age, dat=pg1)
+summary(betaherb)
+
+pg1 <- pg1[order(pg1$pa_herb),]
+pg.herb.pres<-pg1[-c(1:39),]#removing no herb
+
+herb6<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+summary(herb6)
+Anova(herb6)#no signif, interaction marginally
+shapiro.test(resid(herb6))#normal
+
+betaherb1<-betareg(prop_herb ~ treatment * age, dat=pg.herb.pres)
+summary(betaherb1)
+
+betaherb2<-betareg(prop_herb ~ treatment + age, dat=pg.herb.pres)
+summary(betaherb2)
+
+betaherb3<-betareg(prop_herb ~ treatment, dat=pg.herb.pres)
+betaherb4<-betareg(prop_herb ~ age, dat=pg.herb.pres)
+betaherb.null<-betareg(prop_herb ~ 1, dat=pg.herb.pres)
+
+modcomp.herb<-aictab(cand.set=list(betaherb1, betaherb2, betaherb3, betaherb4, betaherb.null),
+					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
+modcomp.herb
+
+pg.herb.pres$yhat<-predict(betaherb3)
+predplot<-ggplot(pg.herb.pres)+
+	geom_point(aes(x=treatment, y=prop_herb))+
+	geom_point(aes(x=treatment, y=yhat), color="red", size=2)+
+	geom_line(aes(x=treatment, y=yhat) ,color="red", size=1)
+predplot
+
+pg1$prop_herb2<-(pg1$prop_herb)+0.1
+
+betaherb10<-betareg(prop_herb2 ~ treatment * age, dat=pg1)
+summary(betaherb10)
+betaherb11<-betareg(prop_herb2 ~ treatment + age, dat=pg1)
+betaherb12<-betareg(prop_herb2 ~ treatment, dat=pg1)
+betaherb13<-betareg(prop_herb2 ~ age, dat=pg1)
+betaherb14<-betareg(prop_herb2 ~ 1, dat=pg1)
+
+modcomp.herb2<-aictab(cand.set=list(betaherb10, betaherb11, betaherb12, betaherb13, betaherb14),
+					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
+modcomp.herb2
+
+summary(betaherb11)
+shapiro.test(resid(betaherb11))#not normal though
