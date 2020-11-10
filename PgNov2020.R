@@ -113,9 +113,9 @@ modcomp.phen
 
 ##PLOTS
 #Stage 
-ggplot(phen_ag2, aes(stage, pdw, color=stage))+
+ggplot(phen_ag2, aes(stage, pdw))+
 	geom_boxplot(outlier.shape = NA)+
-	geom_jitter(position=position_jitter(width =0.04))+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40, aes(color=stage))+
 	theme_classic()+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
 	theme(legend.position = "none",
@@ -248,3 +248,36 @@ modcomp.herb2
 
 summary(betaherb11)
 shapiro.test(resid(betaherb11))#not normal though
+
+#changing names for plot
+pg1$age<-as.character(pg1$age)
+pg1$age[pg1$age=="Y"]="Young"
+pg1$age[pg1$age=="M"]="Old"
+
+pg1$treatment<-as.character(pg1$treatment)
+pg1$treatment[pg1$treatment=="control chamber"]="Control chamber"
+pg1$treatment[pg1$treatment=="T°C"]="Temperature"
+pg1$treatment[pg1$treatment=="T°C + CO2"]="Temp + CO2"
+
+perherb_all<-ggplot(pg1, aes(age, percent_herbivory))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30, aes(color=age))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "% herbivory")
+perherb_all
+
+perherb_treat<-ggplot(pg1, aes(treatment, percent_herbivory))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.25, aes(color=treatment))+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "% herbivory")+
+	scale_x_discrete(limits=c("Control chamber", "CO2", "Temperature", "Temp + CO2"))+
+	scale_color_manual(values = c("#6baed6", "#969696", "#810f7c", "#fb6a4a"))
+perherb_treat
+
+

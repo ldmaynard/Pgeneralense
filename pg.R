@@ -172,8 +172,8 @@ perherb_all<-ggplot(pg, aes(age, percent_herbivory, color=age))+
 	theme_classic()+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
 	theme(legend.position = "none",
-		  text = element_text(size=15), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "% herbivorized")
+		  text = element_text(size=15))+
+	labs(x = "", y = "% herbivory")
 perherb_all
 
 tiff('perherb_all.tiff', units="in", width=6, height=5, res=400)
