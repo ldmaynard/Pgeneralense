@@ -4,17 +4,75 @@ library(ggplot2)
 library(viridis)
 library(ggsignif)
 
-pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
-
-pg <- pg[order(pg$percent_herbivory),]
-
-ggplot(pg, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
-
-hist(pg$percent_herbivory)#skewed, zero-inflated
-
 #creating col for proportion herbivory
+pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
 pg$prop_herb<-(pg$percent_herbivory/100)
 pg$prop_herb<-as.numeric(pg$prop_herb)
+
+library(lme4)
+herb1<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg, na.action = "na.omit")
+summary(herb1)
+library(car)
+Anova(herb1)
+
+ggplot(pg, aes(x=treatment, y=percent_herbivory, fill=age))+geom_boxplot()+geom_point()
+
+shapiro.test(resid(herb1))#residuals not normally distributed
+hist(pg$prop_herb)#skewed, zero-inflated
+
+pg <- pg[order(pg$treatment),]
+pg1<-pg[-c(41:60),]#removing control (no chamber)
+
+herb2<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
+summary(herb2)
+Anova(herb2)
+
+shapiro.test(resid(herb2))#residuals not normally distributed
+hist(pg$prop_herb)#skewed, zero-inflated
+
+ggplot(pg1, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
+ggplot(pg1, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
+
+#create col for herbivory pres/abs
+pg1$pa_herb <- NA
+for(i in 1:length(pg1$percent_herbivory)){
+	if(pg1$percent_herbivory[i]==0){pg1$pa_herb[i]=0}
+	if(pg1$percent_herbivory[i]>0){pg1$pa_herb[i]=1}
+}
+hist(pg1$pa_herb)
+
+herb.pa.mod <- glmer(pa_herb ~ treatment * age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
+#singular, overfitting
+?isSingular
+summary(herb.pa.mod)
+Anova(herb.pa.mod)
+shapiro.test(resid(herb.pa.mod))#not normal
+
+herb.pa.mod2 <- glmer(pa_herb ~ treatment + age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
+#still singular, overfitting
+summary(herb.pa.mod2)
+Anova(herb.pa.mod2)
+shapiro.test(resid(herb.pa.mod2))#not normal
+
+#nonparametric test of correlation
+tbl = table(pgag$percent_herbivory, phen_ag$pdw) 
+tbl
+chisq.test(tbl)
+#not working
+
+pg1 <- pg1[order(pg1$pa_herb),]
+pg.herb.pres<-pg1[-c(1:39),]#removing control (no chamber)
+
+herb5<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+summary(herb5)
+Anova(herb5)
+
+shapiro.test(resid(herb5))#normal dist
+hist(pg.herb.pres$prop_herb)#skewed, zero-inflated
+
+ggplot(pg.herb.pres, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
+ggplot(pg.herb.pres, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
+ggplot(pg.herb.pres, aes(x=treatment, y=percent_herbivory, class=age))+geom_boxplot()+geom_point()
 
 #summarizing data by age and not by individual leaf, n=100->n=50
 pgag<-aggregate(prop_herb~chamber+treatment+age, data=pg, FUN=mean)
@@ -328,15 +386,19 @@ ggplot(phen_ag, aes(treat, concen))+
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Concentration (mg/mL)")
 
+#growth
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
 
-gro1<-aov(grow$Growth..cm.~grow$Treatment)
+grow$growth<-grow$ht.2018.09.cm-grow$ht.2018.04.cm
+grow$rel_gro<-((grow$ht.2018.09.cm-grow$ht.2018.04.cm)/grow$ht.2018.04.cm)
+
+gro1<-aov(grow$growth~grow$Treatment)
 summary.aov(gro1)
 
-gro2<-aov(grow$Growth.rate..cm.cm.~grow$Treatment)
+gro2<-aov(grow$rel_gro~grow$Treatment)
 summary.aov(gro2)
 
-ggplot(grow, aes(Treatment, Growth..cm.))+
+ggplot(grow, aes(Treatment, growth))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
 	theme_classic()+
@@ -344,7 +406,7 @@ ggplot(grow, aes(Treatment, Growth..cm.))+
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Total growth (cm)")
 
-ggplot(grow, aes(Treatment, Growth.rate..cm.cm.))+
+ggplot(grow, aes(Treatment, rel_gro))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
 	theme_classic()+
