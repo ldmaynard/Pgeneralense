@@ -392,6 +392,9 @@ grow <- read.csv(file="Piper_growth.csv",head=TRUE)
 grow$growth<-grow$ht.2018.09.cm-grow$ht.2018.04.cm
 grow$rel_gro<-((grow$ht.2018.09.cm-grow$ht.2018.04.cm)/grow$ht.2018.04.cm)
 
+grow <- grow[order(grow$Treatment),]
+grow<-grow[-c(11:15),]#removing control (no chamber)
+
 gro1<-aov(grow$growth~grow$Treatment)
 summary.aov(gro1)
 
@@ -412,4 +415,4 @@ ggplot(grow, aes(Treatment, rel_gro))+
 	theme_classic()+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "Growth rate")
+	labs(x = "", y = "Relative growth (cm)")
