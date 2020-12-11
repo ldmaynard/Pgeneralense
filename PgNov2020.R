@@ -3,6 +3,8 @@
 library(lme4)
 library(ggplot2)
 library(car)
+library(multcomp)
+library(plyr)
 
 #GROWTH----
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
@@ -79,11 +81,10 @@ phen$treat[phen$treat=="control_nat"]="Control (no chamber)"
 phen$treat[phen$treat=="TC"]="Temperature"
 phen$treat[phen$treat=="TC+CO2"]="Temp + CO2"
 
-
 ggplot(phen, aes(x=treat, y=concen))+geom_boxplot()+geom_point()
 
 phen<-phen[-c(1:30),]#removing control (no chamber)
-phen <- phen[order(phen$treat),]#check
+phen <- phen[order(phen$treat),]#check removed correct rows
 
 #combine triplicate readings for concentration
 phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
@@ -167,6 +168,14 @@ ggplot(phen_ag2, aes(treat, pdw))+
 	labs(x = "", y = "%dw in gallic acid equivalents")
 
 #HERBIVORY----
+
+##couldn't run mixed model with chamber as random effect, so aggregated dataset by chamber to avoid pseudorep
+##run LMs and betaregs, but model comparison identified the null model as mod of best fit
+##then I sep data, running model for  presence/absense herbivory and  another model for only leaves that had herbivory
+##for proportion of leaves that received herbivory, leaf age was a clear predictor 
+##and the additive model was mod of best fit.
+##for proportion of herbivory on leaves, the null model was always model of better fit
+
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
 #creating col for proportion herbivory
@@ -174,37 +183,49 @@ pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
 pg$prop_herb<-(pg$percent_herbivory/100)
 pg$prop_herb<-as.numeric(pg$prop_herb)
 
-herb1<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg, na.action = "na.omit")
-summary(herb1)#warning messages
-Anova(herb1)#age signif
-shapiro.test(resid(herb1))#residuals not normally distributed
-
-herb.<-lmer(prop_herb ~ treatment + age + (1|chamber), data=pg, na.action = "na.omit")
-summary(herb.)#warning messages
-Anova(herb.)#age signif
-shapiro.test(resid(herb.))#residuals not normally distributed
-hist(pg$prop_herb)#skewed, zero-inflated
-
-ggplot(pg, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
-
 pg <- pg[order(pg$treatment),]
 pg1<-pg[-c(41:60),]#removing control (no chamber)
+#pg1=data without no chamber control group
 
-herb2<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
-summary(herb2)#warnings
-Anova(herb2)#age signif
+#combine chambers to avoid pseudorep and take out of models, averaging prop. herb, N=8 
+pg2<-aggregate(prop_herb~treatment + age,data=pg1,FUN=mean)
 
-shapiro.test(resid(herb2))#residuals not normally distributed
-hist(pg$prop_herb)#skewed, zero-inflated
+herb.3<-lm(prop_herb ~ treatment + age, data=pg2)
+summary(herb.3)#effect of age
+shapiro.test(resid(herb.3))#normal!
 
-herb.1<-lm(prop_herb ~ treatment + age, data=pg1)
-summary(herb.1)
-shapiro.test(resid(herb.1))#not normal
+herb.4<-lm(prop_herb ~ treatment * age, data=pg2)
+summary(herb.4)#all NAs, not enough data?
 
-ggplot(pg1, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
-ggplot(pg1, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
+herb.5<-lm(prop_herb ~ 1, data=pg2)
 
-#create col for herbivory pres/abs
+modcomp.herb<-aictab(cand.set=list(herb.3, herb.5),
+					 modnames=c("add", "null"), REML=F)#AIC table
+modcomp.herb
+#null is model of better fit...
+
+library(betareg)
+betaherb<-betareg(prop_herb ~ treatment + age, dat=pg2)
+summary(betaherb)
+shapiro.test(resid(betaherb))#normal! 
+Anova(betaherb)#both age and treatment significant...
+
+betaherb2<-betareg(prop_herb ~ treatment * age, dat=pg2)
+summary(betaherb2)#still can't do that interaction
+
+betaherb5<-betareg(prop_herb~1, dat=pg2)
+
+modcomp.herb.b<-aictab(cand.set=list(betaherb, betaherb5),
+					   modnames=c("add", "null"), REML=F)#AIC table
+modcomp.herb.b
+#null is model of better fit
+
+#plots
+ggplot(pg2, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
+ggplot(pg2, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
+
+#separating datasets
+#create col for herbivory pres/abs 
 pg1$pa_herb <- NA
 for(i in 1:length(pg1$percent_herbivory)){
 	if(pg1$percent_herbivory[i]==0){pg1$pa_herb[i]=0}
@@ -212,94 +233,113 @@ for(i in 1:length(pg1$percent_herbivory)){
 }
 hist(pg1$pa_herb)
 
-herb.pa.mod <- glmer(pa_herb ~ treatment * age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
-#singular, overfitting
-?isSingular
-summary(herb.pa.mod)
-Anova(herb.pa.mod)
-shapiro.test(resid(herb.pa.mod))#not normal
+herb.pa.mod2 <-glm (pa_herb~treatment+age, data=pg1,  family = binomial)
+summary(herb.pa.mod2)#age sig
+herb.pa.mod3 <-glm (pa_herb~treatment*age, data=pg1,  family = binomial)
+herb.pa.mod4 <-glm (pa_herb~1, data=pg1,  family = binomial)
 
-herb.pa.mod2 <- glmer(pa_herb ~ treatment + age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
-#still singular, overfitting
-summary(herb.pa.mod2)
-Anova(herb.pa.mod2)
-shapiro.test(resid(herb.pa.mod2))#not normal
+modcomp.herb.pa<-aictab(cand.set=list(herb.pa.mod2, herb.pa.mod3, herb.pa.mod4),
+					 modnames=c("add","interaxn", "null"), REML=F)#AIC table
+modcomp.herb.pa
+#add=model of better fit
 
-#all data, including non herb
-herb5<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
-summary(herb5)
-Anova(herb5)#age signif
-shapiro.test(resid(herb5))#not normal
+summary(herb.pa.mod2)#age sig, treat not
+Anova(herb.pa.mod2)#treamtnet p=0.4244, age p < 0.0001
+shapiro.test(resid(herb.pa.mod2))#not normal :(
 
+#PLOT
+#changing names for plot
+pg1$age<-as.character(pg1$age)
+pg1$age[pg1$age=="Y"]="Young"
+pg1$age[pg1$age=="M"]="Old"
 
+ggplot(pg1, aes(age, pa_herb,fill=age,color))+
+	geom_bar(stat = "summary")+
+	theme_classic()+
+	scale_fill_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "Proportion of leaves with herbivory present")
 
-#zero skewed wont run
-library(betareg)
-betaherb<-betareg(prop_herb ~ treatment + age, dat=pg1)
-summary(betaherb)
+herb.pa.tab <- ddply(pg1, c("age"), summarise,
+				  N    = length(pa_herb),
+				  mean = mean(pa_herb),
+				  sd   = sd(pa_herb),
+				  se   = sd / sqrt(N))
+herb.pa.tab
+0.825/0.200
 
+#prop herbivory with leaves that have herbivory
 pg1 <- pg1[order(pg1$pa_herb),]
 pg.herb.pres<-pg1[-c(1:39),]#removing no herb
 
-herb6<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
-summary(herb6)
-Anova(herb6)#no signif, interaction marginally
-shapiro.test(resid(herb6))#normal
+herb20<-glm(prop_herb~treatment+age, data=pg.herb.pres)
+herb21<-glm(prop_herb~treatment*age, data=pg.herb.pres)
+herb22<-glm(prop_herb~1, data=pg.herb.pres)
 
+modcomp.herb.20<-aictab(cand.set=list(herb20, herb21, herb22),
+						modnames=c("add","interaxn", "null"), REML=F)#AIC table
+modcomp.herb.20
+#null=model of better fit
+
+summary(herb20)#nothing sig
+shapiro.test(resid(herb20))#not normal
+
+#betaregressions
 betaherb1<-betareg(prop_herb ~ treatment * age, dat=pg.herb.pres)
 summary(betaherb1)
 
 betaherb2<-betareg(prop_herb ~ treatment + age, dat=pg.herb.pres)
 summary(betaherb2)
 
-betaherb3<-betareg(prop_herb ~ treatment, dat=pg.herb.pres)
-betaherb4<-betareg(prop_herb ~ age, dat=pg.herb.pres)
 betaherb.null<-betareg(prop_herb ~ 1, dat=pg.herb.pres)
 
-modcomp.herb<-aictab(cand.set=list(betaherb1, betaherb2, betaherb3, betaherb4, betaherb.null),
-					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
-modcomp.herb
-#null is model of best fit
-
 modcomp.herb.beta<-aictab(cand.set=list(betaherb1, betaherb2, betaherb.null),
-					 modnames=c("interaxn","add", "null"), REML=F)#AIC table
+						  modnames=c("interaxn","add", "null"), REML=F)#AIC table
 modcomp.herb.beta
+#null model is best fit...
 
-pg.herb.pres$yhat<-predict(betaherb3)
-predplot<-ggplot(pg.herb.pres)+
-	geom_point(aes(x=treatment, y=prop_herb))+
-	geom_point(aes(x=treatment, y=yhat), color="red", size=2)+
-	geom_line(aes(x=treatment, y=yhat) ,color="red", size=1)
-predplot
 
-pg1$prop_herb2<-(pg1$prop_herb)+0.1
+herb1<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
+summary(herb1)#warnings, prob overfitting
+Anova(herb1)#age signif
 
-betaherb10<-betareg(prop_herb2 ~ treatment * age, dat=pg1)
-summary(betaherb10)
-betaherb11<-betareg(prop_herb2 ~ treatment + age, dat=pg1)
-betaherb12<-betareg(prop_herb2 ~ treatment, dat=pg1)
-betaherb13<-betareg(prop_herb2 ~ age, dat=pg1)
-betaherb14<-betareg(prop_herb2 ~ 1, dat=pg1)
+shapiro.test(resid(herb1))#residuals not normally distributed
+hist(pg$prop_herb)#skewed, zero-inflated
 
-modcomp.herb2<-aictab(cand.set=list(betaherb10, betaherb11, betaherb12, betaherb13, betaherb14),
-					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
-modcomp.herb2
-#if add 0.1 to all numbers, not zero-skewed and additive is model of better fit
+herb.1<-lm(prop_herb ~ treatment + age + chamber, data=pg1)
+summary(herb.1)#effect of age and chamber(H & I)
+shapiro.test(resid(herb.1))#not normal
 
-#again, silly to not include CC in models
-modcomp.herb3<-aictab(cand.set=list(betaherb10, betaherb11, betaherb14),
-					  modnames=c("interaxn","add", "null"), REML=F)#AIC table
-modcomp.herb3
-#add still best model
 
-summary(betaherb11)
-shapiro.test(resid(betaherb11))#not normal though
+herb.2<-lm(prop_herb ~ treatment + age, data=pg1)
+summary(herb.2)#effect of age and marginal effect of temp+CO2 treatment
+shapiro.test(resid(herb.2))#not normal
 
-#changing names for plot
-pg1$age<-as.character(pg1$age)
-pg1$age[pg1$age=="Y"]="Young"
-pg1$age[pg1$age=="M"]="Old"
+#combine chambers to avoid pseudorep and take out of models, averaging prop. herb, N=8 
+pg2<-aggregate(prop_herb~treatment + age,data=pg1,FUN=mean)
 
+herb.3<-lm(prop_herb ~ treatment + age, data=pg2)
+summary(herb.3)#effect of age, p=0.0394, t=-3.502
+shapiro.test(resid(herb.3))#normal!
+
+herb.4<-lm(prop_herb ~ treatment * age, data=pg2)
+summary(herb.4)#all NAs, not enough data?
+
+
+
+herb.pa.mod <- glmer(pa_herb ~ treatment + age + (1|chamber), data=pg1, family=binomial, na.action="na.fail")
+#singular, overfitting
+?isSingular
+summary(herb.pa.mod)
+Anova(herb.pa.mod)
+shapiro.test(resid(herb.pa.mod))#not normal
+
+herb6<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+summary(herb6)#warnings
+Anova(herb6)#no signif, interaction marginally
+
+#changing names for plots
 pg1$treatment<-as.character(pg1$treatment)
 pg1$treatment[pg1$treatment=="control chamber"]="Control chamber"
 pg1$treatment[pg1$treatment=="T°C"]="Temperature"
@@ -330,7 +370,7 @@ herb_plant<-aggregate(pa_herb~treatment + age ,data=pg1,FUN=mean)
 herb_plant$pa_herb<-as.numeric(herb_plant$pa_herb)
 herb_plant$pa_herb[herb_plant$pa_herb==1] <- 0.99999
 herb_plant$pa_herb[herb_plant$pa_herb==0] <- 0.00001
-b1<-betareg(pa_herb ~ treatment + age + chamber, dat=herb_plant)
+b1<-betareg(pa_herb ~ treatment + age, dat=herb_plant)
 summary(b1)
 
 m1 <- glmer(pa_herb ~ treatment * age + (1|chamber), data=herb_plant, family=binomial, na.action="na.fail")
