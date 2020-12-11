@@ -92,13 +92,8 @@ phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 phen_ag2<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
 
 phen1<-lmer(pdw ~ treat * stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
-summary(phen1)
-Anova(phen1)
 
 phen2<-lmer(pdw ~ treat + stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
-summary(phen2)
-Anova(phen2)
-shapiro.test(resid(phen2))
 
 phen3<-lmer(pdw ~ treat + (1|chamber), data=phen_ag2, na.action = "na.omit")
 phen4<-lmer(pdw ~ stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
@@ -110,6 +105,34 @@ modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
 #don't know why it's not accepting REML=F?
 modcomp.phen
 #best fit model=only stage
+summary(phen4)
+Anova(phen4)
+shapiro.test(resid(phen4))#normal!!
+#but silly to exclude treatment bc that's one of main questions of study
+
+modcomp.phen2<-aictab(cand.set = list(phen1, phen2, phen.null),
+					 modnames = c("interaxn", "add", "null"), REML=F)
+#don't know why it's not accepting REML=F?
+modcomp.phen2
+#additive=model of better fit
+
+summary(phen2)
+Anova(phen2)
+shapiro.test(resid(phen2))#normal dist!!
+
+#SUMMARY STATS
+library(plyr)
+phen.tab <- ddply(phen_ag2, c("stage"), summarise,
+					N    = length(pdw),
+					mean = mean(pdw),
+					sd   = sd(pdw),
+					se   = sd / sqrt(N))
+phen.tab
+
+#young leaf avg pdw/old leaf avg pdw
+6.859805/4.970515
+#1.380099
+#Young leaves had an average of 1.4 times more total phenolics
 
 ##PLOTS
 #Stage 
@@ -155,6 +178,11 @@ herb1<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg, na.action = "na.
 summary(herb1)#warning messages
 Anova(herb1)#age signif
 shapiro.test(resid(herb1))#residuals not normally distributed
+
+herb.<-lmer(prop_herb ~ treatment + age + (1|chamber), data=pg, na.action = "na.omit")
+summary(herb.)#warning messages
+Anova(herb.)#age signif
+shapiro.test(resid(herb.))#residuals not normally distributed
 hist(pg$prop_herb)#skewed, zero-inflated
 
 ggplot(pg, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
@@ -168,6 +196,10 @@ Anova(herb2)#age signif
 
 shapiro.test(resid(herb2))#residuals not normally distributed
 hist(pg$prop_herb)#skewed, zero-inflated
+
+herb.1<-lm(prop_herb ~ treatment + age, data=pg1)
+summary(herb.1)
+shapiro.test(resid(herb.1))#not normal
 
 ggplot(pg1, aes(x=treatment, y=percent_herbivory))+geom_boxplot()+geom_point()
 ggplot(pg1, aes(x=age, y=percent_herbivory))+geom_boxplot()+geom_point()
@@ -199,6 +231,8 @@ summary(herb5)
 Anova(herb5)#age signif
 shapiro.test(resid(herb5))#not normal
 
+
+
 #zero skewed wont run
 library(betareg)
 betaherb<-betareg(prop_herb ~ treatment + age, dat=pg1)
@@ -225,6 +259,11 @@ betaherb.null<-betareg(prop_herb ~ 1, dat=pg.herb.pres)
 modcomp.herb<-aictab(cand.set=list(betaherb1, betaherb2, betaherb3, betaherb4, betaherb.null),
 					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
 modcomp.herb
+#null is model of best fit
+
+modcomp.herb.beta<-aictab(cand.set=list(betaherb1, betaherb2, betaherb.null),
+					 modnames=c("interaxn","add", "null"), REML=F)#AIC table
+modcomp.herb.beta
 
 pg.herb.pres$yhat<-predict(betaherb3)
 predplot<-ggplot(pg.herb.pres)+
@@ -245,6 +284,13 @@ betaherb14<-betareg(prop_herb2 ~ 1, dat=pg1)
 modcomp.herb2<-aictab(cand.set=list(betaherb10, betaherb11, betaherb12, betaherb13, betaherb14),
 					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
 modcomp.herb2
+#if add 0.1 to all numbers, not zero-skewed and additive is model of better fit
+
+#again, silly to not include CC in models
+modcomp.herb3<-aictab(cand.set=list(betaherb10, betaherb11, betaherb14),
+					  modnames=c("interaxn","add", "null"), REML=F)#AIC table
+modcomp.herb3
+#add still best model
 
 summary(betaherb11)
 shapiro.test(resid(betaherb11))#not normal though
@@ -280,4 +326,32 @@ perherb_treat<-ggplot(pg1, aes(treatment, percent_herbivory))+
 	scale_color_manual(values = c("#6baed6", "#969696", "#810f7c", "#fb6a4a"))
 perherb_treat
 
+herb_plant<-aggregate(pa_herb~treatment + age ,data=pg1,FUN=mean)
+herb_plant$pa_herb<-as.numeric(herb_plant$pa_herb)
+herb_plant$pa_herb[herb_plant$pa_herb==1] <- 0.99999
+herb_plant$pa_herb[herb_plant$pa_herb==0] <- 0.00001
+b1<-betareg(pa_herb ~ treatment + age + chamber, dat=herb_plant)
+summary(b1)
+
+m1 <- glmer(pa_herb ~ treatment * age + (1|chamber), data=herb_plant, family=binomial, na.action="na.fail")
+summary(m1)
+Anova(m1)
+
+ggplot(herb_plant, aes(age, pa_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30, aes(color=age))+
+	theme_classic()+
+	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "% herbivory")#+
+	#scale_y_continuous(limits =  c(0,1))
+
+ggplot(herb_plant, aes(treatment, pa_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.25, aes(color=treatment))+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "% herbivory")
 
