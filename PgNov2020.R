@@ -283,8 +283,19 @@ modcomp.herb.20
 #null=model of better fit
 
 summary(herb20)#nothing sig
+Anova(herb20)
+#but when you run the ANOVA, treatment is signficant...what?
 shapiro.test(resid(herb20))#not normal
 
+#plot
+ggplot(pg.herb.pres, aes(treatment, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30, aes(color=treatment))+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "Proportion herbivory")
+#OTHER THINGS I TRIED####
 #betaregressions
 betaherb1<-betareg(prop_herb ~ treatment * age, dat=pg.herb.pres)
 summary(betaherb1)
