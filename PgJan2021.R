@@ -5,11 +5,11 @@ library(ggplot2)
 library(car)
 library(multcomp)
 library(plyr)
+library(AICcmodavg)
 
 #GROWTH----
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
 
-grow$growth<-grow$ht.2018.09.cm-grow$ht.2018.04.cm
 grow$rel_gro<-((grow$ht.2018.09.cm-grow$ht.2018.04.cm)/grow$ht.2018.04.cm)
 
 grow <- grow[order(grow$Treatment),]
@@ -91,23 +91,22 @@ phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 #combine triplicate readings for %dw
 phen_ag2<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
 
+#models for pdw
 phen1<-lmer(pdw ~ treat * stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
-
 phen2<-lmer(pdw ~ treat + stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
-
 phen3<-lmer(pdw ~ treat + (1|chamber), data=phen_ag2, na.action = "na.omit")
 phen4<-lmer(pdw ~ stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
 phen.null<-lmer(pdw ~ 1 + (1|chamber), data=phen_ag2, na.action = "na.omit")
 
-library(AICcmodavg)
 modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
 				modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
 #don't know why it's not accepting REML=F?
-modcomp.phen
-#best fit model=only stage
+modcomp.phen #best fit model=only stage
+
 summary(phen4)
-Anova(phen4)#stage p=3.9 e-15
 shapiro.test(resid(phen4))#normal!!
+Anova(phen4)#stage p=3.9 e-15
+
 #don't need to do mod avg bc next model has deltaAIC>4
 
 #SUMMARY STATS
@@ -135,17 +134,6 @@ ggplot(phen_ag2, aes(stage, pdw))+
 		  text = element_text(size=15))+
 	labs(x = "", y = "%dw in gallic acid equivalents")
 
-#interaction
-ggplot(phen_ag2, aes(treat, pdw, color=stage))+
-	geom_boxplot(outlier.shape = NA)+
-	geom_jitter(position=position_jitter(width =0.04))+
-	theme_classic()+
-	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
-	theme(legend.position = "none",
-		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "%dw in gallic acid equivalents")#+
-	#facet_wrap(~stage)
-
 #treatment
 ggplot(phen_ag2, aes(treat, pdw))+
 	geom_boxplot(outlier.shape = NA)+
@@ -158,7 +146,8 @@ ggplot(phen_ag2, aes(treat, pdw))+
 
 #HERBIVORY----
 
-##couldn't run mixed model with chamber as random effect, so aggregated dataset by chamber to avoid pseudorep
+##ran mixed model with chamber as random effect, but couldn't run interactive model bc not enough data
+##so aggregated dataset by chamber to avoid pseudorep
 ##run LMs and betaregs, but model comparison identified the null model as mod of best fit
 ##then I sep data, running model for  presence/absense herbivory and  another model for only leaves that had herbivory
 ##for proportion of leaves that received herbivory, leaf age was a clear predictor 
@@ -176,56 +165,55 @@ pg <- pg[order(pg$treatment),]
 pg1<-pg[-c(41:60),]#removing control (no chamber)
 #pg1=data without no chamber control group
 
+#LMM with chamber as fixed effect
 lmm1<-lmer(prop_herb ~ age + (1|chamber), data=pg1, na.action = "na.omit")
 lmm2<-lmer(prop_herb ~ treatment + (1|chamber), data=pg1, na.action = "na.omit")
 lmm3<-lmer(prop_herb ~ age + treatment + (1|chamber), data=pg1, na.action = "na.omit")
-lmm4<-lmer(prop_herb ~ age * treatment + (1|chamber), data=pg1, na.action = "na.omit")
+lmm4<-lmer(prop_herb ~ age * treatment + (1|chamber), data=pg1, na.action = "na.omit")#warning
 lmm5<-lmer(prop_herb ~ (1|chamber), data=pg1, na.action = "na.omit")
 
 modcomp.lmm<-aictab(cand.set=list(lmm1, lmm2, lmm3, lmm4, lmm5),
 				 modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
 modcomp.lmm#error about fixed effects bening different, but they're not...?
 #best model is age, next model = null and dAIC>3
+
+#modcom w/o interactive model
+modcomp.lmm1<-aictab(cand.set=list(lmm1, lmm2, lmm3, lmm5),
+					modnames=c("age", "treat", "add", "null"), REML=F)#AIC table
+modcomp.lmm1
+#still get error, still age as top model
+
 summary(lmm1)
 shapiro.test(resid(lmm1))#not normal 
+hist(resid(lmm1))
+qqnorm(resid(lmm1))
+qqline(resid(lmm1))
+#transform data? or try hurdle
 
-#models with individual leaves, 80 obs
-lm1<-lm(prop_herb ~ age, data=pg1)
-lm2<-lm(prop_herb ~ treatment, data=pg1)
-lm3<-lm(prop_herb ~ treatment + age, data=pg1)
-lm4<-lm(prop_herb ~ treatment * age, data=pg1)
-lm5<-lm(prop_herb ~ 1, data=pg1)
+#plots
+ggplot(pg1, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
+ggplot(pg1, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
 
-modcomp1<-aictab(cand.set=list(lm1, lm2, lm3, lm4, lm5),
-					 modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
-modcomp1
-summary(lm3)
-shapiro.test(resid(lm3))#not normal
-
-#combine chambers to avoid pseudorep since not enough data for LMM, averaging prop. herb, N=8 
+#create dataset that combines chambers to avoid pseudorep and remove fixed effect, averaging prop. herb, N=8 
 pg2<-aggregate(prop_herb~treatment + age,data=pg1,FUN=mean)
 
-herb.3<-lm(prop_herb ~ treatment + age, data=pg2)
-summary(herb.3)#effect of age
-
-herb.4<-lm(prop_herb ~ treatment * age, data=pg2)
-summary(herb.4)#all NAs, not enough data?, breaks AIC mod comp
-
-herb.5<-lm(prop_herb ~ 1, data=pg2)
 herb.1<-lm(prop_herb ~ treatment, data=pg2)
 herb.2<-lm(prop_herb ~ age, data=pg2)
+herb.5<-lm(prop_herb ~ 1, data=pg2)
+herb.3<-lm(prop_herb ~ treatment + age, data=pg2)
+herb.4<-lm(prop_herb ~ treatment * age, data=pg2)
+summary(herb.4)#all NAs, not enough data?, breaks AIC mod comp
 
 modcomp.herb<-aictab(cand.set=list(herb.1, herb.2, herb.3, herb.5),
 					 modnames=c("treatment", "age", "add", "null"), REML=F)#AIC table
 modcomp.herb
-#treamtnet is model of better fit, age close behind, dAICc=-0.4
-
-shapiro.test(resid(herb.3))#not normal
+#null is model of better fit, age close behind, dAICc=-0.4
 
 #plots
 ggplot(pg2, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
 ggplot(pg2, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
 
+#hurdle
 #separating datasets
 #create col for herbivory pres/abs 
 pg1$pa_herb <- NA
@@ -235,19 +223,26 @@ for(i in 1:length(pg1$percent_herbivory)){
 }
 hist(pg1$pa_herb)
 
-herb.pa.mod2 <-glm (pa_herb~treatment+age, data=pg1,  family = binomial)
-summary(herb.pa.mod2)#age sig
-herb.pa.mod3 <-glm (pa_herb~treatment*age, data=pg1,  family = binomial)
-herb.pa.mod4 <-glm (pa_herb~1, data=pg1,  family = binomial)
+herb.pa.mod <-glmer (pa_herb ~ treatment + (1|chamber), data=pg1,  family = binomial)
+#singular fit, not enough data
 
-modcomp.herb.pa<-aictab(cand.set=list(herb.pa.mod2, herb.pa.mod3, herb.pa.mod4),
-					 modnames=c("add","interaxn", "null"), REML=F)#AIC table
+herb.pa.mod1 <-glm (pa_herb~treatment, data=pg1,  family = binomial)
+herb.pa.mod2 <-glm (pa_herb~age, data=pg1,  family = binomial)
+herb.pa.mod3 <-glm (pa_herb~treatment+age, data=pg1,  family = binomial)
+herb.pa.mod4 <-glm (pa_herb~treatment*age, data=pg1,  family = binomial)
+herb.pa.mod5 <-glm (pa_herb~1, data=pg1,  family = binomial)
+
+modcomp.herb.pa<-aictab(cand.set=list(herb.pa.mod1, herb.pa.mod2, herb.pa.mod3, herb.pa.mod4, herb.pa.mod5),
+					 modnames=c("treat", "age","add","interaxn", "null"), REML=F)#AIC table
 modcomp.herb.pa
-#add=model of better fit
+#age=model of best fit, add dAIC>3
 
-summary(herb.pa.mod2)#age sig, treat not
-Anova(herb.pa.mod2)#treamtnet p=0.4244, age p < 0.0001
+summary(herb.pa.mod2)
 shapiro.test(resid(herb.pa.mod2))#not normal :(
+hist(resid(herb.pa.mod2))
+qqnorm(resid(herb.pa.mod2))
+qqline(resid(herb.pa.mod2))
+
 
 #PLOT
 #changing names for plot
@@ -270,24 +265,37 @@ herb.pa.tab <- ddply(pg1, c("age"), summarise,
 				  se   = sd / sqrt(N))
 herb.pa.tab
 0.825/0.200
+#old leaves were 4.1 times more likely to have herbivore damage compared to young leaves
 
 #prop herbivory with leaves that have herbivory
 pg1 <- pg1[order(pg1$pa_herb),]
 pg.herb.pres<-pg1[-c(1:39),]#removing no herb
 
-herb20<-glm(prop_herb~treatment+age, data=pg.herb.pres)
-herb21<-glm(prop_herb~treatment*age, data=pg.herb.pres)
-herb22<-glm(prop_herb~1, data=pg.herb.pres)
+lmm20<-lmer(prop_herb ~ age + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+lmm21<-lmer(prop_herb ~ treatment + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+lmm22<-lmer(prop_herb ~ age + treatment + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+lmm23<-lmer(prop_herb ~ age * treatment + (1|chamber), data=pg.herb.pres, na.action = "na.omit")
+lmm24<-lmer(prop_herb ~ (1|chamber), data=pg.herb.pres, na.action = "na.omit")
 
-modcomp.herb.20<-aictab(cand.set=list(herb20, herb21, herb22),
-						modnames=c("add","interaxn", "null"), REML=F)#AIC table
-modcomp.herb.20
-#null=model of better fit
+modcomp.lmm2<-aictab(cand.set=list(lmm20, lmm21, lmm22, lmm23, lmm24),
+					modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
+modcomp.lmm2
+#best model is null, next model = age and dAIC>8
 
-summary(herb20)#nothing sig
-Anova(herb20)
-#but when you run the ANOVA, treatment is signficant...what?
-shapiro.test(resid(herb20))#not normal
+pg.herb.pres2<-aggregate(prop_herb~treatment + age,data=pg.herb.pres,FUN=mean)
+lm25<-lm(prop_herb ~ age, data=pg.herb.pres2)
+lm26<-lm(prop_herb ~ treatment, data=pg.herb.pres2)
+lm27<-lm(prop_herb ~ age + treatment, data=pg.herb.pres2)
+lm28<-lm(prop_herb ~ age * treatment, data=pg.herb.pres2)
+lm29<-lm(prop_herb ~ 1, data=pg.herb.pres2)
+
+summary(lm28)#NAs again, removing from AIC mod comp
+
+modcomp.lmm3<-aictab(cand.set=list(lm25, lm26, lm27, lm29),
+					 modnames=c("age", "treat", "add", "null"), REML=F)#AIC table
+modcomp.lmm3
+#again null is best model, age is next but dAIC>5
+
 
 #plot
 ggplot(pg.herb.pres, aes(treatment, prop_herb))+
@@ -297,20 +305,61 @@ ggplot(pg.herb.pres, aes(treatment, prop_herb))+
 	theme(legend.position = "none",
 		  text = element_text(size=15))+
 	labs(x = "", y = "Proportion herbivory")
+
 #OTHER THINGS I TRIED####
 #betaregressions
-betaherb1<-betareg(prop_herb ~ treatment * age, dat=pg.herb.pres)
-summary(betaherb1)
+#using data with herb present and combined chambers (bc can't add fixed effect in beta regs)
+#if you run it with full dataset, null is still best model, but add model has lower dAIC
+library(betareg)
+betaherb1<-betareg(prop_herb ~ treatment, dat=pg.herb.pres2)
+betaherb2<-betareg(prop_herb ~ age, dat=pg.herb.pres2)
+betaherb3<-betareg(prop_herb ~ treatment + age, dat=pg.herb.pres2)
+betaherb4<-betareg(prop_herb ~ treatment * age, dat=pg.herb.pres2)#doesn't like interactive model
+betaherb.null<-betareg(prop_herb ~ 1, dat=pg.herb.pres2)
 
-betaherb2<-betareg(prop_herb ~ treatment + age, dat=pg.herb.pres)
-summary(betaherb2)
-
-betaherb.null<-betareg(prop_herb ~ 1, dat=pg.herb.pres)
-
-modcomp.herb.beta<-aictab(cand.set=list(betaherb1, betaherb2, betaherb.null),
-						  modnames=c("interaxn","add", "null"), REML=F)#AIC table
+modcomp.herb.beta<-aictab(cand.set=list(betaherb1, betaherb2, betaherb3, betaherb.null),
+						  modnames=c("treat", "age", "add", "null"), REML=F)#AIC table
 modcomp.herb.beta
-#null model is best fit...
+#null model is best fit, age dAIC>5
+
+betaherb10<-betareg(prop_herb ~ treatment, dat=pg1)#can't run with full dataset bc zero-inflated. also doesn't account for chamber
+
+#running with aggregated data
+betaherb11<-betareg(prop_herb ~ treatment, dat=pg2)
+betaherb12<-betareg(prop_herb ~ age, dat=pg2)
+betaherb13<-betareg(prop_herb ~ treatment + age, dat=pg2)
+betaherb14<-betareg(prop_herb ~ treatment * age, dat=pg2)#doesn't like interactive model
+betaherb.null1<-betareg(prop_herb ~ 1, dat=pg2)
+
+modcomp.herb.beta1<-aictab(cand.set=list(betaherb11, betaherb12, betaherb13, betaherb.null1),
+						  modnames=c("treat", "age", "add", "null"), REML=F)#AIC table
+modcomp.herb.beta1
+#age is top model, null close behind dAIC=1.23
+
+shapiro.test(resid(betaherb12))#normal!
+
+
+#dataset not accounting for chamber, treatment only model is best model
+herb20<-glm(prop_herb~treatment, data=pg.herb.pres)
+herb21<-glm(prop_herb~age, data=pg.herb.pres)
+herb22<-glm(prop_herb~treatment+age, data=pg.herb.pres)
+herb23<-glm(prop_herb~treatment*age, data=pg.herb.pres)
+herb24<-glm(prop_herb~1, data=pg.herb.pres)
+
+modcomp.herb.20<-aictab(cand.set=list(herb20, herb21, herb22, herb23, herb24),
+						modnames=c("treat", "age","add","interaxn", "null"), REML=F)#AIC table
+modcomp.herb.20
+#treat=model of better fit, null close behind dAIC=2.11
+
+summary(herb20)#nothing sig, temp+CO2 p=0.09
+Anova(herb20)#but when you run the ANOVA, treatment is signficant
+summary(glht(herb20, linfct=mcp(treatment="Tukey")))
+#tukey test shoes sig diff bw temp + CO2 chamber and control chamber, and diff bw T+C chamber + temp chamber
+
+shapiro.test(resid(herb20))#not normal, p=0.02
+hist(resid(herb20))
+qqnorm(resid(herb20))
+qqline(resid(herb20))
 
 
 herb1<-lmer(prop_herb ~ treatment * age + (1|chamber), data=pg1, na.action = "na.omit")
