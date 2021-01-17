@@ -6,6 +6,7 @@ library(car)
 library(multcomp)
 library(plyr)
 library(AICcmodavg)
+library(betareg)
 
 #GROWTH----
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
@@ -103,10 +104,12 @@ modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
 #don't know why it's not accepting REML=F?
 modcomp.phen #best fit model=only stage
 
+write.table(modcomp.phen, file = "aic_totalphenolics.csv", sep = ",", quote = FALSE, row.names = F)
+
 summary(phen4)
 shapiro.test(resid(phen4))#normal!!
 Anova(phen4)#stage p=3.9 e-15
-
+Anova(phen3)#treatment=0.72
 #don't need to do mod avg bc next model has deltaAIC>4
 
 #SUMMARY STATS
@@ -133,6 +136,14 @@ ggplot(phen_ag2, aes(stage, pdw))+
 	theme(legend.position = "none",
 		  text = element_text(size=15))+
 	labs(x = "", y = "%dw in gallic acid equivalents")
+
+ggplot(phen_ag2, aes(stage, pdw))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "Total phenolics (%dw in gallic acid equivalents)")
 
 #treatment
 ggplot(phen_ag2, aes(treat, pdw))+
@@ -189,6 +200,25 @@ hist(resid(lmm1))
 qqnorm(resid(lmm1))
 qqline(resid(lmm1))
 #transform data? or try hurdle
+
+#summary stats
+herb.sum <- ddply(pg1, c("age"), summarise,
+					 N    = length(prop_herb),
+					 mean = mean(prop_herb),
+					 sd   = sd(prop_herb),
+					 se   = sd / sqrt(N))
+herb.sum
+0.0528275/0.0103100
+#mature leaves had 5.1 times more herbivory than younger leaves
+
+#PLOT
+ggplot(pg1, aes(age, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "Proportion herbivory")
 
 #plots
 ggplot(pg1, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
