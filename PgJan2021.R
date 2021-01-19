@@ -35,6 +35,7 @@ ggplot(grow, aes(Treatment, rel_gro))+
 
 #CHEMISTRY----
 
+#Script that can be used to quantify compounds as concentration or absolute value
 #Load standard curve data
 ga <- read.csv(file = "GA_StandardCurve.csv", head=T)
 
@@ -85,8 +86,9 @@ ggplot(phen, aes(x=treat, y=concen))+geom_boxplot()+geom_point()
 
 phen<-phen[-c(1:30),]#removing control (no chamber)
 phen <- phen[order(phen$treat),]#check removed correct rows
+ggplot(phen, aes(x=treat, y=concen))+geom_boxplot()+geom_point()
 
-#combine triplicate readings for concentration
+#average triplicate readings for concentration
 phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 
 #combine triplicate readings for %dw
@@ -102,7 +104,7 @@ phen.null<-lmer(pdw ~ 1 + (1|chamber), data=phen_ag2, na.action = "na.omit")
 modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
 				modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
 #don't know why it's not accepting REML=F?
-modcomp.phen #best fit model=only stage
+modcomp.phen #best fit model=only stage, next best is additive, dAIC=4.04
 
 write.table(modcomp.phen, file = "aic_totalphenolics.csv", sep = ",", quote = FALSE, row.names = F)
 
@@ -110,7 +112,7 @@ summary(phen4)
 shapiro.test(resid(phen4))#normal!!
 Anova(phen4)#stage p=3.9 e-15
 Anova(phen3)#treatment=0.72
-#don't need to do mod avg bc next model has deltaAIC>4
+#don't need to do mod avg bc next model has deltaAIC>4 for add and treat univar mod was last in mod comp
 
 #SUMMARY STATS
 library(plyr)
@@ -157,13 +159,16 @@ ggplot(phen_ag2, aes(treat, pdw))+
 
 #HERBIVORY----
 
-##ran mixed model with chamber as random effect, but couldn't run interactive model bc not enough data
-##so aggregated dataset by chamber to avoid pseudorep
-##run LMs and betaregs, but model comparison identified the null model as mod of best fit
-##then I sep data, running model for  presence/absense herbivory and  another model for only leaves that had herbivory
-##for proportion of leaves that received herbivory, leaf age was a clear predictor 
-##and the additive model was mod of best fit.
-##for proportion of herbivory on leaves, the null model was always model of better fit
+##ran LMM with chamber as random effect, model comp showed additive was model of best fit with null behind and dAIC>3
+##but residuals for additive model don't have normal distribution
+##so I aggregated the dataset (pg2) by chamber (to avoid pseudorep) and ran LMs and betaregs
+##but null model was always the clear top model in both
+##then I sep data, running model for  presence/absense herbivory (binomial GLM, not enough data to fit GLMM, so not controling for chamber)
+##and another set of models for only leaves that had herbivory (LMMs)
+##for proportion of leaves that received herbivory, leaf age was mod of best fit again (dAIC>3)
+##for proportion of herbivory on leaves, the null model was model of best fit (dAIC>8)
+##The best option seems to bethe first one, but still have non-normal dist residuals for the top model
+##Hurdle method isn't working with these data, so I could transform the data
 
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
