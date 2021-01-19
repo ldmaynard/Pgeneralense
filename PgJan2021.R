@@ -181,7 +181,7 @@ pg <- pg[order(pg$treatment),]
 pg1<-pg[-c(41:60),]#removing control (no chamber)
 #pg1=data without no chamber control group
 
-#LMM with chamber as fixed effect
+#LMM with chamber as random effect
 lmm1<-lmer(prop_herb ~ age + (1|chamber), data=pg1, na.action = "na.omit")
 lmm2<-lmer(prop_herb ~ treatment + (1|chamber), data=pg1, na.action = "na.omit")
 lmm3<-lmer(prop_herb ~ age + treatment + (1|chamber), data=pg1, na.action = "na.omit")
@@ -190,7 +190,7 @@ lmm5<-lmer(prop_herb ~ (1|chamber), data=pg1, na.action = "na.omit")
 
 modcomp.lmm<-aictab(cand.set=list(lmm1, lmm2, lmm3, lmm4, lmm5),
 				 modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
-modcomp.lmm#error about fixed effects bening different, but they're not...?
+modcomp.lmm#error about fixed effects bening different?
 #best model is age, next model = null and dAIC>3
 
 #modcom w/o interactive model
@@ -229,7 +229,7 @@ ggplot(pg1, aes(age, prop_herb))+
 ggplot(pg1, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
 ggplot(pg1, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
 
-#create dataset that combines chambers to avoid pseudorep and remove fixed effect, averaging prop. herb, N=8 
+#create dataset that combines chambers to avoid pseudorep and remove random effect, averaging prop. herb, N=8 
 pg2<-aggregate(prop_herb~treatment + age,data=pg1,FUN=mean)
 
 herb.1<-lm(prop_herb ~ treatment, data=pg2)
@@ -343,7 +343,7 @@ ggplot(pg.herb.pres, aes(treatment, prop_herb))+
 
 #OTHER THINGS I TRIED####
 #betaregressions
-#using data with herb present and combined chambers (bc can't add fixed effect in beta regs)
+#using data with herb present and combined chambers (bc can't add random effect in beta regs)
 #if you run it with full dataset, null is still best model, but add model has lower dAIC
 library(betareg)
 betaherb1<-betareg(prop_herb ~ treatment, dat=pg.herb.pres2)
