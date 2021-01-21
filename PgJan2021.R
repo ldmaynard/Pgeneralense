@@ -162,13 +162,17 @@ ggplot(phen_ag2, aes(treat, pdw))+
 ##ran LMM with chamber as random effect, model comp showed additive was model of best fit with null behind and dAIC>3
 ##but residuals for additive model don't have normal distribution
 ##so I aggregated the dataset (pg2) by chamber (to avoid pseudorep) and ran LMs and betaregs
-##but null model was always the clear top model in both
-##then I sep data, running model for  presence/absense herbivory (binomial GLM, not enough data to fit GLMM, so not controling for chamber)
+##null model was always the clear top model in LM. Can't run interactive model
+##additive was top model in beta reg, null close behind. Again, can't run interactive model
+##Good news: residuals of age betareg are normal. So.
+##Next, I sep data, running model for  presence/absense herbivory (binomial GLM, not enough data to fit GLMM, so not controling for chamber)
 ##and another set of models for only leaves that had herbivory (LMMs)
 ##for proportion of leaves that received herbivory, leaf age was mod of best fit again (dAIC>3)
 ##for proportion of herbivory on leaves, the null model was model of best fit (dAIC>8)
-##The best option seems to bethe first one, but still have non-normal dist residuals for the top model
-##Hurdle method isn't working with these data, so I could transform the data
+##The best options seem to be the first one (LMM) and how I did the phenolics, but still have non-normal dist residuals for the top model
+##Or the betareg with the aggregated data (norm dist resids)
+##Either options gives the same outcome. Top models=age univariate
+##Hurdle method isn't working with these data, so I could transform the data, logit transformation?
 
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
