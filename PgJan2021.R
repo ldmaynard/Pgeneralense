@@ -185,6 +185,17 @@ pg <- pg[order(pg$treatment),]
 pg1<-pg[-c(41:60),]#removing control (no chamber)
 #pg1=data without no chamber control group
 
+#logit transformation
+logitTransform <- function(p) { log(p/(1-p)) }
+pg1$prop_herb_add <- (pg1$prop_herb)+0.001 #adding small amount to get rid of zeros 
+pg1$pLogit <- logitTransform(pg1$prop_herb_add)
+pg1$pLogit <- as.numeric(pg1$pLogit)
+
+#Arcsine transformation
+asinTransform <- function(p) { asin(sqrt(p)) }
+pg1$pAsin <- asinTransform(pg1$prop_herb_add)
+pg1$pAsin <- as.numeric(pg1$pAsin)
+
 #LMM with chamber as random effect
 lmm1<-lmer(prop_herb ~ age + (1|chamber), data=pg1, na.action = "na.omit")
 lmm2<-lmer(prop_herb ~ treatment + (1|chamber), data=pg1, na.action = "na.omit")
@@ -197,18 +208,14 @@ modcomp.lmm<-aictab(cand.set=list(lmm1, lmm2, lmm3, lmm4, lmm5),
 modcomp.lmm#error about fixed effects bening different?
 #best model is age, next model = null and dAIC>3
 
-#modcom w/o interactive model
-modcomp.lmm1<-aictab(cand.set=list(lmm1, lmm2, lmm3, lmm5),
-					modnames=c("age", "treat", "add", "null"), REML=F)#AIC table
-modcomp.lmm1
-#still get error, still age as top model
-
 summary(lmm1)
 shapiro.test(resid(lmm1))#not normal 
 hist(resid(lmm1))
 qqnorm(resid(lmm1))
 qqline(resid(lmm1))
 #transform data? or try hurdle
+
+
 
 #summary stats
 herb.sum <- ddply(pg1, c("age"), summarise,
@@ -232,6 +239,36 @@ ggplot(pg1, aes(age, prop_herb))+
 #plots
 ggplot(pg1, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
 ggplot(pg1, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
+
+#LMM with chamber as random effect with logit transformed data
+lmm1t<-lmer(pLogit ~ age + (1|chamber), data=pg1, na.action = "na.omit")
+lmm2t<-lmer(pLogit ~ treatment + (1|chamber), data=pg1, na.action = "na.omit")
+lmm3t<-lmer(pLogit ~ age + treatment + (1|chamber), data=pg1, na.action = "na.omit")
+lmm4t<-lmer(pLogit ~ age * treatment + (1|chamber), data=pg1, na.action = "na.omit")#warning
+lmm5t<-lmer(pLogit ~ (1|chamber), data=pg1, na.action = "na.omit")
+
+modcomp.lmmt<-aictab(cand.set=list(lmm1t, lmm2t, lmm3t, lmm4t, lmm5t),
+					modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
+modcomp.lmmt#error about fixed effects bening different?
+#best model is age, next model = null and dAIC>3
+
+summary(lmm1t)
+shapiro.test(resid(lmm1t))#not normal, but more normal than untransformed data 
+
+#LMM with chamber as random effect with arcsine transformed data
+lmm1a<-lmer(pAsin ~ age + (1|chamber), data=pg1, na.action = "na.omit")
+lmm2a<-lmer(pAsin ~ treatment + (1|chamber), data=pg1, na.action = "na.omit")
+lmm3a<-lmer(pAsin ~ age + treatment + (1|chamber), data=pg1, na.action = "na.omit")
+lmm4a<-lmer(pAsin ~ age * treatment + (1|chamber), data=pg1, na.action = "na.omit")#warning
+lmm5a<-lmer(pAsin ~ (1|chamber), data=pg1, na.action = "na.omit")
+
+modcomp.lmma<-aictab(cand.set=list(lmm1a, lmm2a, lmm3a, lmm4a, lmm5a),
+					 modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
+modcomp.lmma#error about fixed effects bening different?
+#best model is age, next model = null and dAIC>3
+
+summary(lmm1a)
+shapiro.test(resid(lmm1a))#not normal
 
 #create dataset that combines chambers to avoid pseudorep and remove random effect, averaging prop. herb, N=8 
 pg2<-aggregate(prop_herb~treatment + age,data=pg1,FUN=mean)
