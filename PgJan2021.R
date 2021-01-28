@@ -161,18 +161,23 @@ ggplot(phen_ag2, aes(treat, pdw))+
 
 ##ran LMM with chamber as random effect, model comp showed additive was model of best fit with null behind and dAIC>3
 ##but residuals for additive model don't have normal distribution
-##so I aggregated the dataset (pg2) by chamber (to avoid pseudorep) and ran LMs and betaregs
+##I added a small number (0.0001) to proportion data so I could do transformations (logit and arcsine)
+##ran same LMMs with both transformations with the same top model (age). Residuals still not normal
+##but logit transformed data closer to normal (0=0.01) compared to untransformed (p=7 e -9)
+##Next, I aggregated the dataset (pg2) by chamber (to avoid pseudorep) and ran LMs and betaregs
 ##null model was always the clear top model in LM. Can't run interactive model
 ##additive was top model in beta reg, null close behind. Again, can't run interactive model
-##Good news: residuals of age betareg are normal. So.
+##Good news: residuals of age betareg are normal. But only have 8 obvs since combining chambers since can't add random effect
 ##Next, I sep data, running model for  presence/absense herbivory (binomial GLM, not enough data to fit GLMM, so not controling for chamber)
 ##and another set of models for only leaves that had herbivory (LMMs)
 ##for proportion of leaves that received herbivory, leaf age was mod of best fit again (dAIC>3)
 ##for proportion of herbivory on leaves, the null model was model of best fit (dAIC>8)
+##
 ##The best options seem to be the first one (LMM) and how I did the phenolics, but still have non-normal dist residuals for the top model
-##Or the betareg with the aggregated data (norm dist resids)
-##Either options gives the same outcome. Top models=age univariate
-##Hurdle method isn't working with these data, so I could transform the data, logit transformation?
+##Or LMM with logit transformed data (almost normally dist resid)
+##Or the betareg with the aggregated data (also norm dist resids)
+##Any of these options give the same outcome. Top models=age univariate
+##Hurdle method isn't working with these data, null model comes out as top model most of the time
 
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
@@ -187,7 +192,7 @@ pg1<-pg[-c(41:60),]#removing control (no chamber)
 
 #logit transformation
 logitTransform <- function(p) { log(p/(1-p)) }
-pg1$prop_herb_add <- (pg1$prop_herb)+0.001 #adding small amount to get rid of zeros 
+pg1$prop_herb_add <- (pg1$prop_herb)+0.0001 #adding small amount to get rid of zeros 
 pg1$pLogit <- logitTransform(pg1$prop_herb_add)
 pg1$pLogit <- as.numeric(pg1$pLogit)
 
@@ -209,11 +214,10 @@ modcomp.lmm#error about fixed effects bening different?
 #best model is age, next model = null and dAIC>3
 
 summary(lmm1)
-shapiro.test(resid(lmm1))#not normal 
+shapiro.test(resid(lmm1))#not normal, p=7 e -9 
 hist(resid(lmm1))
 qqnorm(resid(lmm1))
 qqline(resid(lmm1))
-#transform data? or try hurdle
 
 
 
