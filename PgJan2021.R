@@ -220,8 +220,7 @@ qqnorm(resid(lmm1))
 qqline(resid(lmm1))
 
 
-
-#summary stats
+#summary stats for proportion herbivory by leaf age
 herb.sum <- ddply(pg1, c("age"), summarise,
 					 N    = length(prop_herb),
 					 mean = mean(prop_herb),
