@@ -219,6 +219,9 @@ hist(resid(lmm1))
 qqnorm(resid(lmm1))
 qqline(resid(lmm1))
 
+lmm1<-lmer(prop_herb ~ age + (1|chamber), data=pg1, na.action = "na.omit")
+lmm100<-lmer(prop_herb ~ age, data=pg1, na.action = "na.omit", REML = F)
+
 
 #summary stats for proportion herbivory by leaf age
 herb.sum <- ddply(pg1, c("age"), summarise,
@@ -242,6 +245,7 @@ ggplot(pg1, aes(age, prop_herb))+
 #plots
 ggplot(pg1, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
 ggplot(pg1, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
+
 
 #LMM with chamber as random effect with logit transformed data
 lmm1t<-lmer(pLogit ~ age + (1|chamber), data=pg1, na.action = "na.omit")
