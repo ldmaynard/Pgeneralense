@@ -10,11 +10,19 @@ library(betareg)
 
 #GROWTH----
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
+colnames(grow)[1] <- "Casa"
 
 grow$rel_gro<-((grow$ht.2018.09.cm-grow$ht.2018.04.cm)/grow$ht.2018.04.cm)
+grow$total_gro <- grow$ht.2018.09.cm-grow$ht.2018.04.cm
 
 grow <- grow[order(grow$Treatment),]
 grow<-grow[-c(11:15),]#removing control (no chamber)
+
+hist(grow$rel_gro)  #not normal, this is a typical proportion
+hist(grow$total_gro)
+
+#re-ordering factor levels so lm will compare everything to control
+grow$Treatment <- factor(grow$Treatment, levels=c("control chamber", "CO2", "TÂ°C", "TÂ°C + CO2" ))
 
 gro1<-lmer(rel_gro ~ Treatment + (1|Casa), data=grow, na.action = "na.omit")
 #Error: number of levels of each grouping factor must be < number of observations
@@ -24,6 +32,16 @@ gro2<-aov(grow$rel_gro~grow$Treatment)
 summary.aov(gro2)
 #p=0.927
 
+gro3 <- lm(rel_gro ~ Treatment, data=grow)
+summary(gro3)
+
+gro4 <- lm(total_gro ~ Treatment, data=grow)
+summary(gro4)
+
+gro5 <-betareg(rel_gro ~ Treatment, dat=grow)
+summary(gro5)
+
+
 #plot
 ggplot(grow, aes(Treatment, rel_gro))+
 	geom_boxplot(outlier.shape = NA)+
@@ -32,6 +50,7 @@ ggplot(grow, aes(Treatment, rel_gro))+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Relative growth (cm)")
+
 
 #CHEMISTRY----
 
@@ -104,6 +123,7 @@ phen.null<-lmer(pdw ~ 1 + (1|chamber), data=phen_ag2, na.action = "na.omit")
 modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
 				modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
 #don't know why it's not accepting REML=F?
+
 modcomp.phen #best fit model=only stage, next best is additive, dAIC=4.04
 
 write.table(modcomp.phen, file = "aic_totalphenolics.csv", sep = ",", quote = FALSE, row.names = F)
@@ -278,7 +298,10 @@ summary(lmm1a)
 shapiro.test(resid(lmm1a))#not normal
 
 #create dataset that combines chambers to avoid pseudorep and remove random effect, averaging prop. herb, N=8 
-pg2<-aggregate(prop_herb~treatment + age,data=pg1,FUN=mean)
+#SW: I changed this to aggregate by chamber; it was set up as
+#prop_herb ~ treatment + age; which meant that all data from all
+#chambers were averaged by treatment, giving just 2 datapoints per treatment
+pg2<-aggregate(prop_herb~chamber + age + treatment,data=pg1,FUN=mean)
 
 herb.1<-lm(prop_herb ~ treatment, data=pg2)
 herb.2<-lm(prop_herb ~ age, data=pg2)
@@ -291,10 +314,14 @@ modcomp.herb<-aictab(cand.set=list(herb.1, herb.2, herb.3, herb.5),
 					 modnames=c("treatment", "age", "add", "null"), REML=F)#AIC table
 modcomp.herb
 #null is model of better fit, age close behind, dAICc=-0.4
+#with changes above: AGE is now best fit, and additive is close behind
+
 
 #plots
 ggplot(pg2, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
 ggplot(pg2, aes(x=age, y=prop_herb))+geom_boxplot()+geom_point()
+summary(glht(herb.3, linfct=mcp(treatment="Tukey")))
+
 
 #hurdle
 #separating datasets
