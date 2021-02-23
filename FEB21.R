@@ -110,6 +110,9 @@ phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 phen_ag2<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
 phen_ag$pdw<-(phen_ag$pdw)*100
 
+#re-ordering factors
+phen_ag2$treat <- factor(phen_ag2$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+
 #models for pdw
 phen1<-lmer(pdw ~ treat * stage + (1|chamber), data=phen_ag2, na.action = "na.fail")
 phen2<-lmer(pdw ~ treat + stage + (1|chamber), data=phen_ag2, na.action = "na.fail")
@@ -171,6 +174,8 @@ pg2 <- pg2[order(pg2$chamber),]
 #combine aggregated herbivory and chemistry datasets
 ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
 
+ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+
 #global model
 ph6<-lmer(percent_herbivory ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
 d1<-dredge(ph6)#lots of singular fits, not enough data to run some of these
@@ -179,29 +184,51 @@ d1
 # Model average models with delta AICc < 4
 d1.avg<-model.avg(d1, subset=delta<4)
 summary(d1.avg)
-#sig interaction b/w phenolics and temp+Co2 treatment in conditional average
+#nothing significant
 
 #all models
 d2.avg<-model.avg(d1)
 summary(d2.avg)
-#moderately sig interaxn bw chem and T+CO2 treatment
-#mod sig interaxn among chem, young leaves, and T+CO2 treatment
-#both in conditional average
+#nothing significant 
 
-ph10<-lmer(percent_herbivory ~ pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
-#this is the model that's singular... 
-#the phenolics and treatment interactive model that is coming out as significant
+#global additive model
+ph.add<-lmer(percent_herbivory ~ pdw + treat + stage + (1|chamber), data=ph, na.action = "na.fail")
 
+d3<-dredge(ph.add)
+d3#top model is stage+treatment
+d3.avg<-model.avg(d3, subset=delta<4)
+summary(d3.avg)
+#in full avg, T+CO2 treatment moderately significant, p=0.073
+#in conditional average, age p=0.065, T+CO2 p=0.073, and phenolics p=0.0965
 
 #Herbivory plots----
-#creating labels for legend
+#Leaf age
+ggplot(ph, aes(stage, percent_herbivory))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "Leave age", y = "% herbivory")
+
+#creating labels for treatment legend
 lab1 <- c(expression(CO["2"]),
-		  "Control chamber", 
+		  "Control", 
 		  "Temperature",
 		  expression(Temp + CO["2"]))
-ph$Treatment<-ph$treat
+#treatment
+ggplot(ph, aes(Treatment, percent_herbivory))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "% herbivory")+
+	scale_x_discrete(labels=lab1)
 
-herbplot<-ggplot(ph)+
+#pretty plot I made when I thought there was an interaction b/w phenolics and treatment
+#don't want to delete yet...
+ggplot(ph)+
 	geom_smooth(aes(pdw, percent_herbivory, color=Treatment, linetype=Treatment),method = "lm", se=F, formula = "y~x")+
 	geom_jitter(aes(pdw, percent_herbivory, color=Treatment),position=position_jitter(width = 0.04), alpha=0.30)+
 	theme_classic()+
@@ -212,37 +239,15 @@ herbplot<-ggplot(ph)+
 		  text = element_text(size=15))+
 	labs(x = "Total phenolics (%dw GAE)", y = "% herbivory")+
 	scale_linetype_manual(values=c("twodash", "twodash", "twodash", "solid"), labels = lab1)+
-	scale_color_viridis(discrete = T, option = "D", labels = lab1)
-herbplot
-
-#add R^2 value
-herbplot+annotate("text", x = 3.5, y = 14,
+	scale_color_viridis(discrete = T, option = "D", labels = lab1)+
+	annotate("text", x = 3.5, y = 14,
 			 label = "paste(italic(R) ^ 2, \" = 0.42\")", parse = TRUE, size = 4)
 
-#facet by leaf age, if including the three-way interaction
-herbplot+facet_grid(.~stage)
-
-#finding R^2 values and effect sizes
-ph <- ph[order(ph$treat),]
-inter <- ph[21:28,]
-ph.inter.mod<-lm(inter$percent_herbivory~inter$pdw)
-summary(ph.inter.mod)
-plot(inter$prop_herb~inter$pdw)
-#y=mx+b, y=-4.708x+34.151, R^2=0.419
-#When exposed to increased temperature and CO2,
-#Herbivory decreases 1% with every 4.7% increase in total phenolics in increased CO2 and temp conditions
-
-inter <- inter[order(inter$stage),]
-inter.mature <- inter[1:4,]
-inter.yg <- inter[5:8,]
-ph.inter.mod.m<-lm(inter.mature$percent_herbivory~inter.mature$pdw)
-summary(ph.inter.mod.m)
-plot(inter.mature$percent_herbivory~inter.mature$pdw)
-#In mature leaves, herbivory decerases 7.25% with every  1% increase in total phenolics in inc CO2 and temp environment
-#R2=0.2827
-
-ph.inter.mod.y<-lm(inter.yg$percent_herbivory~inter.yg$pdw)
-summary(ph.inter.mod.y)
-plot(inter.mature$percent_herbivory~inter.mature$pdw)
-#In young leaves, herbivory decerases 3.34% with every  1% increase in total phenolics in inc CO2 and temp environment
-#R2=0.439
+#total phenolics
+ggplot(ph, aes(pdw, percent_herbivory))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Total phenolics (%dw GAE)", y = "% herbivory")
