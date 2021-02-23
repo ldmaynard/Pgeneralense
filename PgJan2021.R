@@ -22,12 +22,7 @@ hist(grow$rel_gro)  #not normal, this is a typical proportion
 hist(grow$total_gro)
 
 #re-ordering factor levels so lm will compare everything to control
-grow$Treatment <- factor(grow$Treatment, levels=c("control chamber", "CO2", "TÂ°C", "TÂ°C + CO2" ))
-
-gro1<-lmer(rel_gro ~ Treatment + (1|Casa), data=grow, na.action = "na.omit")
-#Error: number of levels of each grouping factor must be < number of observations
-#not enough data to run lmer
-
+grow$Treatment <- factor(grow$Treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
 gro3 <- lm(rel_gro ~ Treatment, data=grow)
 summary(gro3)
@@ -42,6 +37,7 @@ summary(gro5)
 shapiro.test(resid(gro5))#also normal
 
 #plot
+#relative growth
 ggplot(grow, aes(Treatment, rel_gro))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width =0.04))+
@@ -49,6 +45,15 @@ ggplot(grow, aes(Treatment, rel_gro))+
 	theme(legend.title = element_blank(),
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Relative growth (cm)")
+
+#total growth
+ggplot(grow, aes(Treatment, total_gro))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Total growth (cm)")
 
 
 #PHENOLICS----
