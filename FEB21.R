@@ -211,6 +211,7 @@ ggplot(ph, aes(stage, percent_herbivory))+
 		  text = element_text(size=15))+
 	labs(x = "Leave age", y = "% herbivory")
 
+
 #creating labels for treatment legend
 lab1 <- c(expression(CO["2"]),
 		  "Control", 
@@ -226,6 +227,50 @@ ggplot(ph, aes(Treatment, percent_herbivory))+
 	labs(x = "", y = "% herbivory")+
 	scale_x_discrete(labels=lab1)
 
+#total phenolics
+ggplot(ph, aes(pdw, percent_herbivory))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Total phenolics (%dw GAE)", y = "% herbivory")
+
+
+##Herbivory summary stats----
+
+###herbivory ~ leaf age
+herb.sum <- ddply(ph, c("stage"), summarise,
+				  N    = length(percent_herbivory),
+				  mean = mean(percent_herbivory),
+				  sd   = sd(percent_herbivory),
+				  se   = sd / sqrt(N))
+herb.sum
+5.28275/1.03100
+#mature leaves experiences 5.1 times more herbivory than younger leaves
+
+###herbivory ~ treatment
+herb.sum.treat <- ddply(ph, c("treat"), summarise,
+						N    = length(percent_herbivory),
+						mean = mean(percent_herbivory),
+						sd   = sd(percent_herbivory),
+						se   = sd / sqrt(N))
+herb.sum.treat
+6.813125/2.375000
+#Leaves in increased CO2+temperature chambers experienced 2.9x more herbivory than leaves in control chambers
+
+#The analysis compared all chambers to control chamber, looks like could be sig diff bw T + TC chambers
+#However, tukey test with top model (stage+treat) says TC + Control chambers is only sig diff
+herb.top<-lmer(percent_herbivory ~ treat + stage + (1|chamber), data=ph, na.action = "na.fail")
+summary(glht(herb.top, linfct=mcp(treat="Tukey")))
+
+###herbivory ~ phenolics
+summary(lm(ph$percent_herbivory~ph$pdw))
+plot(ph$percent_herbivory~ph$pdw)
+#y=mx+b, y=-1.37x+11.254, R^2=0.1659
+#Total herbivory decreases 1.4% with every 1% increase in total phenolics
+
+##--
 #pretty plot I made when I thought there was an interaction b/w phenolics and treatment
 #don't want to delete yet...
 ggplot(ph)+
@@ -243,11 +288,3 @@ ggplot(ph)+
 	annotate("text", x = 3.5, y = 14,
 			 label = "paste(italic(R) ^ 2, \" = 0.42\")", parse = TRUE, size = 4)
 
-#total phenolics
-ggplot(ph, aes(pdw, percent_herbivory))+
-	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
-	theme_classic()+
-	theme(legend.position = "top",
-		  text = element_text(size=15))+
-	labs(x = "Total phenolics (%dw GAE)", y = "% herbivory")
