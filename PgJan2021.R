@@ -28,19 +28,18 @@ gro1<-lmer(rel_gro ~ Treatment + (1|Casa), data=grow, na.action = "na.omit")
 #Error: number of levels of each grouping factor must be < number of observations
 #not enough data to run lmer
 
-gro2<-aov(grow$rel_gro~grow$Treatment)
-summary.aov(gro2)
-#p=0.927
 
 gro3 <- lm(rel_gro ~ Treatment, data=grow)
 summary(gro3)
+shapiro.test(resid(gro3))#normal
 
 gro4 <- lm(total_gro ~ Treatment, data=grow)
 summary(gro4)
+shapiro.test(resid(gro4))#also normal
 
 gro5 <-betareg(rel_gro ~ Treatment, dat=grow)
 summary(gro5)
-
+shapiro.test(resid(gro5))#also normal
 
 #plot
 ggplot(grow, aes(Treatment, rel_gro))+
@@ -52,7 +51,7 @@ ggplot(grow, aes(Treatment, rel_gro))+
 	labs(x = "", y = "Relative growth (cm)")
 
 
-#CHEMISTRY----
+#PHENOLICS----
 
 #Script that can be used to quantify compounds as concentration or absolute value
 #Load standard curve data
@@ -176,6 +175,20 @@ ggplot(phen_ag2, aes(treat, pdw))+
 	theme(legend.position = "none",
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "%dw in gallic acid equivalents")
+
+
+#SAPONINS----
+
+#Load total saponin data
+sap <- read.csv(file = "Piper_saponins.csv", head=T)
+
+#delete blanks/negative controls
+sap <- sap[order(sap$sample),]
+sap <- sap[-c(1:26),] #removing blanks and standards
+
+ggplot(sap, aes(x=treat, y=abs_tot))+geom_boxplot()+geom_point()
+ggplot(sap, aes(x=stage, y=abs_tot))+geom_boxplot()+geom_point()
+
 
 #HERBIVORY----
 
