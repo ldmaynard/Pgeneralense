@@ -1,6 +1,7 @@
 #Interactive effects of climate change, leaf age, and secondary metabolites 
 #on plant growth, defense, and herbivory.
 
+#LIBRARIES----
 library(lme4)
 library(ggplot2)
 library(car)
@@ -129,7 +130,7 @@ summary(d.phen.avg)#thus, can't model average
 d.phen.avg1<-model.avg(d.phen)
 summary(d.phen.avg1)#stage is only significant p val
 
-##Phenolics plots----
+#Phenolics plots----
 #leaf age
 ggplot(phen_ag2, aes(stage, pdw))+
 	geom_boxplot(outlier.shape = NA)+
@@ -192,7 +193,7 @@ ph10<-lmer(percent_herbivory ~ pdw * treat + (1|chamber), data=ph, na.action = "
 #the phenolics and treatment interactive model that is coming out as significant
 
 
-#HERBIVORY PLOT----
+#Herbivory plots----
 #creating labels for legend
 lab1 <- c(expression(CO["2"]),
 		  "Control chamber", 
