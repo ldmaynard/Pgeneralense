@@ -96,11 +96,11 @@ phen$concen<-(phen$abs_avg-0.056570)/0.702271
 #change names for leaf stages
 phen$stage<-as.character(phen$stage)
 phen$stage[phen$stage=="y"]="Young"
-phen$stage[phen$stage=="m"]="Old"
+phen$stage[phen$stage=="m"]="Mature"
 
 #change names for treatments
 phen$treat<-as.character(phen$treat)
-phen$treat[phen$treat=="control_chamber"]="Control (chamber)"
+phen$treat[phen$treat=="control_chamber"]="Control chamber"
 phen$treat[phen$treat=="control_nat"]="Control (no chamber)"
 phen$treat[phen$treat=="TC"]="Temperature"
 phen$treat[phen$treat=="TC+CO2"]="Temp + CO2"
@@ -604,4 +604,161 @@ ggplot(herb_plant, aes(treatment, pa_herb))+
 	theme(legend.position = "none",
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "% herbivory")
+
+#CHEM & HERB ----
+phen_ag2 <- phen_ag2[order(phen_ag2$sample),]
+pg2 <- pg2[order(pg2$chamber),]
+
+ph <- cbind(phen_ag2, prop_herb = pg2$prop_herb) 
+ph$prop_herb<-ph$prop_herb*100
+
+#LMM with chamber as random effect
+ph1<-lmer(prop_herb ~ stage + (1|chamber), data=ph, na.action = "na.omit")
+ph2<-lmer(prop_herb ~ pdw + (1|chamber), data=ph, na.action = "na.omit")
+ph3<-lmer(prop_herb ~ stage + pdw + (1|chamber), data=ph, na.action = "na.omit")
+ph4<-lmer(prop_herb ~ stage * pdw + (1|chamber), data=ph, na.action = "na.fail")
+ph5<-lmer(prop_herb ~ (1|chamber), data=ph, na.action = "na.omit")
+
+
+modcomp.ph<-aictab(cand.set=list(ph1, ph2, ph3, ph4, ph5),
+					modnames=c("age", "phen", "add", "interactive", "null"), REML=F)#AIC table
+modcomp.ph#error about fixed effects bening different?
+#best model is age, next model = null and dAIC>3
+
+summary(ph1)
+shapiro.test(resid(ph1))#not normal
+
+summary(ph2)
+shapiro.test(resid(ph2))#not normal
+
+chemherb.sum <- ddply(ph, c("stage"), summarise,
+				  N    = length(prop_herb),
+				  mean = mean(prop_herb),
+				  sd   = sd(prop_herb),
+				  se   = sd / sqrt(N))
+chemherb.sum
+0.0528275/0.0103100
+#mature leaves had 5.1 times more herbivory than younger leaves
+
+ph20<-lm(ph$prop_herb~ph$pdw)
+summary(ph20)
+plot(ph$prop_herb~ph$pdw)
+#y=mx+b, y=-0.01369x+0.11254, R^2=0.1659
+#Proportion perbivory decreases with every 1.4%dw increase in total phenolics 
+
+#PLOT
+ggplot(ph, aes(stage, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "", y = "% herbivory")
+
+ggplot(ph, aes(pdw, prop_herb))+
+	geom_smooth(method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30, aes(color=stage))+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "%dw total phenolics", y = "% herbivory")
+
+library(MuMIn)
+ph6<-lmer(prop_herb ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
+d1<-dredge(ph6)
+d1
+# Model average models with delta AICc < 4
+d1.avg<-model.avg(d1, subset=delta<4)
+summary(d1.avg)
+#sig interaction b/w phenolics and temp+Co2 treatment
+
+ggplot(ph, aes(pdw, prop_herb))+
+	geom_smooth(method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30, aes(color=treat))+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "%dw total phenolics", y = "% herbivory")
+
+lab1 <- c(expression(CO["2"]),
+		  "Control chamber", 
+		  expression(Temp + CO["2"]),
+		  "Temperature")
+ph$Treatment<-ph$treat
+ggplot(ph)+
+	geom_smooth(aes(pdw, prop_herb, color=Treatment, linetype=Treatment),method = "lm", se=F, formula = "y~x")+
+	geom_jitter(aes(pdw, prop_herb, color=Treatment),position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = c(0.85, 0.8),
+		  legend.direction = "vertical",
+		  legend.text = element_text(size = 10, hjust = 0),
+		  legend.title = element_text(size = 10),
+		  text = element_text(size=15))+
+	labs(x = "%dw total phenolics", y = "% herbivory")+
+	annotate("text", x = 3.5, y = 14,
+			 label = "paste(italic(R) ^ 2, \" = 0.42\")", parse = TRUE, size = 4)+
+	annotate("text", x = 3.6, y = 12.7,
+			 label = "paste(italic(P), \" = 0.044 *\")", parse = TRUE, size = 4)+
+	scale_linetype_manual(values=c("twodash", "twodash", "solid", "twodash"), labels = lab1)+
+	scale_color_viridis(discrete = T, option = "D", labels = lab1)
+
+ph <- ph[order(ph$treat),]
+inter <- ph[21:28,]
+ph.inter.mod<-lm(inter$prop_herb~inter$pdw)
+summary(ph.inter.mod)
+plot(inter$prop_herb~inter$pdw)
+#y=mx+b, y=-4.708x+34.151, R^2=0.419
+#When exposed to increased temperature and CO2,
+#Herbivory decreases 1% with every 4.7%dw increase in total phenolics 
+
+ggplot(ph)+
+	geom_smooth(aes(pdw, prop_herb, color=treat),method = "lm")+
+	geom_jitter(aes(pdw, prop_herb),position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	scale_color_viridis(discrete = T, option = "D")+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "%dw total phenolics", y = "% herbivory")+
+	facet_wrap(.~treat,ncol=1)
+
+ggplot(ph, aes(treat, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_smooth(method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30, aes(color=pdw))+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "treatment", y = "% herbivory")
+
+d2<-dredge(ph11)
+d2.avg<-model.avg(d2, subset=delta<4)
+summary(d2.avg)
+
+ph10<-lmer(prop_herb ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
+ph11<-lmer(prop_herb ~ stage + pdw + treat + (1|chamber), data=ph, na.action = "na.fail")
+ph12<-lmer(prop_herb ~ pdw * treat + (1|chamber), data=ph, na.action = "na.fail")#singular, removed from aiccomp
+ph13<-lmer(prop_herb ~ stage * treat + (1|chamber), data=ph, na.action = "na.fail")
+ph14<-lmer(prop_herb ~ pdw + treat + (1|chamber), data=ph, na.action = "na.fail")
+ph15<-lmer(prop_herb ~ stage + treat + (1|chamber), data=ph, na.action = "na.fail")
+
+modcomp.ph2<-aictab(cand.set=list(ph1, ph2, ph3, ph4, ph5, ph10,ph11,ph13,ph14,ph15),
+				   modnames=c("age", "phen", "add", "age*phen", "null","stage*phen*treat",
+				   		   "stage+phen+treat","stage*treat","phen+treat","stage+treat"), REML=F)#AIC table
+modcomp.ph2
+
+summary(ph13)
+require(car)
+Anova(ph13)
+
+modcomp.ph3<-aictab(cand.set = list(ph1,ph2,ph3,ph5,ph11,ph14,ph15),
+					modnames = c("age", "phen", "age+phen", "null", "age+phen+treat", "phen+treat",
+								 "age+treat"))
+modcomp.ph3
+
+
+
+summary(glht(ph15, linfct=mcp(treat="Tukey")))
+summary(glht(ph15, linfct=mcp(stage="Tukey")))
+summary(ph11)
+Anova(ph11)
 
