@@ -116,6 +116,7 @@ phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 
 #combine triplicate readings for %dw
 phen_ag2<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
+phen_ag$pdw<-(phen_ag$pdw)*100
 
 #models for pdw
 phen1<-lmer(pdw ~ treat * stage + (1|chamber), data=phen_ag2, na.action = "na.omit")
@@ -326,14 +327,31 @@ herb.2<-lm(prop_herb ~ age, data=pg2)
 herb.5<-lm(prop_herb ~ 1, data=pg2)
 herb.3<-lm(prop_herb ~ treatment + age, data=pg2)
 herb.4<-lm(prop_herb ~ treatment * age, data=pg2)
-summary(herb.4)#all NAs, not enough data?, breaks AIC mod comp
+summary(herb.4)
 
 modcomp.herb<-aictab(cand.set=list(herb.1, herb.2, herb.3, herb.5),
 					 modnames=c("treatment", "age", "add", "null"), REML=F)#AIC table
 modcomp.herb
-#null is model of better fit, age close behind, dAICc=-0.4
-#with changes above: AGE is now best fit, and additive is close behind
+#AGE is now best fit, and additive is close behind
+#but still can't include interactive model
 
+#LMM with chamber as random effect
+h1<-lmer(prop_herb ~ age + (1|chamber), data=pg2, na.action = "na.omit")
+h2<-lmer(prop_herb ~ treatment + (1|chamber), data=pg2, na.action = "na.omit")
+h3<-lmer(prop_herb ~ age + treatment + (1|chamber), data=pg2, na.action = "na.omit")
+h4<-lmer(prop_herb ~ age * treatment + (1|chamber), data=pg2, na.action = "na.omit")#warning
+h5<-lmer(prop_herb ~ (1|chamber), data=pg2, na.action = "na.omit")
+
+modcomp.lmmh<-aictab(cand.set=list(h1, h2, h3, h4, h5),
+					modnames=c("age", "treat", "add", "interactive", "null"), REML=F)#AIC table
+modcomp.lmmh#error about fixed effects being different?
+#best model is null, next model = age and dAIC=0.27
+
+summary(h1)
+shapiro.test(resid(h1))#not normal
+hist(resid(h1))
+qqnorm(resid(h1))
+qqline(resid(h1))
 
 #plots
 ggplot(pg2, aes(x=treatment, y=prop_herb))+geom_boxplot()+geom_point()
@@ -451,6 +469,8 @@ modcomp.herb.beta
 #null model is best fit, age dAIC>5
 
 betaherb10<-betareg(prop_herb ~ treatment, dat=pg1)#can't run with full dataset bc zero-inflated. also doesn't account for chamber
+
+pg2$prop_herb<-as.numeric(pg2$prop_herb)
 
 #running with aggregated data
 betaherb11<-betareg(prop_herb ~ treatment, dat=pg2)
