@@ -180,7 +180,7 @@ ggplot(phen_ag2, aes(treat, pdw))+
 	scale_color_manual(values = c("#006d2c", "#66c2a4"))+
 	theme(legend.position = "none",
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "%dw in gallic acid equivalents")
+	labs(x = "", y = "Total phenolics (%dw in gallic acid equivalents)")
 
 
 #SAPONINS----
@@ -704,7 +704,7 @@ ggplot(ph)+
 
 ph <- ph[order(ph$treat),]
 inter <- ph[21:28,]
-ph.inter.mod<-lm(inter$prop_herb~inter$pdw)
+ph.inter.mod<-lm(inter$percent_herbivory~inter$pdw)
 summary(ph.inter.mod)
 plot(inter$prop_herb~inter$pdw)
 #y=mx+b, y=-4.708x+34.151, R^2=0.419
