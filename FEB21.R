@@ -8,6 +8,7 @@ library(multcomp)
 library(plyr)
 library(AICcmodavg)
 library(betareg)
+library(MuMIn)
 
 #GROWTH ANALYSIS----
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
@@ -119,6 +120,7 @@ modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
 					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
 modcomp.phen #best fit model=only stage, next best is additive, dAIC=4.04
 
+#same thing, but automated dredge fcn
 d.phen<-dredge(phen1)
 d.phen
 d.phen.avg<-model.avg(d.phen, subset=delta<4)#only consists of one model
@@ -168,27 +170,34 @@ pg2 <- pg2[order(pg2$chamber),]
 #combine aggregated herbivory and chemistry datasets
 ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
 
-library(MuMIn)
+#global model
 ph6<-lmer(percent_herbivory ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
-d1<-dredge(ph6)
+d1<-dredge(ph6)#lots of singular fits, not enough data to run some of these
 d1
+
 # Model average models with delta AICc < 4
 d1.avg<-model.avg(d1, subset=delta<4)
 summary(d1.avg)
-#sig interaction b/w phenolics and temp+Co2 treatment
+#sig interaction b/w phenolics and temp+Co2 treatment in conditional average
 
 #all models
 d2.avg<-model.avg(d1)
 summary(d2.avg)
 #moderately sig interaxn bw chem and T+CO2 treatment
 #mod sig interaxn among chem, young leaves, and T+CO2 treatment
+#both in conditional average
+
+ph10<-lmer(percent_herbivory ~ pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
+#this is the model that's singular... 
+#the phenolics and treatment interactive model that is coming out as significant
+
 
 #HERBIVORY PLOT----
+#creating labels for legend
 lab1 <- c(expression(CO["2"]),
 		  "Control chamber", 
-		  expression(Temp + CO["2"]),
-		  "Temperature")
-
+		  "Temperature",
+		  expression(Temp + CO["2"]))
 ph$Treatment<-ph$treat
 
 herbplot<-ggplot(ph)+
@@ -200,15 +209,19 @@ herbplot<-ggplot(ph)+
 		  legend.text = element_text(size = 10, hjust = 0),
 		  legend.title = element_text(size = 10),
 		  text = element_text(size=15))+
-	labs(x = "%dw total phenolics", y = "% herbivory")+
-	scale_linetype_manual(values=c("twodash", "twodash", "solid", "twodash"), labels = lab1)+
+	labs(x = "Total phenolics (%dw GAE)", y = "% herbivory")+
+	scale_linetype_manual(values=c("twodash", "twodash", "twodash", "solid"), labels = lab1)+
 	scale_color_viridis(discrete = T, option = "D", labels = lab1)
 herbplot
 
+#add R^2 value
 herbplot+annotate("text", x = 3.5, y = 14,
 			 label = "paste(italic(R) ^ 2, \" = 0.42\")", parse = TRUE, size = 4)
+
+#facet by leaf age, if including the three-way interaction
 herbplot+facet_grid(.~stage)
 
+#finding R^2 values and effect sizes
 ph <- ph[order(ph$treat),]
 inter <- ph[21:28,]
 ph.inter.mod<-lm(inter$percent_herbivory~inter$pdw)
