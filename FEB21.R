@@ -257,7 +257,8 @@ herb.sum.treat <- ddply(ph, c("treat"), summarise,
 						se   = sd / sqrt(N))
 herb.sum.treat
 6.813125/2.375000
-#Leaves in increased CO2+temperature chambers experienced 2.9x more herbivory than leaves in control chambers
+#Leaves in increased CO2+temperature chambers experienced an average of 2.9x more herbivory 
+#than leaves in control chambers
 
 #The analysis compared all chambers to control chamber, looks like could be sig diff bw T + TC chambers
 #However, tukey test with top model (stage+treat) says TC + Control chambers is only sig diff
@@ -268,7 +269,7 @@ summary(glht(herb.top, linfct=mcp(treat="Tukey")))
 summary(lm(ph$percent_herbivory~ph$pdw))
 plot(ph$percent_herbivory~ph$pdw)
 #y=mx+b, y=-1.37x+11.254, R^2=0.1659
-#Total herbivory decreases 1.4% with every 1% increase in total phenolics
+#Leaf herbivory decreases 1.4% with every 1% increase in total phenolics
 
 ##--
 #pretty plot I made when I thought there was an interaction b/w phenolics and treatment
