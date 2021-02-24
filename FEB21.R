@@ -37,6 +37,8 @@ gro4 <- lm(total_gro ~ Treatment, data=grow)
 summary(gro4)
 shapiro.test(resid(gro4))#also normal
 
+Anova(gro4)
+
 #Growth plot----
 #relative growth
 ggplot(grow, aes(Treatment, rel_gro))+
@@ -153,7 +155,19 @@ ggplot(phen_ag2, aes(treat, pdw))+
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Total phenolics (%dw in gallic acid equivalents)")
 
+#SUMMARY STATS
+library(plyr)
+phen.tab <- ddply(phen_ag2, c("stage"), summarise,
+				  N    = length(pdw),
+				  mean = mean(pdw),
+				  sd   = sd(pdw),
+				  se   = sd / sqrt(N))
+phen.tab
 
+#young leaf avg pdw/old leaf avg pdw
+6.859805/4.970515
+#1.380099
+#Young leaves had an average of 1.4 times more total phenolics
 
 #HERBIVORY ANALYSIS----
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
@@ -200,6 +214,10 @@ d3.avg<-model.avg(d3, subset=delta<4)
 summary(d3.avg)
 #in full avg, T+CO2 treatment moderately significant, p=0.073
 #in conditional average, age p=0.065, T+CO2 p=0.073, and phenolics p=0.0965
+
+d4.avg<-model.avg(d3)
+summary(d4.avg)
+#if average all models, regardless of dAIC, get the same answers with slightly diff p vals
 
 #Herbivory plots----
 #Leaf age
