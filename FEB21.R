@@ -1,7 +1,7 @@
 #Interactive effects of climate change, leaf age, and secondary metabolites 
 #on plant growth, defense, and herbivory.
 
-#LIBRARIES----
+#LIBRARIES----------------------------------------------------
 library(lme4)
 library(ggplot2)
 library(car)
@@ -11,7 +11,7 @@ library(AICcmodavg)
 library(betareg)
 library(MuMIn)
 
-#GROWTH ANALYSIS----
+#GROWTH ANALYSIS----------------------------------------------------
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
 colnames(grow)[1] <- "Casa"
 
@@ -39,7 +39,7 @@ shapiro.test(resid(gro4))#also normal
 
 Anova(gro4)
 
-#Growth plot----
+#Growth plot-----------------------------------------------------
 #relative growth
 ggplot(grow, aes(Treatment, rel_gro))+
 	geom_boxplot(outlier.shape = NA)+
@@ -58,7 +58,7 @@ ggplot(grow, aes(Treatment, total_gro))+
 		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
 	labs(x = "", y = "Total growth (cm)")
 
-#PHENOLICS ANALYSIS----
+#PHENOLICS ANALYSIS----------------------------------------------------
 
 #Script that can be used to quantify compounds as concentration or absolute value
 ##Load standard curve data
@@ -135,7 +135,7 @@ summary(d.phen.avg)#thus, can't model average
 d.phen.avg1<-model.avg(d.phen)
 summary(d.phen.avg1)#stage is only significant p val
 
-#Phenolics plots----
+#Phenolics plots----------------------------------------------------
 #leaf age
 ggplot(phen_ag2, aes(stage, pdw))+
 	geom_boxplot(outlier.shape = NA)+
@@ -169,7 +169,7 @@ phen.tab
 #1.380099
 #Young leaves had an average of 1.4 times more total phenolics
 
-#HERBIVORY ANALYSIS----
+#HERBIVORY ANALYSIS----------------------------------------------------
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
 #creating col for proportion herbivory
@@ -219,7 +219,7 @@ d4.avg<-model.avg(d3)
 summary(d4.avg)
 #if average all models, regardless of dAIC, get the same answers with slightly diff p vals
 
-#Herbivory plots----
+#Herbivory plots----------------------------------------------------
 #Leaf age
 plot1<-ggplot(ph, aes(stage, percent_herbivory))+
 	geom_boxplot(outlier.shape = NA)+
@@ -259,7 +259,7 @@ ggplot(ph, aes(pdw, percent_herbivory))+
 	labs(x = "Total phenolics (%dw GAE)", y = "% herbivory")
 
 
-##Herbivory summary stats----
+##Herbivory summary stats----------------------------------------------------
 
 ###herbivory ~ leaf age
 herb.sum <- ddply(ph, c("stage"), summarise,
@@ -311,3 +311,36 @@ ggplot(ph)+
 	annotate("text", x = 3.5, y = 14,
 			 label = "paste(italic(R) ^ 2, \" = 0.42\")", parse = TRUE, size = 4)
 
+
+##Growth & Herbivory---------------------------
+
+#aggregate herbivory by plant/chamber
+herb_20<-aggregate(percent_herbivory~chamber+treatment,data=pg1,FUN=mean)#aggregate data
+
+herb_20 <- herb_20[order(herb_20$chamber),]
+grow <- grow[order(grow$Casa),]
+herb_gro <- cbind(herb_20, total_gro = grow$total_gro) 
+
+herb_gro$treatment <- factor(herb_gro$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+
+hg1 <- lm(total_gro ~ treatment * percent_herbivory, data=herb_gro, na.action = "na.fail")
+summary(hg1)
+
+d.hg<-dredge(hg1)
+d.hg#top model is herbivory
+dhg.avg<-model.avg(d.hg, subset=delta<4)
+summary(dhg.avg)
+
+dhg.avg1<-model.avg(d.hg)
+summary(dhg.avg1)
+
+ggplot(herb_gro, aes(percent_herbivory, total_gro))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Herbivory (%)", y = "Total growth in height (cm)")
+
+summary(lm(herb_gro$total_gro~herb_gro$percent_herbivory))
+plot(herb_gro$total_gro~herb_gro$percent_herbivory)
