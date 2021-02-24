@@ -312,28 +312,45 @@ ggplot(ph)+
 			 label = "paste(italic(R) ^ 2, \" = 0.42\")", parse = TRUE, size = 4)
 
 
-##Growth & Herbivory---------------------------
+##Growth, FULL---------------------------
 
 #aggregate herbivory by plant/chamber
-herb_20<-aggregate(percent_herbivory~chamber+treatment,data=pg1,FUN=mean)#aggregate data
+herb_20<-aggregate(percent_herbivory~chamber+treatment,data=pg1,FUN=mean)
 
+#aggregate phenolics by plant/chamber
+phen_ag20<-aggregate(pdw~chamber+treat,data=phen_ag2,FUN=mean)
+
+phen_ag20 <- phen_ag20[order(phen_ag20$chamber),]
 herb_20 <- herb_20[order(herb_20$chamber),]
 grow <- grow[order(grow$Casa),]
-herb_gro <- cbind(herb_20, total_gro = grow$total_gro) 
+herb_gro1 <- cbind(herb_20, total_gro = grow$total_gro) 
+herb_gro <-cbind(herb_gro1, pdw = phen_ag20$pdw)
 
 herb_gro$treatment <- factor(herb_gro$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
-hg1 <- lm(total_gro ~ treatment * percent_herbivory, data=herb_gro, na.action = "na.fail")
-summary(hg1)
 
-d.hg<-dredge(hg1)
-d.hg#top model is herbivory
-dhg.avg<-model.avg(d.hg, subset=delta<4)
-summary(dhg.avg)
+#global interactive model with treatment, herbivory, and phenolics
+hg2 <- lm(total_gro ~ treatment * percent_herbivory * pdw, data=herb_gro, na.action = "na.fail")
+summary(hg2)
+d.hg2<-dredge(hg2)
+d.hg2#top model is herbivory
+dhg.avg2<-model.avg(d.hg2, subset=delta<4)
+summary(dhg.avg2)
 
-dhg.avg1<-model.avg(d.hg)
-summary(dhg.avg1)
+dhg.avg3<-model.avg(d.hg2)
+summary(dhg.avg3)
 
+hg3 <- lm(total_gro ~ treatment + percent_herbivory + pdw, data=herb_gro, na.action = "na.fail")
+summary(hg3)
+d.hg3<-dredge(hg3)
+d.hg3#top model is herbivory
+dhg.avg4<-model.avg(d.hg3, subset=delta<4)
+summary(dhg.avg4)
+
+dhg.avg5<-model.avg(d.hg3)
+summary(dhg.avg5)
+
+#Growth plot----
 ggplot(herb_gro, aes(percent_herbivory, total_gro))+
 	geom_smooth(color="black",method = "lm")+
 	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
@@ -344,3 +361,13 @@ ggplot(herb_gro, aes(percent_herbivory, total_gro))+
 
 summary(lm(herb_gro$total_gro~herb_gro$percent_herbivory))
 plot(herb_gro$total_gro~herb_gro$percent_herbivory)
+
+ggplot(herb_gro, aes(pdw, total_gro))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Total phenolics (%dw GAE)", y = "Total growth in height (cm)")
+
+summary(lm(herb_gro$total_gro~herb_gro$pdw))
