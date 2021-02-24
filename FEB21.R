@@ -363,7 +363,7 @@ summary(lm(herb_gro$total_gro~herb_gro$percent_herbivory))
 plot(herb_gro$total_gro~herb_gro$percent_herbivory)
 
 ggplot(herb_gro, aes(pdw, total_gro))+
-	geom_smooth(color="black",method = "lm")+
+	geom_smooth(color="black",method = "lm", linetype= "dashed")+
 	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
 	theme_classic()+
 	theme(legend.position = "top",
