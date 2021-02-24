@@ -188,7 +188,7 @@ pg2 <- pg2[order(pg2$chamber),]
 #combine aggregated herbivory and chemistry datasets
 ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
 
-ph$treat <- factor(ph$treat, levels=c("Control chamber", "CO2", "Temperature", "Temp + CO2" ))
+ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
 
 #global model
 ph6<-lmer(percent_herbivory ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
@@ -221,14 +221,18 @@ summary(d4.avg)
 
 #Herbivory plots----
 #Leaf age
-ggplot(ph, aes(stage, percent_herbivory))+
+plot1<-ggplot(ph, aes(stage, percent_herbivory))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
 	theme_classic()+
 	theme(legend.position = "none",
 		  text = element_text(size=15))+
 	labs(x = "Leave age", y = "% herbivory")
+plot1
 
+library(ggsignif)
+plot1+geom_signif(comparisons = list(c("Mature", "Young")), map_signif_level=TRUE)
+#sig level is wrong
 
 #creating labels for treatment legend
 lab1 <- c(expression(CO["2"]),
@@ -236,7 +240,7 @@ lab1 <- c(expression(CO["2"]),
 		  "Temperature",
 		  expression(Temp + CO["2"]))
 #treatment
-ggplot(ph, aes(Treatment, percent_herbivory))+
+ggplot(ph, aes(Treat, percent_herbivory))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
 	theme_classic()+
