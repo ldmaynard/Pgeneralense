@@ -188,7 +188,7 @@ pg2 <- pg2[order(pg2$chamber),]
 #combine aggregated herbivory and chemistry datasets
 ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
 
-ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+ph$treat <- factor(ph$treat, levels=c("Control chamber", "CO2", "Temperature", "Temp + CO2" ))
 
 #global model
 ph6<-lmer(percent_herbivory ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
