@@ -121,12 +121,12 @@ phen3<-lmer(pdw ~ treat + (1|chamber), data=phen_ag2, na.action = "na.fail")
 phen4<-lmer(pdw ~ stage + (1|chamber), data=phen_ag2, na.action = "na.fail")
 phen.null<-lmer(pdw ~ 1 + (1|chamber), data=phen_ag2, na.action = "na.fail")
 
-modcomp.phen<-aictab(cand.set=list(phen1, phen2, phen3, phen4, phen.null),
-					 modnames=c("interaxn","add","treat", "stage", "null"), REML=F)#AIC table
+modcomp.phen<-aictab(cand.set=list(phen2, phen3, phen4, phen.null),
+					 modnames=c("add","treat", "stage", "null"), REML=F)#AIC table
 modcomp.phen #best fit model=only stage, next best is additive, dAIC=4.04
 
 #same thing, but automated dredge fcn
-d.phen<-dredge(phen1)
+d.phen<-dredge(phen2)
 d.phen
 d.phen.avg<-model.avg(d.phen, subset=delta<4)#only consists of one model
 summary(d.phen.avg)#thus, can't model average
@@ -167,6 +167,7 @@ phen.tab
 6.859805/4.970515
 #1.380099
 #Young leaves had an average of 1.4 times more total phenolics
+#138% more?
 
 #HERBIVORY ANALYSIS----------------------------------------------------
 
