@@ -1,7 +1,7 @@
 #Interactive effects of climate change, leaf age, and secondary metabolites 
 #on plant growth, defense, and herbivory.
 
-#LIBRARIES----------------------------------------------------
+#LOADING LIBRARIES----------------------------------------------------
 library(lme4)
 library(ggplot2)
 library(car)
@@ -11,12 +11,15 @@ library(AICcmodavg)
 library(betareg)
 library(MuMIn)
 
-#GROWTH ANALYSIS----------------------------------------------------
+#LOADING DATASETS----------------------------------------------------
+
+##GROWTH
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
 colnames(grow)[1] <- "Casa"
 
-grow$rel_gro<-((grow$ht.2018.09.cm-grow$ht.2018.04.cm)/grow$ht.2018.04.cm)
 grow$total_gro <- grow$ht.2018.09.cm-grow$ht.2018.04.cm
+grow$rel_gro<-grow$total_gro/grow$ht.2018.04.cm
+grow$per_gro<-grow$rel_gro*100
 
 grow <- grow[order(grow$Treatment),]
 grow<-grow[-c(11:15),]#removing control (no chamber)
@@ -26,41 +29,14 @@ shapiro.test(grow$rel_gro)#LM: it is technically normal
 hist(grow$total_gro)
 shapiro.test(grow$total_gro)#LM: but so is this one. Both yield the same results, no treatment effect
 
+hist(grow$per_gro)
+shapiro.test(grow$per_gro)
+
 #re-ordering factor levels so lm will compare everything to control
 grow$Treatment <- factor(grow$Treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
-gro3 <- lm(rel_gro ~ Treatment, data=grow)
-summary(gro3)
-shapiro.test(resid(gro3))#normally dist resids
 
-gro4 <- lm(total_gro ~ Treatment, data=grow)
-summary(gro4)
-shapiro.test(resid(gro4))#also normal
-
-Anova(gro4)
-
-#Growth plot-----------------------------------------------------
-#relative growth
-ggplot(grow, aes(Treatment, rel_gro))+
-	geom_boxplot(outlier.shape = NA)+
-	geom_jitter(position=position_jitter(width =0.04))+
-	theme_classic()+
-	theme(legend.title = element_blank(),
-		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "Relative growth (cm)")
-
-#total growth
-ggplot(grow, aes(Treatment, total_gro))+
-	geom_boxplot(outlier.shape = NA)+
-	geom_jitter(position=position_jitter(width =0.04))+
-	theme_classic()+
-	theme(legend.title = element_blank(),
-		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
-	labs(x = "", y = "Total growth (cm)")
-
-#PHENOLICS ANALYSIS----------------------------------------------------
-
-#Script that can be used to quantify compounds as concentration or absolute value
+#CHEMISTRY
 ##Load standard curve data
 ga <- read.csv(file = "GA_StandardCurve.csv", head=T)
 
@@ -114,6 +90,29 @@ phen_ag$pdw<-(phen_ag$pdw)*100
 
 #re-ordering factors
 phen_ag2$treat <- factor(phen_ag2$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+
+##HERBIVORY
+pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
+
+#creating col for proportion herbivory
+pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
+pg$prop_herb<-(pg$percent_herbivory/100)
+pg$prop_herb<-as.numeric(pg$prop_herb)
+
+pg <- pg[order(pg$treatment),]
+pg1<-pg[-c(41:60),]#removing control (no chamber)
+pg2<-aggregate(percent_herbivory~chamber + age + treatment,data=pg1,FUN=mean)#aggregate data
+
+#get two datasets ready to combine
+phen_ag2 <- phen_ag2[order(phen_ag2$sample),]
+pg2 <- pg2[order(pg2$chamber),]
+
+#combine aggregated herbivory and chemistry datasets
+ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
+
+ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+
+#PHENOLICS ANALYSIS----------------------------------------------------
 
 #models for pdw
 phen1<-lmer(pdw ~ treat * stage + (1|chamber), data=phen_ag2, na.action = "na.fail")
@@ -170,25 +169,7 @@ phen.tab
 #Young leaves had an average of 1.4 times more total phenolics
 
 #HERBIVORY ANALYSIS----------------------------------------------------
-pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
-#creating col for proportion herbivory
-pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
-pg$prop_herb<-(pg$percent_herbivory/100)
-pg$prop_herb<-as.numeric(pg$prop_herb)
-
-pg <- pg[order(pg$treatment),]
-pg1<-pg[-c(41:60),]#removing control (no chamber)
-pg2<-aggregate(percent_herbivory~chamber + age + treatment,data=pg1,FUN=mean)#aggregate data
-
-#get two datasets ready to combine
-phen_ag2 <- phen_ag2[order(phen_ag2$sample),]
-pg2 <- pg2[order(pg2$chamber),]
-
-#combine aggregated herbivory and chemistry datasets
-ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
-
-ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
 
 #global model
 ph6<-lmer(percent_herbivory ~ stage * pdw * treat + (1|chamber), data=ph, na.action = "na.fail")
@@ -371,3 +352,22 @@ ggplot(herb_gro, aes(pdw, total_gro))+
 	labs(x = "Total phenolics (%dw GAE)", y = "Total growth in height (cm)")
 
 summary(lm(herb_gro$total_gro~herb_gro$pdw))
+
+#Growth plots-----------------------------------------------------
+#relative growth
+ggplot(grow, aes(Treatment, rel_gro))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Relative growth (cm)")
+
+#total growth
+ggplot(grow, aes(Treatment, total_gro))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width =0.04))+
+	theme_classic()+
+	theme(legend.title = element_blank(),
+		  text = element_text(size=12), axis.text.x = element_text(angle=45, hjust=1))+
+	labs(x = "", y = "Total growth (cm)")
