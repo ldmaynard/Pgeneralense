@@ -310,6 +310,24 @@ herb_gro <-cbind(herb_gro1, pdw = phen_ag20$pdw)
 
 herb_gro$treatment <- factor(herb_gro$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
+omg<-lm(cbind(percent_herbivory, total_gro, pdw)~treatment, data=herb_gro)
+omg
+summary(omg)
+manova.omg<-Anova(omg)
+manova.omg
+summary(manova.omg)
+
+summary(lm(percent_herbivory~total_gro+pdw, data = herb_gro))
+summary(lm(total_gro~percent_herbivory+pdw, data = herb_gro))
+summary(lm(pdw~total_gro+percent_herbivory, data = herb_gro))
+
+plot(percent_herbivory~total_gro, data = herb_gro)
+plot((herb_gro$percent_herbivory~herb_gro$pdw))
+ggplot(herb_gro, aes(pdw, percent_herbivory))+
+	geom_point()+
+	geom_smooth(method = "lm")
+
+write.csv(herb_gro, "20.csv")
 
 #global interactive model with treatment, herbivory, and phenolics
 hg2 <- lm(total_gro ~ treatment * percent_herbivory * pdw, data=herb_gro, na.action = "na.fail")
