@@ -110,7 +110,27 @@ pg2 <- pg2[order(pg2$chamber),]
 #combine aggregated herbivory and chemistry datasets
 ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
 
+#combining all data
+ph <- ph[order(ph$stage),]
+all.dat<-cbind(ph, growth = grow$total_gro) 
+all.dat<-all.dat[order(all.dat$sample)]
+
+
 ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+all.dat$treat <- factor(all.dat$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+
+#spreading data by leaf age
+#remove sample col
+chem_herb_spread<-ph[,-2]
+
+library(data.table)
+chem_herb_spread<-dcast(setDT(chem_herb_spread), chamber ~ stage, 
+						value.var = c('treat', 'pdw', 'percent_herbivory'))
+chem_herb_spread<-chem_herb_spread[,-2]#remove one of treatment cols??
+colnames(chem_herb_spread)[2] <- "treat"
+
+#combine with growth data
+all.dat2 <- cbind(chem_herb_spread, growth = grow$per_gro) 
 
 #PHENOLICS ANALYSIS----------------------------------------------------
 
