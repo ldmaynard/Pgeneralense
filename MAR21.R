@@ -157,6 +157,8 @@ b3<-betareg(prop_dw~treat+prop_herb+prop_gro+stage, dat=all.dat)
 summary(b3)#stage sig
 shapiro.test(resid(b3)) #normal
 
+##Plots
+
 #GROWTH + HERBIVORY
 ggplot(all.dat, aes(prop_herb1, prop_gro))+
 	geom_smooth(color="black",method = "lm")+
@@ -168,3 +170,240 @@ ggplot(all.dat, aes(prop_herb1, prop_gro))+
 plot(all.dat$prop_gro~all.dat$prop_herb1)
 summary(lm(all.dat$growth~all.dat$prop_herb1))
 #R2=0.12 
+
+#HERBIVORY + GROWTH
+ggplot(all.dat, aes(prop_gro, prop_herb))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
+plot(all.dat$prop_herb~all.dat$prop_gro)
+summary(lm(all.dat$prop_herb~all.dat$prop_gro))
+#R2=0.10
+
+#HERBIVORY + LEAF AGE
+ggplot(all.dat, aes(stage, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "Leaf age", y = "Proportion leaf herbivorized")
+
+#PHENOLICS + LEAF AGE
+ggplot(all.dat, aes(stage, prop_dw))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "Leaf age", y = "Total phenolics (%dw in gallic acid equivalents)")
+
+##spreading the data
+library(data.table)
+chem_herb_spread<-dcast(setDT(all.dat), chamber ~ stage, 
+						value.var = c('treat', 'prop_dw', 'prop_herb'))
+chem_herb_spread<-chem_herb_spread[,-2]#remove one of treatment cols??
+colnames(chem_herb_spread)[2] <- "treat"
+
+#combine with growth data
+all.dat2 <- cbind(chem_herb_spread, growth = grow$rel_gro) 
+
+#young leaves
+b4<-betareg(growth~treat+prop_herb_Young+prop_dw_Young, dat=all.dat2)
+summary(b4) #herb marg sig (neg)
+
+all.dat2$prop_herb_Young1<-all.dat2$prop_herb_Young+0.00001
+b5<-betareg(prop_herb_Young1~treat+growth+prop_dw_Young, dat=all.dat2)
+summary(b5) #no sig
+
+b6<-betareg(prop_dw_Young~growth+treat+prop_herb_Young, dat=all.dat2)
+summary(b6) #no sig
+
+#mature leaves
+b7<-betareg(growth~treat+prop_herb_Mature+prop_dw_Mature, dat=all.dat2)
+summary(b7) #herb sig (neg)
+
+all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.00001
+b8<-betareg(prop_herb_Mature1~treat+growth+prop_dw_Mature, dat=all.dat2)
+summary(b8) #T+CO2 treat (pos), growth (neg), and phenolics (neg) all significant
+
+b9<-betareg(prop_dw_Mature~growth+treat+prop_herb_Mature, dat=all.dat2)
+summary(b9) #no sig
+
+
+##If separated, young and mature leaves still show decrease in growth with increased
+##herbivory.
+#However,  mature leaf group had sig effects with herbivory
+
+#HERBIVORY + GROWTH
+ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
+	geom_smooth(color="black",method = "logit")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
+plot(all.dat2$prop_herb_Mature1~all.dat2$growth)
+summary(betareg(all.dat2$prop_herb_Mature1~all.dat2$growth))
+#R2=0.13
+
+#HERBIVORY + PHENOLICS
+ggplot(all.dat2, aes(prop_dw_Mature, prop_herb_Mature1))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Total phenolics (prop. dw in GAE)", y = "Proportion leaf herbivorized")
+plot(all.dat2$prop_herb_Mature1~all.dat2$prop_dw_Mature)
+summary(betareg(all.dat2$prop_herb_Mature1~all.dat2$prop_dw_Mature))
+
+
+bmod<-betareg(prop_herb_Mature1~prop_dw_Mature, dat=all.dat2)
+library(rcompanion)
+plotPredy(data  = all.dat2,
+		  y     = prop_herb_Mature1,
+		  x     = prop_dw_Mature,
+		  model = bmod,
+		  xlab  = "Phenolics",
+		  ylab  = "Proportion herb")
+
+#HERBIVORY + TREATMENT
+ggplot(all.dat2, aes(treat, prop_herb_Mature1))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "Treatment", y = "Proportion herbivory")+
+	stat_summary(geom = 'text', label = c("A","AB","AB","B"),
+				 fun = max, vjust = -1.5, size = 5.5)+
+	scale_y_continuous(limits = c(0, 0.25))+
+	theme(text = element_text(size=18))
+
+ggplot(data=all.dat2, aes(x=treat, y=prop_herb_Mature1))+ 
+	geom_point()+
+	stat_summary(fun.data = "mean_se", colour="blue", size=1)+
+	theme_classic()
+
+#summary(glht(b8, linfct=mcp(treat="Tukey")))
+
+library(emmeans)
+d1<-emmeans(b8,pairwise~treat, type="response")
+cld(d1$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
+
+#HERBIVORY + GROWTH
+ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
+
+bmod2<-betareg(prop_herb_Mature1~growth, dat=all.dat2)
+plotPredy(data  = all.dat2,
+		  y     = prop_herb_Mature1,
+		  x     = growth,
+		  model = bmod2,
+		  xlab  = "Phenolics",
+		  ylab  = "Proportion herb")
+
+#combining all
+
+#aggregate herbivory by plant/chamber
+herb_20<-aggregate(prop_herb~chamber+treatment,data=pg1,FUN=mean)
+
+#aggregate phenolics by plant/chamber
+phen_ag20<-aggregate(pdw~chamber+treat,data=phen_ag2,FUN=mean)
+
+phen_ag20 <- phen_ag20[order(phen_ag20$chamber),]
+herb_20 <- herb_20[order(herb_20$chamber),]
+grow <- grow[order(grow$Casa),]
+herb_gro1 <- cbind(herb_20, prop_gro = grow$rel_gro) 
+all.dat3 <-cbind(herb_gro1, pdw = phen_ag20$pdw)
+all.dat3$prop_dw<-all.dat3$pdw/100 #proportion phenolics
+
+#all leaves
+b10<-betareg(prop_gro~treatment+prop_herb+prop_dw, dat=all.dat3)
+summary(b10) #herb sig (neg)
+
+b11<-betareg(prop_herb~treatment+prop_gro+prop_dw, dat=all.dat3)
+summary(b11) #CO2 treat (neg), growth (neg), and phenolics (neg) all significant
+
+b12<-betareg(prop_dw~prop_gro+treatment+prop_herb, dat=all.dat3)
+summary(b12) #no sig
+
+#so same as mature leaves, kinda
+
+#HERBIVORY + GROWTH
+ggplot(all.dat3, aes(prop_gro, prop_herb))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
+
+
+#HERBIVORY + PHENOLICS
+ggplot(all.dat3, aes(prop_dw, prop_herb))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Total phenolics (prop. dw in GAE)", y = "Proportion leaf herbivorized")
+
+
+bmod3<-betareg(prop_herb~prop_dw, dat=all.dat3)
+plotPredy(data  = all.dat3,
+		  y     = prop_herb,
+		  x     = prop_dw,
+		  model = bmod3,
+		  xlab  = "Phenolics",
+		  ylab  = "Proportion herb")
+
+#HERBIVORY + TREATMENT
+ggplot(all.dat3, aes(treatment, prop_herb))+
+	geom_boxplot(outlier.shape = NA)+
+	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40)+
+	theme_classic()+
+	theme(legend.position = "none",
+		  text = element_text(size=15))+
+	labs(x = "Treatment", y = "Proportion herbivory")+
+	stat_summary(geom = 'text', label = c("A","AB","AB","B"),
+				 fun = max, vjust = -1.5, size = 5.5)+
+	scale_y_continuous(limits = c(0, 0.25))+
+	theme(text = element_text(size=18))
+
+ggplot(data=all.dat3, aes(x=treatment, y=prop_herb))+ 
+	geom_point()+
+	stat_summary(fun.data = "mean_se", colour="blue", size=1)+
+	theme_classic()
+
+#summary(glht(b11, linfct=mcp(treatment="Tukey")))
+
+d2<-emmeans(b11,pairwise~treatment, type="response")
+cld(d2$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
+#doesn't make sense...
+
+#HERBIVORY + GROWTH
+ggplot(all.dat3, aes(prop_gro, prop_herb))+
+	geom_smooth(color="black",method = "lm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	theme_classic()+
+	theme(legend.position = "top",
+		  text = element_text(size=15))+
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
+
+bmod4<-betareg(prop_herb~prop_gro, dat=all.dat3)
+plotPredy(data  = all.dat3,
+		  y     = prop_herb,
+		  x     = prop_gro,
+		  model = bmod4,
+		  xlab  = "Phenolics",
+		  ylab  = "Proportion herb")
