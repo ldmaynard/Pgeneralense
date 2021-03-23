@@ -12,6 +12,7 @@ library(betareg)
 library(MuMIn)
 library(car)
 library(corrplot)
+library(viridis)
 
 #LOADING & WRANGLING DATA----------------------------------------------------
 
@@ -186,11 +187,12 @@ shapiro.test(resid(b1)) #normal!!
 #GROWTH + HERBIVORY PLOT
 ggplot(all.dat, aes(prop_herb, prop_gro))+
 	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
 	theme_classic()+
-	theme(legend.position = "top",
+	theme(legend.position = "none",
 		  text = element_text(size=15))+
-	labs(x = "Proportion leaf herbivorized", y = "Proportion change in height")
+	labs(x = "Proportion leaf herbivorized", y = "Proportion change in height")+
+	scale_color_viridis(discrete = T, option = "D")
 #pseudo R^2=0.178
 
 bmod<-betareg(prop_gro~prop_herb, dat=all.dat)
@@ -210,44 +212,43 @@ shapiro.test(resid(b3)) #normal
 
 #PHENOLICS + LEAF AGE PLOT
 ggplot(data=all.dat, aes(x=stage, y=prop_dw))+ 
-	geom_point(aes(color=chamber))+
+	geom_point(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	labs(x="", y="Total phenolics (prop. dw in GAE)")+
-	theme(text = element_text(size=18), legend.position = "none")
+	theme(text = element_text(size=18), legend.position = "none")+
+	scale_color_viridis(discrete = T, option = "D")
 
 ###HERBIVORY---
 #young leaves
 all.dat2$prop_herb_Young1<-all.dat2$prop_herb_Young+0.00001
 b5<-betareg(prop_herb_Young1~treat+growth+prop_dw_Young, dat=all.dat2)
-summary(b5) #no sig
+summary(b5) #no sig, so no plots?
 
 #mature leaves
 all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.00001
 b8<-betareg(prop_herb_Mature1~treat+growth+prop_dw_Mature, dat=all.dat2)
 summary(b8) #T+CO2 treat (pos), growth (neg), and phenolics (neg) all significant
 
-
 #HERBIVORY + GROWTH (mature)
 ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
 	geom_smooth(color="black",method = "glm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
 	theme_classic()+
-	theme(legend.position = "top",
+	theme(legend.position = "none",
 		  text = element_text(size=15))+
-	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
-plot(all.dat2$prop_herb_Mature1~all.dat2$growth)
-summary(betareg(all.dat2$prop_herb_Mature1~all.dat2$growth))
-#R2=0.13
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")+
+	scale_color_viridis(discrete = T, option = "D")
 
 #HERBIVORY + PHENOLICS (mature)
 ggplot(all.dat2, aes(prop_dw_Mature, prop_herb_Mature1))+
-	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	geom_smooth(color="black",method = "glm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
 	theme_classic()+
-	theme(legend.position = "top",
+	theme(legend.position = "none",
 		  text = element_text(size=15))+
-	labs(x = "Total phenolics (prop. dw in GAE)", y = "Proportion leaf herbivorized")
+	labs(x = "Total phenolics (prop. dw in GAE)", y = "Proportion leaf herbivory")+
+	scale_color_viridis(discrete = T, option = "D")
 
 bmod1<-betareg(prop_herb_Mature1~prop_dw_Mature, dat=all.dat2)
 plotPredy(data  = all.dat2,
@@ -257,44 +258,54 @@ plotPredy(data  = all.dat2,
 		  xlab  = "Phenolics",
 		  ylab  = "Proportion herb")
 
-#HERBIVORY + TREATMENT
-ggplot(all.dat2, aes(treat, prop_herb_Young1))+
+#HERBIVORY + TREATMENT (mature)
+#writing labels for plot
+lab1 <- c(expression(CO["2"]),
+		  "Control", 
+		  "Temperature",
+		  expression(Temp + CO["2"]))
+
+#create cld
+library(emmeans)
+library(multcomp)
+d2<-emmeans(b8,pairwise~treat, type="response")
+cld(d2$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
+
+ggplot(all.dat2, aes(treat, prop_herb_Mature1))+
 	geom_boxplot(outlier.shape = NA)+
 	geom_jitter(position=position_jitter(width = 0.04), alpha=0.40)+
 	theme_classic()+
 	theme(legend.position = "none",
 		  text = element_text(size=15))+
-	labs(x = "Treatment", y = "Proportion herbivory")+
-	theme(text = element_text(size=18))
+	labs(x = "Treatment", y = "Proportion leaf herbivory")+
+	theme(text = element_text(size=18))+
+	scale_x_discrete(labels=lab1)
 
-ggplot(data=all.dat2, aes(x=treat, y=prop_herb_Young1))+ 
-	geom_point()+
-	stat_summary(fun.data = "mean_se", colour="blue", size=1)+
-	theme_classic()
+ggplot(data=all.dat2, aes(x=treat, y=prop_herb_Mature1))+ 
+	geom_point(aes(color=chamber),position=position_jitter(width = 0.04), alpha=0.40)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()+
+	scale_color_viridis(discrete = T, option = "D")+
+	theme(legend.position = "none",
+		  text = element_text(size=18))+
+	labs(x="", y="Proportion leaf herbivory")+
+	stat_summary(geom = 'text', label = c("AB","AB","A","B"),
+				 fun = max, vjust = -1.5, size = 5.5)+
+	scale_y_continuous(limits = c(0, 0.25))+
+	scale_x_discrete(labels=lab1)
 
-
-library(emmeans)
-d1<-emmeans(b8,pairwise~treat, type="response")
-cld(d1$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
 
 #HERBIVORY + GROWTH
 ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
-	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
+	geom_smooth(color="black",method = "glm")+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
 	theme_classic()+
-	theme(legend.position = "top",
+	theme(legend.position = "none",
 		  text = element_text(size=15))+
-	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivory")+
+	scale_color_viridis(discrete = T, option = "D")
 
-bmod2<-betareg(prop_herb_Mature1~growth, dat=all.dat2)
-plotPredy(data  = all.dat2,
-		  y     = prop_herb_Mature1,
-		  x     = growth,
-		  model = bmod2,
-		  xlab  = "Phenolics",
-		  ylab  = "Proportion herb")
-
-
+##OTHER THINGS----
 
 #all leaves
 b10<-betareg(prop_gro~treatment+prop_herb+prop_dw, dat=all.dat3)
