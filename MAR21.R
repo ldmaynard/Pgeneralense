@@ -375,9 +375,9 @@ ggplot(all.dat3, aes(treatment, prop_herb))+
 	theme(legend.position = "none",
 		  text = element_text(size=15))+
 	labs(x = "Treatment", y = "Proportion herbivory")+
-	stat_summary(geom = 'text', label = c("A","AB","AB","B"),
+	stat_summary(geom = 'text', label = c("AB","AB","A","B"),
 				 fun = max, vjust = -1.5, size = 5.5)+
-	scale_y_continuous(limits = c(0, 0.25))+
+	scale_y_continuous(limits = c(0, 0.16))+
 	theme(text = element_text(size=18))
 
 ggplot(data=all.dat3, aes(x=treatment, y=prop_herb))+ 
