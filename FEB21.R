@@ -113,11 +113,49 @@ ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory)
 #combining all data
 ph <- ph[order(ph$stage),]
 all.dat<-cbind(ph, growth = grow$total_gro) 
+all.dat<-cbind(all.dat, per_gro = grow$per_gro)
 all.dat<-all.dat[order(all.dat$sample)]
 
 
 ph$treat <- factor(ph$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
 all.dat$treat <- factor(all.dat$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+
+library(car)
+library(corrplot)
+check <- lm(growth ~ percent_herbivory+pdw+stage+treat, data=all.dat)
+summary(check)
+vif(check)
+
+samp<-all.dat[,-c(1:4)]#cat vars
+samp<-samp[,-4]#remove second growth var
+
+L <- cor(samp)#correlation matrix
+corrplot(L, method = "circle")
+corrplot(L, method = "number")
+
+all1<-lmer(growth ~ treat + pdw + percent_herbivory + (1|chamber), data=all.dat, na.action = "na.fail")
+all.dat$prop_herb<-all.dat$percent_herbivory/100
+all.dat$prop_dw<-all.dat$pdw/100
+all.dat$prop_gro<-all.dat$per_gro/100
+
+all1<-lmer(prop_gro ~ treat + prop_herb + prop_dw + (1|chamber), 
+		   data=all.dat, na.action = "na.fail")
+summary(all1)
+Anova(all1)
+shapiro.test(all.dat$prop_gro)
+
+b1<-betareg(prop_gro~treat+prop_herb+prop_dw, dat=all.dat)
+summary(b1)
+shapiro.test(resid(b1))
+
+all.dat$prop_herb1<-all.dat$prop_herb+0.001
+b2<-betareg(prop_herb1~treat+prop_dw+prop_gro+stage, dat=all.dat)
+summary(b2)
+shapiro.test(resid(b2))
+
+b3<-betareg(prop_dw~treat+prop_herb+prop_gro+stage, dat=all.dat)
+summary(b3)
+shapiro.test(resid(b3))
 
 #spreading data by leaf age
 #remove sample col
@@ -350,11 +388,12 @@ ggplot(herb_gro, aes(pdw, percent_herbivory))+
 write.csv(herb_gro, "20.csv")
 
 #global interactive model with treatment, herbivory, and phenolics
-hg2 <- lm(total_gro ~ treatment * percent_herbivory * pdw, data=herb_gro, na.action = "na.fail")
+hg2 <- lm(growth ~ treat * percent_herbivory * pdw, data=all.dat, na.action = "na.fail")
+hg2<-lmer(growth ~ treat + percent_herbivory + pdw + (1|chamber), data=all.dat, na.action = "na.fail")
 summary(hg2)
 d.hg2<-dredge(hg2)
 d.hg2#top model is herbivory
-dhg.avg2<-model.avg(d.hg2, subset=delta<4)
+dhg.avg2<-model.avg(d.hg2, subset=delta<3)
 summary(dhg.avg2)
 
 dhg.avg3<-model.avg(d.hg2)
