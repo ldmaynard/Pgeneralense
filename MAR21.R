@@ -187,11 +187,11 @@ shapiro.test(resid(b1)) #normal!!
 #GROWTH + HERBIVORY PLOT
 ggplot(all.dat, aes(prop_herb, prop_gro))+
 	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, size=2.5, aes(color=chamber))+
 	theme_classic()+
 	theme(legend.position = "none",
-		  text = element_text(size=15))+
-	labs(x = "Proportion leaf herbivorized", y = "Proportion change in height")+
+		  text = element_text(size=19))+
+	labs(x = "Proportion leaf herbivory", y = "Proportion change in height")+
 	scale_color_viridis(discrete = T, option = "D")
 #pseudo R^2=0.178
 
@@ -212,12 +212,32 @@ shapiro.test(resid(b3)) #normal
 
 #PHENOLICS + LEAF AGE PLOT
 ggplot(data=all.dat, aes(x=stage, y=prop_dw))+ 
-	geom_point(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
+	geom_point(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	labs(x="", y="Total phenolics (prop. dw in GAE)")+
 	theme(text = element_text(size=18), legend.position = "none")+
-	scale_color_viridis(discrete = T, option = "D")
+	scale_color_viridis(discrete = T, option = "D")+
+	geom_signif(comparisons = list(c("Mature", "Young")),
+				map_signif_level = T, textsize=6)+
+	scale_y_continuous(limits = c(0,.105))
+
+#create cld
+library(emmeans)
+library(multcomp)
+d5<-emmeans(b3,pairwise~stage, type="response")
+cld(d5$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
+
+ggplot(data=all.dat, aes(x=stage, y=prop_dw))+ 
+	geom_point(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()+
+	labs(x="", y="Total phenolics (prop. dw in GAE)")+
+	theme(text = element_text(size=18), legend.position = "none")+
+	scale_color_viridis(discrete = T, option = "D")+
+	stat_summary(geom = 'text', label = c("A","B"),
+				 fun = max, vjust = -1.5, size = 5.8)+
+	scale_y_continuous(limits = c(0,.115))
 
 ###HERBIVORY---
 #young leaves
@@ -233,20 +253,20 @@ summary(b8) #T+CO2 treat (pos), growth (neg), and phenolics (neg) all significan
 #HERBIVORY + GROWTH (mature)
 ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
 	geom_smooth(color="black",method = "glm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
 	theme_classic()+
 	theme(legend.position = "none",
-		  text = element_text(size=15))+
-	labs(x = "Proportion change in height", y = "Proportion leaf herbivorized")+
+		  text = element_text(size=19))+
+	labs(x = "Proportion change in height", y = "Proportion leaf herbivory")+
 	scale_color_viridis(discrete = T, option = "D")
 
 #HERBIVORY + PHENOLICS (mature)
 ggplot(all.dat2, aes(prop_dw_Mature, prop_herb_Mature1))+
 	geom_smooth(color="black",method = "glm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
 	theme_classic()+
 	theme(legend.position = "none",
-		  text = element_text(size=15))+
+		  text = element_text(size=19))+
 	labs(x = "Total phenolics (prop. dw in GAE)", y = "Proportion leaf herbivory")+
 	scale_color_viridis(discrete = T, option = "D")
 
@@ -260,10 +280,12 @@ plotPredy(data  = all.dat2,
 
 #HERBIVORY + TREATMENT (mature)
 #writing labels for plot
-lab1 <- c(expression(CO["2"]),
-		  "Control", 
+
+all.dat2 <- all.dat2[order(all.dat2$treat),]
+lab1 <- c("Control", 
+		  expression(CO["2"]),
 		  "Temperature",
-		  expression(Temp + CO["2"]))
+		  expression(CO["2"] + Temp))
 
 #create cld
 library(emmeans)
@@ -282,28 +304,18 @@ ggplot(all.dat2, aes(treat, prop_herb_Mature1))+
 	scale_x_discrete(labels=lab1)
 
 ggplot(data=all.dat2, aes(x=treat, y=prop_herb_Mature1))+ 
-	geom_point(aes(color=chamber),position=position_jitter(width = 0.04), alpha=0.40)+
+	geom_point(aes(color=chamber),position=position_jitter(width = 0.04), alpha=0.40, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	scale_color_viridis(discrete = T, option = "D")+
 	theme(legend.position = "none",
-		  text = element_text(size=18))+
+		  text = element_text(size=20), axis.text.x = element_text(angle=20, hjust=1))+
 	labs(x="", y="Proportion leaf herbivory")+
 	stat_summary(geom = 'text', label = c("AB","AB","A","B"),
-				 fun = max, vjust = -1.5, size = 5.5)+
+				 fun = max, vjust = -1.5, size = 5.8)+
 	scale_y_continuous(limits = c(0, 0.25))+
 	scale_x_discrete(labels=lab1)
 
-
-#HERBIVORY + GROWTH
-ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
-	geom_smooth(color="black",method = "glm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber))+
-	theme_classic()+
-	theme(legend.position = "none",
-		  text = element_text(size=15))+
-	labs(x = "Proportion change in height", y = "Proportion leaf herbivory")+
-	scale_color_viridis(discrete = T, option = "D")
 
 ##OTHER THINGS----
 
