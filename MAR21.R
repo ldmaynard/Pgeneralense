@@ -145,23 +145,26 @@ all1<-lmer(prop_gro ~ treat + prop_herb + prop_dw + (1|chamber),
 		   data=all.dat, na.action = "na.fail")
 
 b1<-betareg(prop_gro~treat+prop_herb+prop_dw, dat=all.dat)
-summary(b1) #CO2 treatment (neg) and herbivory (pos) significant 
+summary(b1) #herbivory (neg) significant 
 shapiro.test(resid(b1)) #normal!!
 
 all.dat$prop_herb1<-all.dat$prop_herb+0.0001 #adding to avoid zero-inflation
 b2<-betareg(prop_herb1~treat+prop_dw+prop_gro+stage, dat=all.dat)
-summary(b2) #CO2+Temp treatment (pos), growth (pos), young lvs (neg) sig. phenolics marg sig
+summary(b2) #growth (neg), young lvs (neg) sig
 shapiro.test(resid(b2)) #normal!
 
 b3<-betareg(prop_dw~treat+prop_herb+prop_gro+stage, dat=all.dat)
-summary(b3)#no significance
+summary(b3)#stage sig
 shapiro.test(resid(b3)) #normal
 
 #GROWTH + HERBIVORY
 ggplot(all.dat, aes(prop_herb1, prop_gro))+
 	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.04), alpha=0.30)+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30)+
 	theme_classic()+
 	theme(legend.position = "top",
 		  text = element_text(size=15))+
-	labs(x = "Proportion leaf herbivorized", y = "Relative growth in height")
+	labs(x = "Proportion leaf herbivorized", y = "Proportion change in height")
+plot(all.dat$prop_gro~all.dat$prop_herb1)
+summary(lm(all.dat$growth~all.dat$prop_herb1))
+#R2=0.12 
