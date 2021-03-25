@@ -180,12 +180,19 @@ vif(check1)
 
 
 ###GROWTH (using data averaged across all four leaves)----
-b1<-betareg(prop_gro~treat+prop_herb+prop_dw, dat=all.dat)
-summary(b1) #herbivory (neg) significant 
-shapiro.test(resid(b1)) #normal!!
+b10<-betareg(prop_gro~treatment+prop_herb+prop_dw, dat=all.dat3)
+shapiro.test(resid(b10)) #normal!!
+
+summary(b10)
+#Pseudo R-squared: 0.3165
+#y=mx+b, y= -4.774x - 0.099
+#growth decreased 4.8% with every 1% increase in leaf herbivory 
+Anova(b10)#herb sig (neg)
+
+phen.tab
 
 #GROWTH + HERBIVORY PLOT
-ggplot(all.dat, aes(prop_herb, prop_gro))+
+ggplot(all.dat3, aes(prop_herb, prop_gro))+
 	geom_smooth(color="black",method = "lm")+
 	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, size=2.5, aes(color=chamber))+
 	theme_classic()+
@@ -195,9 +202,9 @@ ggplot(all.dat, aes(prop_herb, prop_gro))+
 	scale_color_viridis(discrete = T, option = "D")
 #pseudo R^2=0.178
 
-bmod<-betareg(prop_gro~prop_herb, dat=all.dat)
+bmod<-betareg(prop_gro~prop_herb, dat=all.dat3)
 library(rcompanion)
-plotPredy(data  = all.dat,
+plotPredy(data  = all.dat3,
 		  y     = prop_gro,
 		  x     = prop_herb,
 		  model = bmod,
@@ -207,8 +214,9 @@ plotPredy(data  = all.dat,
 
 ###PHENOLICS----
 b3<-betareg(prop_dw~treat+stage, dat=all.dat)
-summary(b3)#stage sig
 shapiro.test(resid(b3)) #normal
+
+Anova(b3, test.statistic="F")#stage sig, p=4.32e-07 ***
 
 #PHENOLICS + LEAF AGE PLOT
 ggplot(data=all.dat, aes(x=stage, y=prop_dw))+ 
@@ -239,16 +247,41 @@ ggplot(data=all.dat, aes(x=stage, y=prop_dw))+
 				 fun = max, vjust = -1.5, size = 5.8)+
 	scale_y_continuous(limits = c(0,.115))
 
+#PHENOLICS SUMMARY STATS
+library(plyr)
+phen.tab <- ddply(all.dat, c("stage"), summarise,
+				  N    = length(prop_dw),
+				  mean = mean(prop_dw),
+				  sd   = sd(prop_dw),
+				  se   = sd / sqrt(N))
+phen.tab
+
+#young leaf avg pdw/old leaf avg pdw
+0.06859805/0.04970515
+#1.380099
+#Young leaves had an average of 1.4 times more total phenolics
+#138% more?
+
 ###HERBIVORY---
 #young leaves
 all.dat2$prop_herb_Young1<-all.dat2$prop_herb_Young+0.00001
 b5<-betareg(prop_herb_Young1~treat+growth+prop_dw_Young, dat=all.dat2)
 summary(b5) #no sig, so no plots?
+Anova(b5)
 
 #mature leaves
 all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.00001
 b8<-betareg(prop_herb_Mature1~treat+growth+prop_dw_Mature, dat=all.dat2)
 summary(b8) #T+CO2 treat (pos), growth (neg), and phenolics (neg) all significant
+Anova(b8)
+summary(betareg(prop_herb_Mature1~prop_dw_Mature, dat=all.dat2))
+
+#herb~grow
+#y= -2.89 - 1.0586
+
+#herb~phenolics
+#y = -30.05 -1.05
+
 
 #HERBIVORY + GROWTH (mature)
 ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
@@ -316,6 +349,16 @@ ggplot(data=all.dat2, aes(x=treat, y=prop_herb_Mature1))+
 	scale_y_continuous(limits = c(0, 0.25))+
 	scale_x_discrete(labels=lab1)
 
+treat.tab <- ddply(all.dat2, c("treat"), summarise,
+				  N    = length(prop_herb_Mature1),
+				  mean = mean(prop_herb_Mature1),
+				  sd   = sd(prop_herb_Mature1),
+				  se   = sd / sqrt(N))
+treat.tab
+
+0.10494750/0.02532667
+#Mature leaves in CO2+temp experienced 4.14 times more herbivory than mature leaves in 
+#environments with increased temp
 
 ##OTHER THINGS----
 
