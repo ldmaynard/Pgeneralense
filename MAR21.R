@@ -13,6 +13,7 @@ library(MuMIn)
 library(car)
 library(corrplot)
 library(viridis)
+library(ggsignif)
 
 #LOADING & WRANGLING DATA----------------------------------------------------
 
@@ -189,17 +190,29 @@ summary(b10)
 #growth decreased 4.8% with every 1% increase in leaf herbivory 
 Anova(b10)#herb sig (neg)
 
-phen.tab
+b11<-betareg(prop_gro~treatment+prop_herb, dat=all.dat3)
+shapiro.test(resid(b11)) #normal!!
+Anova(b11)#herb sig (neg)
+
+summary(b11)
+#Pseudo R-squared: 0.3165
+#y=mx+b, y= -11.66x - 0.424
+#growth decreased ~12% with every 1% increase in leaf herbivory 
+
+summary(betareg(prop_gro~prop_herb, dat=all.dat3))
+#y= -8.95 - 0.65
+#growth decreased ~9% with every 1% increase in leaf herbivory
 
 #GROWTH + HERBIVORY PLOT
 ggplot(all.dat3, aes(prop_herb, prop_gro))+
 	geom_smooth(color="black",method = "lm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, size=2.5, aes(color=chamber))+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.45, size=2.5, aes(color=treatment))+
 	theme_classic()+
-	theme(legend.position = "none",
+	theme(legend.position = "right",
 		  text = element_text(size=19))+
 	labs(x = "Proportion leaf herbivory", y = "Proportion change in height")+
-	scale_color_viridis(discrete = T, option = "D")
+	scale_color_viridis(discrete = T, option = "D")+
+	scale_x_continuous(limits = c(0,.15))
 #pseudo R^2=0.178
 
 bmod<-betareg(prop_gro~prop_herb, dat=all.dat3)
@@ -211,12 +224,20 @@ plotPredy(data  = all.dat3,
 		  xlab  = "Phenolics",
 		  ylab  = "Proportion herb")
 
+library(lmtest)
+lrtest(b10)
+lrtest(bmod)
+
+summary(bmod)
+#y=mx+b, y= -8.95 - 0.65
+#Change in height decreased 8.95% with every 1% increase in herbivory
 
 ###PHENOLICS----
 b3<-betareg(prop_dw~treat+stage, dat=all.dat)
 shapiro.test(resid(b3)) #normal
 
 Anova(b3, test.statistic="F")#stage sig, p=4.32e-07 ***
+Anova(b3)
 
 #PHENOLICS + LEAF AGE PLOT
 ggplot(data=all.dat, aes(x=stage, y=prop_dw))+ 
@@ -237,7 +258,7 @@ d5<-emmeans(b3,pairwise~stage, type="response")
 cld(d5$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
 
 ggplot(data=all.dat, aes(x=stage, y=prop_dw))+ 
-	geom_point(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treat), size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	labs(x="", y="Total phenolics (prop. dw in GAE)")+
@@ -257,8 +278,8 @@ phen.tab <- ddply(all.dat, c("stage"), summarise,
 phen.tab
 
 #young leaf avg pdw/old leaf avg pdw
-0.06859805/0.04970515
-#1.380099
+(0.06859805-0.04970515)/0.04970515
+#0.380099
 #Young leaves had an average of 1.4 times more total phenolics
 #138% more?
 
@@ -271,32 +292,35 @@ Anova(b5)
 
 #mature leaves
 all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.00001
-b8<-betareg(prop_herb_Mature1~treat+growth+prop_dw_Mature, dat=all.dat2)
+b8<-betareg(prop_herb_Mature1~treat+prop_dw_Mature+growth, dat=all.dat2)
 summary(b8) #T+CO2 treat (pos), growth (neg), and phenolics (neg) all significant
 Anova(b8)
+Anova(b8, test.statistic="F")
 summary(betareg(prop_herb_Mature1~prop_dw_Mature, dat=all.dat2))
-
-#herb~grow
-#y= -2.89 - 1.0586
-
-#herb~phenolics
-#y = -30.05 -1.05
+#herb~chem
+#y= -17.14 - 2.05
+#herbivory decreased ~17% with every 1% increase in phenolic concentration
+summary(betareg(prop_herb_Mature1~growth, dat=all.dat2))
+#herb~growth
+#y = -2.36 -1.96
+#herbivory decreased 2.4% with every 1% increase in growth
 
 
 #HERBIVORY + GROWTH (mature)
 ggplot(all.dat2, aes(growth, prop_herb_Mature1))+
 	geom_smooth(color="black",method = "glm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.4, aes(color=treat), size=2.5)+
 	theme_classic()+
 	theme(legend.position = "none",
 		  text = element_text(size=19))+
 	labs(x = "Proportion change in height", y = "Proportion leaf herbivory")+
 	scale_color_viridis(discrete = T, option = "D")
 
+
 #HERBIVORY + PHENOLICS (mature)
 ggplot(all.dat2, aes(prop_dw_Mature, prop_herb_Mature1))+
 	geom_smooth(color="black",method = "glm")+
-	geom_jitter(position=position_jitter(width = 0.0), alpha=0.30, aes(color=chamber), size=2.5)+
+	geom_jitter(position=position_jitter(width = 0.0), alpha=0.4, aes(color=treat), size=2.5)+
 	theme_classic()+
 	theme(legend.position = "none",
 		  text = element_text(size=19))+
@@ -337,7 +361,7 @@ ggplot(all.dat2, aes(treat, prop_herb_Mature1))+
 	scale_x_discrete(labels=lab1)
 
 ggplot(data=all.dat2, aes(x=treat, y=prop_herb_Mature1))+ 
-	geom_point(aes(color=chamber),position=position_jitter(width = 0.04), alpha=0.40, size=2.5)+
+	geom_point(aes(color=treat),position=position_jitter(width = 0.04), alpha=0.45, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	scale_color_viridis(discrete = T, option = "D")+
@@ -356,8 +380,9 @@ treat.tab <- ddply(all.dat2, c("treat"), summarise,
 				  se   = sd / sqrt(N))
 treat.tab
 
-0.10494750/0.02532667
-#Mature leaves in CO2+temp experienced 4.14 times more herbivory than mature leaves in 
+(0.10494750-0.02532667)/0.02532667
+#3.14
+#Mature leaves in CO2+temp experienced 3.14 times more herbivory than mature leaves in 
 #environments with increased temp
 
 ##OTHER THINGS----
