@@ -190,6 +190,7 @@ summary(b10)
 #growth decreased 4.8% with every 1% increase in leaf herbivory 
 Anova(b10)#herb sig (neg)
 
+#USE THIS ONE
 b11<-betareg(prop_gro~treatment+prop_herb, dat=all.dat3)
 shapiro.test(resid(b11)) #normal!!
 Anova(b11)#herb sig (neg)
@@ -280,8 +281,7 @@ phen.tab
 #young leaf avg pdw/old leaf avg pdw
 (0.06859805-0.04970515)/0.04970515
 #0.380099
-#Young leaves had an average of 1.4 times more total phenolics
-#138% more?
+#Young leaves had an average of 38% times more total phenolics
 
 ###HERBIVORY---
 #young leaves
@@ -294,8 +294,14 @@ Anova(b5)
 all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.00001
 b8<-betareg(prop_herb_Mature1~treat+prop_dw_Mature+growth, dat=all.dat2)
 summary(b8) #T+CO2 treat (pos), growth (neg), and phenolics (neg) all significant
+##herbivory decreased ~30% with every 1% increase in phenolic concentration
 Anova(b8)
 Anova(b8, test.statistic="F")
+
+b80<-betareg(prop_herb_Mature1~treat+prop_dw_Mature, dat=all.dat2)
+summary(b80)
+#if remove growth from model, nothing is significant....
+
 summary(betareg(prop_herb_Mature1~prop_dw_Mature, dat=all.dat2))
 #herb~chem
 #y= -17.14 - 2.05
