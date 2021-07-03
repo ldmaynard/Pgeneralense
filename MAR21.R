@@ -90,7 +90,8 @@ phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 
 #combine triplicate readings for %dw
 phen_ag2<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
-phen_ag$pdw<-(phen_ag$pdw)*100
+#SRW: removed row below, I think you did this above?? I was getting an error
+#phen_ag$pdw<-(phen_ag$pdw)*100
 
 #re-ordering factors
 phen_ag2$treat <- factor(phen_ag2$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
@@ -498,5 +499,117 @@ library(lmtest)
 lrtest(b8)
 lrtest(b11)
 
+
+
+
+
+####SRW trying some things
+
+hist(all.dat$percent_herbivory)
+hist(all.dat$growth)
+hist(all.dat$pdw)
+
+hist(all.dat3$prop_herb)
+hist(all.dat3$prop_gro)
+hist(all.dat3$pdw)
+
+
+m1<-betareg(prop_gro~pdw*treatment, dat=all.dat3)
+shapiro.test(resid(m1)) #normal!!
+Anova(m1)  #significant interaction
+
+library(dplyr)
+all.dat3 %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_gro, 
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+
+
+m2<-betareg(prop_herb~prop_gro*treatment, dat=all.dat3)
+shapiro.test(resid(m2)) #normal!!
+Anova(m2)  #significant interaction
+
+all.dat3 %>%
+	ggplot(aes(x=prop_gro, 
+			   y=prop_herb, 
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+
+
+m3<-betareg(prop_herb~pdw*treatment, dat=all.dat3)
+shapiro.test(resid(m3)) #normal!!
+Anova(m3)  #significant interaction
+
+all.dat3 %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb, 
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+
+###Okay, so there are some interesting interactions going on here...
+#In CO2+temp treatment, the plants that are doing the best in terms of 
+#growth are getting low levels of herbivory and also producing high
+#phenolics. Also we see the predicted relationship between high phenolics-low herbivory
+
+#In control treatments, and most other treatments, 
+#basically we don't see these trade-offs
+
+#I am thinking maybe this is just driven by a general increase in herbivory in 
+#the CO2+temp chamber. So herbivory is becoming more apparent and the 
+#role of defense is becoming more important
+
+#We never see any growth-defense trade-offs, where plants that are 
+#growing more producing fewer defenses, though it is possible
+#this would have been more apparent in the absence of any herbivory
+
+
+#I also think it would be worth repeating this, but looking separately at
+#young leaves and old leaves rather than
+
+
+
+
+#Another thing to look at...are changes in herbivory mediated by shifts in 
+#ontogenetic patterns?? It could be that in rapidly growing plants
+#under climate change, more of the herbivory is shifted to young leaves??
+
+all.dat2$prop_dw_YminusM <- all.dat2$prop_dw_Young - all.dat2$prop_dw_Mature
+all.dat2$prop_herb_YminusM <- all.dat2$prop_herb_Young - all.dat2$prop_herb_Mature
+
+hist(all.dat2$prop_dw_YminusM)
+hist(all.dat2$prop_herb_YminusM)
+plot(prop_dw_YminusM ~ treat, data=all.dat2)
+plot(prop_herb_YminusM ~ treat, data=all.dat2)
+
+plot(prop_herb_Young ~ treat, data=all.dat2)
+plot(prop_herb_Mature ~ treat, data=all.dat2)
+
+
+m1 <- lm(prop_dw_YminusM ~ treat, data=all.dat2)
+summary(m1)
+anova(m1)
+
+m2 <- lm(prop_herb_YminusM ~ treat, data=all.dat2)
+summary(m2)
+anova(m2)
+
+
+all.dat %>%
+	ggplot(aes(stage,pdw, color=treat)) +
+	geom_point(aes(fill=treat),size=3) +
+	geom_line(aes(group = chamber))
+
+
+all.dat %>%
+	ggplot(aes(stage,percent_herbivory, color=treat)) +
+	geom_point(aes(fill=treat),size=3) +
+	geom_line(aes(group = chamber))
 
 
