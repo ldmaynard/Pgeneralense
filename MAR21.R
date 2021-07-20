@@ -514,9 +514,38 @@ hist(all.dat3$prop_gro)
 hist(all.dat3$pdw)
 
 
-m1<-betareg(prop_gro~pdw*treatment, dat=all.dat3)
+m1<-betareg(prop_gro~pdw*treatment, dat=all.dat3,na.action = "na.fail")
 shapiro.test(resid(m1)) #normal!!
 Anova(m1)  #significant interaction
+
+m1.add<-betareg(prop_gro~pdw+treatment, dat=all.dat3)
+m1.t<-betareg(prop_gro~treatment, dat=all.dat3)
+m1.c<-betareg(prop_gro~pdw, dat=all.dat3)
+m1.null<-betareg(prop_gro~1, dat=all.dat3)
+
+modcomp.grow<-aictab(cand.set=list(m1, m1.add, m1.t, m1.c, m1.null),
+					 modnames=c("interact", "add","treat", "chem", "null"), REML=F)#AIC table
+modcomp.grow
+#better model of fit = null model, next is chem with dAICc=2.41
+
+growd<-dredge(m1)
+grow.avg<-model.avg(growd, subset=delta<4)#null and chem models
+summary(grow.avg)#no sig
+
+q1<-emmip(m1,pairwise~treatment|pdw, type="response")
+q1
+
+
+
+m1.emm<-emmeans(m1, ~treatment*pdw)
+pairs(m1.emm, simple = "treatment")
+
+#joint_tests() function that obtains and tests the interaction contrasts 
+#for all effects in the model and compiles them in one Type-III-ANOVA-like table
+joint_tests(m1, by = "treatment")
+#significant effect of  pdw on growth in both co2 treatments
+
+
 
 library(dplyr)
 all.dat3 %>%
@@ -532,6 +561,20 @@ m2<-betareg(prop_herb~prop_gro*treatment, dat=all.dat3)
 shapiro.test(resid(m2)) #normal!!
 Anova(m2)  #significant interaction
 
+joint_tests(m2, by = "treatment")
+#sig effect of growth on herbivory in co2+temp treatment
+
+m2.add<-betareg(prop_herb~prop_gro+treatment, dat=all.dat3)
+m2.t<-betareg(prop_herb~treatment, dat=all.dat3)
+m2.g<-betareg(prop_herb~prop_gro, dat=all.dat3)
+m2.null<-betareg(prop_herb~1, dat=all.dat3)
+
+modcomp.herb<-aictab(cand.set=list(m2, m2.add, m2.t, m2.g, m2.null),
+					 modnames=c("interact", "add","treat", "grow", "null"), REML=F)#AIC table
+modcomp.herb
+#top model is growth, followed narrowly by null (.97) then add (5.12)
+
+
 all.dat3 %>%
 	ggplot(aes(x=prop_gro, 
 			   y=prop_herb, 
@@ -541,9 +584,27 @@ all.dat3 %>%
 
 
 
-m3<-betareg(prop_herb~pdw*treatment, dat=all.dat3)
+m3<-betareg(prop_herb~pdw*treatment, dat=all.dat3, na.action = "na.fail")
 shapiro.test(resid(m3)) #normal!!
 Anova(m3)  #significant interaction
+
+joint_tests(m3, by = "treatment")
+#sig effect of chemistry on herbivory in the additive cc treatment
+
+q2<-emmeans(m3,pairwise~treatment, type="response")
+
+m3.add<-betareg(prop_herb~pdw+treatment, dat=all.dat3)
+m3.t<-betareg(prop_herb~treatment, dat=all.dat3)
+m3.c<-betareg(prop_herb~pdw, dat=all.dat3)
+m3.null<-betareg(prop_herb~1, dat=all.dat3)
+
+modcomp.herb2<-aictab(cand.set=list(m3, m3.add, m3.t, m3.c, m3.null),
+					 modnames=c("interact", "add","treat", "chem", "null"), REML=F)#AIC table
+modcomp.herb2
+
+herb2d<-dredge(m3)
+herb2.avg<-model.avg(herb2d, subset=delta<4)#null and chem models
+summary(herb2.avg)#no sig
 
 all.dat3 %>%
 	ggplot(aes(x=pdw, 
@@ -552,6 +613,29 @@ all.dat3 %>%
 	geom_point()+
 	geom_smooth(method="lm")
 
+all.dat3 %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+
+all.dat3 %>%
+	ggplot(aes(x=treatment, 
+			   y=prop_herb))+
+	geom_boxplot()+
+	geom_point()
+
+m4<-betareg(prop_herb_Mature1~prop_dw_Mature*treat, dat=all.dat2, na.action = "na.fail")
+shapiro.test(resid(m4)) #normal!!
+Anova(m4)  #no sig
+
+m5<-betareg(prop_herb_Young1~prop_dw_Young*treat, dat=all.dat2, na.action = "na.fail")
+#won't run
+
+m6<-betareg(prop_herb_Young1~prop_dw_Young+treat, dat=all.dat2, na.action = "na.fail")
+shapiro.test(resid(m6)) #normal!!
+Anova(m6)  #no sig
 
 ###Okay, so there are some interesting interactions going on here...
 #In CO2+temp treatment, the plants that are doing the best in terms of 
@@ -585,20 +669,21 @@ all.dat2$prop_herb_YminusM <- all.dat2$prop_herb_Young - all.dat2$prop_herb_Matu
 
 hist(all.dat2$prop_dw_YminusM)
 hist(all.dat2$prop_herb_YminusM)
-plot(prop_dw_YminusM ~ treat, data=all.dat2)
+plot(prop_dw ~ treat, data=all.dat3)
 plot(prop_herb_YminusM ~ treat, data=all.dat2)
 
 plot(prop_herb_Young ~ treat, data=all.dat2)
 plot(prop_herb_Mature ~ treat, data=all.dat2)
 
+plot(prop_herb~treatment, data=all.dat3)
 
-m1 <- lm(prop_dw_YminusM ~ treat, data=all.dat2)
-summary(m1)
-anova(m1)
+m1z <- lm(prop_dw_YminusM ~ treat, data=all.dat2)
+summary(m1z)
+anova(m1z)
 
-m2 <- lm(prop_herb_YminusM ~ treat, data=all.dat2)
-summary(m2)
-anova(m2)
+m2z <- lm(prop_herb_YminusM ~ treat, data=all.dat2)
+summary(m2z)
+anova(m2)z
 
 
 all.dat %>%
@@ -611,5 +696,61 @@ all.dat %>%
 	ggplot(aes(stage,percent_herbivory, color=treat)) +
 	geom_point(aes(fill=treat),size=3) +
 	geom_line(aes(group = chamber))
+
+
+#re-ordering factor levels so lm will compare everything to control
+all.dat3$treatment <- factor(all.dat3$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+
+#Phenolics
+summary(betareg(prop_dw~treatment, data = all.dat3))
+Anova(betareg(prop_dw~treatment, data = all.dat3))
+#No effect of treatment on leaf chemistry 
+
+summary(betareg(prop_dw~treat*stage, data = all.dat))
+Anova(betareg(prop_dw~treat*stage, data = all.dat))
+#significant effect of leaf age, no effected by climate change
+
+summary(betareg(prop_dw_Mature~treat, data = all.dat2))
+Anova(betareg(prop_dw_Mature~treat, data = all.dat2))
+#No effect of treatment on mature leaf chemistry 
+
+summary(betareg(prop_dw_Young~treat, data = all.dat2))
+Anova(betareg(prop_dw_Young~treat, data = all.dat2))
+#No effect of treatment on mature young chemistry 
+
+#Growth
+summary(betareg(prop_gro~treatment, data = all.dat3))
+Anova(betareg(prop_gro~treatment, data = all.dat3))
+
+#Herbivory
+summary(betareg(prop_herb~treatment, data = all.dat3))
+Anova(betareg(prop_herb~treatment, data = all.dat3))
+
+summary(betareg(prop_herb_Young1~treat, data = all.dat2))
+Anova(betareg(prop_herb_Young1~treat, data = all.dat2))
+#No effect of treatment on young leaf herbivory
+
+summary(betareg(prop_herb_Mature~treat, data = all.dat2))
+Anova(betareg(prop_herb_Mature~treat, data = all.dat2))
+#No effect of treatment on mature leaf herbivory
+
+#Growth+defense
+summary(betareg(prop_gro~treatment+pdw, data = all.dat3))
+Anova((betareg(prop_gro~treatment+pdw, data = all.dat3)))
+
+#Growth*defense
+summary(betareg(prop_gro~treatment*pdw, data = all.dat3))
+Anova((betareg(prop_gro~treatment*pdw, data = all.dat3)))
+#sig interaction
+
+#Herbivory+defense
+summary(betareg(prop_herb~treatment+pdw, data = all.dat3))
+Anova((betareg(prop_herb~treatment+pdw, data = all.dat3)))
+
+#Herbivory*defense
+summary(betareg(prop_herb~treatment*pdw, data = all.dat3))
+Anova((betareg(prop_herb~treatment*pdw, data = all.dat3)))
+#sig interaction
+
 
 
