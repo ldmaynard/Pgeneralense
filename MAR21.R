@@ -752,5 +752,15 @@ summary(betareg(prop_herb~treatment*pdw, data = all.dat3))
 Anova((betareg(prop_herb~treatment*pdw, data = all.dat3)))
 #sig interaction
 
+all.dat$prop_herb1<-all.dat$prop_herb + 0.00001
+#Herbivory*defense, all data
+summary(betareg(prop_herb1~treat*pdw, data = all.dat))
+Anova((betareg(prop_herb1~treat*pdw, data = all.dat)))
+#sig interaction
 
-
+all.dat %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1,
+			   color=treat))+
+	geom_point()+
+	geom_smooth(method="lm")
