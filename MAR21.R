@@ -184,6 +184,7 @@ vif(check1)
 
 #GROWTH
 #all.dat, N=20, only one measurement per plant/per chamber
+all.dat3$treatment <- factor(all.dat3$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 Anova(betareg(prop_gro~treatment, dat=all.dat3))
 #p=0.82, no effect of treatment
 
@@ -195,6 +196,7 @@ plot(all.dat3$prop_gro~all.dat3$treatment)
 
 #CHEMISTRY
 #all.dat, N=40, leaves of same stage on each plant were combined for chem analysis
+all.dat$treat <- factor(all.dat$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
 Anova(betareg(prop_dw~treat, dat=all.dat))
 #p=0.76, no effect of treatment
 
@@ -206,7 +208,7 @@ plot(all.dat$prop_dw~all.dat$treat)
 
 #HERBIVORY
 #pg1 data, N=80, all herbivory data
-
+pg1$treatment <- factor(pg1$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 pg1$treatment<-as.factor(pg1$treatment)
 #adding small number to avoid error (must be between 0,1)
 pg1$prop_herb1<-pg1$prop_herb+0.0001
@@ -242,6 +244,7 @@ Anova(betareg(prop_dw~stage*treat, dat=all.dat))
 #stage signficant p<0.0001
 shapiro.test(resid(betareg(prop_dw~stage*treat, dat=all.dat)))#normal
 
+#plot
 all.dat %>%
 	ggplot(aes(stage,pdw, color=treat)) +
 	geom_point(aes(fill=treat),size=3) +
@@ -255,8 +258,7 @@ all.dat %>%
 #Option uno
 #N=20, all leaves in each chamber are combined
 Anova((betareg(prop_gro~treatment*pdw, data = all.dat3)))
-#interaction significant p=0.02
-#treatment and chemistry alone are not
+#interaction significant p=0.02; treatment and chemistry alone are not
 shapiro.test(resid(betareg(prop_gro~treatment*pdw, data = all.dat3)))
 #normal
 
@@ -288,7 +290,7 @@ shapiro.test(resid(betareg(growth~treat*prop_dw_Young, data = all.dat2)))#normal
 
 joint_tests((betareg(growth~treat*prop_dw_Young, data = all.dat2)), by = "treat")
 #significant effect of phenolics on growth in both temperature treatments
-#odd based on the plot....
+#defense decreased faster as growth increased in temp treatments
 
 #Growth*defense plot, young leaves
 all.dat2 %>%
@@ -334,14 +336,22 @@ all.dat3 %>%
 Anova((betareg(prop_herb1~treat*pdw, data = all.dat)))
 #only chemistry signficant, p<0.0001
 #this doesn't account/control for leaf age
+#Chem plot
+all.dat %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1))+
+	geom_point()+
+	geom_smooth(method = 'lm')
 
 #Option 3, split leave ages
 #Young leaves
+all.dat2$prop_herb_Young1<-all.dat2$prop_herb_Young+0.0001
 Anova((betareg(prop_herb_Young1~treat*prop_dw_Young, data = all.dat2)))
 #nothing signif
 shapiro.test(resid(betareg(prop_herb_Young1~treat*prop_dw_Young, data = all.dat2)))#normal
 
 #Mature leaves
+all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.0001
 Anova((betareg(prop_herb_Mature1~treat*prop_dw_Mature, data = all.dat2)))
 #chemistry marginally signif
 shapiro.test(resid(betareg(prop_herb_Mature1~treat*prop_dw_Mature, data = all.dat2)))#normal
@@ -354,14 +364,6 @@ all.dat2 %>%
 	geom_point()+
 	geom_smooth(method="lm")
 #purple line marginally signficant
-
-#Plot, young leaves defense-herbivory
-all.dat2 %>%
-	ggplot(aes(x=prop_dw_Young, 
-			   y=prop_herb_Young1,
-			   color=treat))+
-	geom_point()+
-	geom_smooth(method="lm")
 
 ##OLD ANALYSES/BRAIN DUMPS----
 
