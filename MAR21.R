@@ -21,7 +21,11 @@ library(ggsignif)
 
 #load growth data
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
+table(grow$Treatment)   #SRW: Why are there 6 T chambers and 4 T+CO2???
 colnames(grow)[1] <- "Casa"
+
+grow$Treatment[which(grow$Treatment=="TÂ°C")] <- "T°C"
+grow$Treatment[which(grow$Treatment=="TÂ°C + CO2")] <- "T°C + CO2"
 
 grow$total_gro <- grow$ht.2018.09.cm-grow$ht.2018.04.cm
 grow$rel_gro<-grow$total_gro/grow$ht.2018.04.cm
@@ -36,6 +40,7 @@ hist(grow$total_gro)
 shapiro.test(grow$total_gro)#LM: but so is this one. Both yield the same results, no treatment effect
 
 #re-ordering factor levels so lm will compare everything to control
+grow$Treatment[]
 grow$Treatment <- factor(grow$Treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
 
@@ -100,6 +105,8 @@ phen_ag2$treat <- factor(phen_ag2$treat, levels=c("control_chamber", "CO2", "TC"
 
 #load herbivory data
 pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
+pg$treatment[which(pg$treatment=="TÂ°C")] <- "T°C"
+pg$treatment[which(pg$treatment=="TÂ°C + CO2")] <- "T°C + CO2"
 
 #creating col for proportion herbivory
 pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
@@ -159,14 +166,14 @@ grow <- grow[order(grow$Casa),]
 herb_gro1 <- cbind(herb_20, prop_gro = grow$rel_gro) 
 all.dat3 <-cbind(herb_gro1, pdw = phen_ag20$pdw)
 all.dat3$prop_dw<-all.dat3$pdw/100 #proportion phenolics
-
 all.dat3$treatment<-as.factor(all.dat3$treatment)
+
 
 #---
 
 ##CHECKING FOR COLINEARITY----
 samp1<-all.dat[,-c(1:8)]#cat vars
-samp1<-samp1[,-4]#remove second herb var
+samp1<-samp1[,-4]#remove second herb var   #SRW: getting an error here, there is no col 4
 
 L1 <- cor(samp1)#correlation matrix
 corrplot(L1, method = "circle")
@@ -184,9 +191,11 @@ vif(check1)
 
 #GROWTH
 #all.dat, N=20, only one measurement per plant/per chamber
-all.dat3$treatment <- factor(all.dat3$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+
+#levels(all.dat3$treatment) <- factor(all.dat3$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2"))
+
 Anova(betareg(prop_gro~treatment, dat=all.dat3))
-#p=0.82, no effect of treatment
+#p=0.82, no effect of treatment  
 
 shapiro.test(resid(betareg(prop_gro~treatment, dat=all.dat3)))
 #residuals normally distributed
@@ -206,9 +215,29 @@ shapiro.test(resid(betareg(prop_dw~treat, dat=all.dat)))
 #chemistry plot
 plot(all.dat$prop_dw~all.dat$treat)
 
+
+#SRW: another approach for these initial analyses--don't aggregate any given
+#dataset, i.e. use all the phenolics samples you have
+#one issue is that you can't use the random effects in the betareg, so this would 
+#have to be with GLMM. I also have the feeling that age should always be in the models
+#since we know it has such a huge effect on everything
+
+hist(phen$pdw)
+
+#there is one outlier here, which I would remove--I feel something
+#definitely went wrong with that one...prob should remove from aggregate values also
+d.temp <- phen[which(phen$pdw>0),]
+hist(d.temp$pdw)
+
+m1 <- lmer(pdw ~ treat + stage + (1|chamber), data=d.temp)
+summary(m1)
+drop1(m1, test="Chisq")
+boxplot(pdw ~ treat, data=d.temp)
+
+
 #HERBIVORY
 #pg1 data, N=80, all herbivory data
-pg1$treatment <- factor(pg1$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+#pg1$treatment <- factor(pg1$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 pg1$treatment<-as.factor(pg1$treatment)
 #adding small number to avoid error (must be between 0,1)
 pg1$prop_herb1<-pg1$prop_herb+0.0001
@@ -237,6 +266,40 @@ shapiro.test(resid(betareg(prop_herb1~treatment, dat=all.dat3)))
 #herbivory plot N=20
 plot(all.dat3$prop_herb1~all.dat3$treat)
 
+
+#SRW: I like using all the data, but it really bugs me that we can't use a random
+#effect with the betareg because without it the data are pseudoreplicated
+
+hist(pg1$percent_herbivory)
+
+#another option with this distribution via lmer could be a hurdle model, where we 
+#first assess whether leaves had herbivory or not 0/1 with a binomial model, then do 
+#another model just for those that received herbivory
+
+pg1$herb_pa <- ifelse(pg1$percent_herbivory==0, 0, 1)
+
+m1  <- glmer(herb_pa ~ treatment + age+ (1|chamber), data=pg1, family=binomial)
+#singular fit error
+drop1(m1, test="Chisq") #but no effect
+
+d.temp <- pg1[which(pg1$herb_pa==1),]
+hist(d.temp$percent_herbivory)  #still very not normal...would have to transform for lmer
+d.temp$ph_tr <- asin(sqrt(d.temp$prop_herb))
+hist(d.temp$ph_tr) #better
+d.temp$ph_tr2 <- logit(d.temp$prop_herb)
+hist(d.temp$ph_tr2) #much better
+
+m1 <- lmer(ph_tr2 ~ treatment + age + (1|chamber), data=d.temp)
+summary(m1)
+drop1(m1, test="Chisq") #no effect
+
+#So none of these things change the outcome, but I guess the question is which
+#statistical approach do we like better...
+#1) betareg with all data, ignoring the random effect
+#2) betareg with aggregate data (throws out a lot of info)
+#3) GLMMs with all data, random effects, and transforms
+
+
 ##QUESTION 2A----
 
 #N=40, only data choice for this analysis
@@ -245,10 +308,12 @@ Anova(betareg(prop_dw~stage*treat, dat=all.dat))
 shapiro.test(resid(betareg(prop_dw~stage*treat, dat=all.dat)))#normal
 
 #plot
+library(dplyr)
 all.dat %>%
 	ggplot(aes(stage,pdw, color=treat)) +
 	geom_point(aes(fill=treat),size=3) +
 	geom_line(aes(group = chamber))
+
 
 ##QUESTION 2B----
 #Growth-defense trade-off
@@ -264,6 +329,7 @@ shapiro.test(resid(betareg(prop_gro~treatment*pdw, data = all.dat3)))
 
 #joint_tests() function that obtains and tests the interaction contrasts 
 #for all effects in the model and compiles them in one Type-III-ANOVA-like table
+library (emmeans)
 joint_tests((betareg(prop_gro~treatment*pdw, data = all.dat3)), by = "treatment")
 #significant effect of  pdw on growth in both temperature treatments
 
