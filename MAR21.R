@@ -32,7 +32,7 @@ grow$rel_gro<-grow$total_gro/grow$ht.2018.04.cm
 grow$per_gro<-grow$rel_gro*100
 
 grow <- grow[order(grow$Treatment),]
-grow<-grow[-c(11:15),]#removing control (no chamber)
+grow<-grow[-c(11:15),] #removing control (no chamber)
 
 hist(grow$rel_gro)  #SW: not normal, this is a typical proportion
 shapiro.test(grow$rel_gro)#LM: it is technically normal
@@ -195,13 +195,32 @@ vif(check1)
 #levels(all.dat3$treatment) <- factor(all.dat3$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2"))
 
 Anova(betareg(prop_gro~treatment, dat=all.dat3))
-#p=0.82, no effect of treatment  
+#p=0.82, no effect of treatment 
+
 
 shapiro.test(resid(betareg(prop_gro~treatment, dat=all.dat3)))
 #residuals normally distributed
 
 #growth plot
 plot(all.dat3$prop_gro~all.dat3$treatment)
+
+
+##SRW: To send to Maaike, it might be good to also include some alternative plots/analyses with the natural 
+#control as well. I did a quick check on this just not running that line above (L35) and using this code
+
+grow$prop_gro <- grow$per_gro/100
+Anova(betareg(prop_gro~Treatment, dat=grow))
+#p=0.54, no effect of treatment 
+
+
+shapiro.test(resid(betareg(prop_gro~Treatment, dat=grow)))
+#residuals normally distributed
+
+#growth plot
+boxplot(grow$prop_gro~grow$Treatment)
+
+
+
 
 #CHEMISTRY
 #all.dat, N=40, leaves of same stage on each plant were combined for chem analysis
@@ -216,23 +235,45 @@ shapiro.test(resid(betareg(prop_dw~treat, dat=all.dat)))
 plot(all.dat$prop_dw~all.dat$treat)
 
 
-#SRW: another approach for these initial analyses--don't aggregate any given
-#dataset, i.e. use all the phenolics samples you have
-#one issue is that you can't use the random effects in the betareg, so this would 
-#have to be with GLMM. I also have the feeling that age should always be in the models
+#SRW: another approach for these initial Q1 analyses--don't aggregate any given
+#dataset, i.e. use all the phenolics samples you have when that is the response
+#I think we discussed this and a major issue was that you can't use the random effects in the betareg. 
+#However, I was just looking at this very helpful paper
+#Douma and Weedon 2019: https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.13234
+#they give some examples of beta regression with random effects using the package glmmTMB
+
+#I also have the feeling that age should always be in the models
 #since we know it has such a huge effect on everything
+
+#Playing around with these things below...
 
 hist(phen$pdw)
 
 #there is one outlier here, which I would remove--I feel something
 #definitely went wrong with that one...prob should remove from aggregate values also
 d.temp <- phen[which(phen$pdw>0),]
-hist(d.temp$pdw)
+hist(d.temp$pdw)  #also this is beautifully normal, so we I don't think we need betareg anyway
 
+
+library(glmmTMB)
+
+d.temp$prop_dw <- d.temp$pdw/100
+
+m1 <- glmmTMB(prop_dw ~ treat + stage + (1|chamber), data = d.temp, family = list(family = "beta", link = "logit"))
+#I am getting some warnings here about the way family is specified, but it is running
+
+summary(m1)
+drop1(m1, test="Chisq")
+
+
+#Also could try with lmer, since the data are so normal
 m1 <- lmer(pdw ~ treat + stage + (1|chamber), data=d.temp)
 summary(m1)
 drop1(m1, test="Chisq")
 boxplot(pdw ~ treat, data=d.temp)
+
+
+
 
 
 #HERBIVORY
@@ -241,6 +282,19 @@ boxplot(pdw ~ treat, data=d.temp)
 pg1$treatment<-as.factor(pg1$treatment)
 #adding small number to avoid error (must be between 0,1)
 pg1$prop_herb1<-pg1$prop_herb+0.0001
+
+#note in the paper I mention above, they suggest rescaling the dataset instead of just adding a constant
+#From the paper, Appendix S3-------------------
+#A suggested rescaling equation is:
+#	x∗i=xi(n−1)+0.5n
+#Where x∗i is the transformation of xi and n is the total number of observations in the dataset.
+#For convenience we define this as a custom function tranform01 and apply it to the dataset:
+#	transform01 <- function(x) {
+#		(x * (length(x) - 1) + 0.5) / (length(x))
+#	}
+#andrew2$ALGAE.scaled <- transform01(andrew2$ALGAE.mean)
+
+#I did not mess with this...
 
 Anova(betareg(prop_herb1~treatment, dat=pg1))#p=0.6813, no effect of treatment
 shapiro.test(resid(betareg(prop_herb1~treatment, dat=pg1)))
@@ -268,19 +322,22 @@ plot(all.dat3$prop_herb1~all.dat3$treat)
 
 
 #SRW: I like using all the data, but it really bugs me that we can't use a random
-#effect with the betareg because without it the data are pseudoreplicated
+#effect with the betareg because without it the data are pseudoreplicated. Maybe we could try running this with
+#the glmmTMB package??
+
+#another option with this distribution could be a hurdle model, where we 
+#first assess whether leaves had herbivory or not 0/1 with a binomial model, then do 
+#another model just for those that received herbivory. I think that could work with lmer or with glmmTMB
+#I started this below with lmer, but later found the glmmTMB and I have not tried that
 
 hist(pg1$percent_herbivory)
-
-#another option with this distribution via lmer could be a hurdle model, where we 
-#first assess whether leaves had herbivory or not 0/1 with a binomial model, then do 
-#another model just for those that received herbivory
-
 pg1$herb_pa <- ifelse(pg1$percent_herbivory==0, 0, 1)
 
-m1  <- glmer(herb_pa ~ treatment + age+ (1|chamber), data=pg1, family=binomial)
+m1  <- glmer(herb_pa ~ treatment * age + (1|chamber), data=pg1, family=binomial)
+m2  <- glmer(herb_pa ~ treatment + age + (1|chamber), data=pg1, family=binomial)
 #singular fit error
 drop1(m1, test="Chisq") #but no effect
+drop1(m2, test="Chisq")
 
 d.temp <- pg1[which(pg1$herb_pa==1),]
 hist(d.temp$percent_herbivory)  #still very not normal...would have to transform for lmer
@@ -289,15 +346,18 @@ hist(d.temp$ph_tr) #better
 d.temp$ph_tr2 <- logit(d.temp$prop_herb)
 hist(d.temp$ph_tr2) #much better
 
-m1 <- lmer(ph_tr2 ~ treatment + age + (1|chamber), data=d.temp)
+m1 <- lmer(ph_tr2 ~ treatment * age + (1|chamber), data=d.temp)
+m2 <- lmer(ph_tr2 ~ treatment + age + (1|chamber), data=d.temp)
 summary(m1)
 drop1(m1, test="Chisq") #no effect
+drop1(m2, test="Chisq") #no effect
 
-#So none of these things change the outcome, but I guess the question is which
-#statistical approach do we like better...
-#1) betareg with all data, ignoring the random effect
-#2) betareg with aggregate data (throws out a lot of info)
-#3) GLMMs with all data, random effects, and transforms
+#Honestly I don't think any of these things will change the outcome, but I still think dialing in the 
+#statistical approach for proportions would be good for this paper. It seems to keep coming
+#up in our lives!
+
+
+
 
 
 ##QUESTION 2A----
@@ -313,6 +373,14 @@ all.dat %>%
 	ggplot(aes(stage,pdw, color=treat)) +
 	geom_point(aes(fill=treat),size=3) +
 	geom_line(aes(group = chamber))
+
+
+#SRW: see above, would be great to do this with the random effect included.
+#also the chem data are so normal, could also do this with lmer
+hist(all.dat$prop_dw)
+Anova(lmer(pdw~stage*treat + (1|chamber), dat=all.dat))
+#not that it matters, I just hate ignoring the random effects
+
 
 
 ##QUESTION 2B----
@@ -366,8 +434,27 @@ all.dat2 %>%
 	geom_point()+
 	geom_smooth(method="lm")
 
+
+##SRW: I guess I like the opcion uno better for this one?? But we could say it is mostly driven by the 
+#young leaves and could even show those separately in a supplement. 
+#I am still struggling with how to interpret this though...basically when you have increased temp, 
+#plants that do better just do better in terms of everything...growth and phenolics, but there is no "trade-off"
+#i.e. a negative relationship for any of the plants or treatments.
+#Maybe this just has to do with physiological differences across individuals in heat tolerance?? Where those
+#that are tolerant of higher temps just do better generally
+
+#I would also be curious to see the data for the no chamber control here...though it would probably just make things
+#more confusing
+
+
+
+
+
 ##QUESTION 2C----
 #Defense-herbivory tradeoff
+
+#SRW: I guess we would not really think of this as a "trade-off" but as  relative change in the effectiveness
+#of defense
 
 #Option uno, N=20
 Anova((betareg(prop_herb~treatment*pdw, data = all.dat3)))
@@ -406,8 +493,14 @@ Anova((betareg(prop_herb1~treat*pdw, data = all.dat)))
 all.dat %>%
 	ggplot(aes(x=pdw, 
 			   y=prop_herb1))+
-	geom_point()+
+	geom_point(aes(color=stage))+
 	geom_smooth(method = 'lm')
+
+
+#SRW: I think we need to account for leaf age in whatever we do, so this one doesn't really work. The pattern
+#here could just be driven by age (old leaves have lower pdw and also higher herbivory)--I added color to the
+#graph above to see this and it does seem to be the case
+
 
 #Option 3, split leave ages
 #Young leaves
@@ -430,6 +523,16 @@ all.dat2 %>%
 	geom_point()+
 	geom_smooth(method="lm")
 #purple line marginally signficant
+
+
+
+#SRW: Not sure what to make of this--we would basically have to conclude that phenolics are effective as a defense 
+#against herbivores only in a climate change scenario with T+CO2??? This does not really make sense to me and I am 
+#struggling because I think there are just not enough data to really conclude much...only 4 points for the 
+#T+CO2 treatment where we see that negative relationship
+
+
+
 
 ##OLD ANALYSES/BRAIN DUMPS----
 
