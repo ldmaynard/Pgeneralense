@@ -2,7 +2,7 @@
 #on plant growth, defense, and herbivory.
 
 #LOADING LIBRARIES----------------------------------------------------
-library(lme4)
+{library(lme4)
 library(ggplot2)
 library(car)
 library(multcomp)
@@ -14,6 +14,7 @@ library(car)
 library(corrplot)
 library(viridis)
 library(ggsignif)
+}
 
 #LOADING & WRANGLING DATA----------------------------------------------------
 
@@ -259,11 +260,13 @@ library(glmmTMB)
 
 d.temp$prop_dw <- d.temp$pdw/100
 
-m1 <- glmmTMB(prop_dw ~ treat + stage + (1|chamber), data = d.temp, family = list(family = "beta", link = "logit"))
+m1 <- glmmTMB(prop_dw ~ treat + stage + (1|chamber), data = d.temp, family = "beta_family")
 #I am getting some warnings here about the way family is specified, but it is running
 
 summary(m1)
 drop1(m1, test="Chisq")
+library(car)
+Anova(m1)
 
 
 #Also could try with lmer, since the data are so normal
