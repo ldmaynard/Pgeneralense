@@ -6,7 +6,7 @@
 library(ggplot2)
 library(car)
 library(multcomp)
-library(plyr)
+library(dplyr)
 library(AICcmodavg)
 library(betareg)
 library(MuMIn)
@@ -14,7 +14,10 @@ library(car)
 library(corrplot)
 library(viridis)
 library(ggsignif)
-}
+library(emmeans)
+library(multcomp)
+library(plyr)
+	}
 
 #LOADING & WRANGLING DATA----------------------------------------------------
 
@@ -30,8 +33,8 @@ table(grow$Treatment)
 colnames(grow)[1] <- "chamber"
 
 grow$total_gro <- grow$ht.2018.09.cm-grow$ht.2018.04.cm
-grow$rel_gro<-grow$total_gro/grow$ht.2018.04.cm
-grow$per_gro<-grow$rel_gro*100
+grow$prop_gro<-grow$total_gro/grow$ht.2018.04.cm
+grow$per_gro<-grow$prop_gro*100
 
 #creating dataset with all treatments
 grow.all<-grow
@@ -40,8 +43,8 @@ grow.all<-grow
 grow <- grow[order(grow$Treatment),]
 grow<-grow[-c(11:15),] #removing control (no chamber)
 
-hist(grow$rel_gro) 
-shapiro.test(grow$rel_gro)#normal
+hist(grow$prop_gro) 
+shapiro.test(grow$prop_gro)#normal
 hist(grow$total_gro)
 shapiro.test(grow$total_gro)#so is this one. Both yield the same results
 
@@ -83,7 +86,8 @@ phen$start_wt<-as.numeric(phen$start_wt)
 
 #create column for absolute value/%dw
 #ab_val/0.2mL (vol in well) = y/1.1mL (total volume in tube)
-phen$pdw<-(((phen$ab_val_mg/0.2)*1.1)/(phen$start_wt))*100
+phen$per_dw<-(((phen$ab_val_mg/0.2)*1.1)/(phen$start_wt))*100
+phen$pdw<-(phen$per_dw)/100
 
 #create new col for concentration
 phen$concen<-(phen$abs_avg-0.056570)/0.702271
@@ -146,7 +150,7 @@ all.dat100<-merge(all.dat100, grow.all, by="chamber", all=T)
 #cleaning up, selecting columns
 all.dat100<-select(all.dat100, chamber, stage, pdw, treatment, sample, ID, total.area.cm2,
 				   real.area.cm2, percent_herbivory, prop_herb, ht.2018.04.cm, ht.2018.09.cm,
-				   total_gro, rel_gro)
+				   total_gro, prop_gro)
 
 #all treatment data, aggregated by leaf age, n=50
 ##adding prop dry weight column to herbivory data
@@ -156,14 +160,14 @@ colnames(all.dat50)[4] <- "chamber"
 all.dat50<-merge(all.dat50, grow.all, by="chamber", all=T)
 #cleaning up, selecting columns
 all.dat50<-select(all.dat50, chamber, stage, pdw, treatment, sample, 
-				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, rel_gro)
+				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, prop_gro)
 
 #all treatment data, aggregated by chamber, n=25
 all.dat25<-merge(grow.all, herb.25,by="chamber", all = T)
 all.dat25<-merge(all.dat25, phen.25,by="chamber", all = T)
 #cleaning up, selecting columns
 all.dat25<-select(all.dat25, chamber, pdw, treatment, 
-				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, rel_gro)
+				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, prop_gro)
 
 #four treatment data, not aggregated, n=80
 all.dat80<-merge(herb.80, phen.40, by="sample", all = T)
@@ -173,7 +177,7 @@ all.dat80<-merge(all.dat80, grow, by="chamber", all=T)
 #cleaning up, selecting columns
 all.dat80<-select(all.dat80, chamber, stage, pdw, treatment, sample, ID, total.area.cm2,
 				   real.area.cm2, percent_herbivory, prop_herb, ht.2018.04.cm, ht.2018.09.cm,
-				   total_gro, rel_gro)
+				   total_gro, prop_gro)
 
 #four treatment data, aggregated by leaf age, n=40
 all.dat40<-merge(herb.40, phen.40, by="sample", all = T)
@@ -182,14 +186,14 @@ colnames(all.dat40)[2] <- "chamber"
 all.dat40<-merge(all.dat40, grow, by="chamber", all=T)
 #cleaning up, selecting columns
 all.dat40<-select(all.dat40, chamber, stage, pdw, treatment, sample, prop_herb, ht.2018.04.cm, 
-				  ht.2018.09.cm, total_gro, rel_gro)
+				  ht.2018.09.cm, total_gro, prop_gro)
 
 #four treatment data, aggregated by chamber, n=20
 all.dat20<-merge(herb.20, phen.20, by="chamber", all = T)
 all.dat20<-merge(all.dat20, grow, by="chamber", all=T)
 #cleaning up, selecting columns
 all.dat20<-select(all.dat20, chamber, pdw, treatment, 
-				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, rel_gro)
+				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, prop_gro)
 
 #for four treatment data, re-ordering factor levels so model will compare everything to control chamber
 all.dat80$treatment<-as.factor(all.dat80$treatment)
@@ -204,73 +208,320 @@ all.dat20$treatment<-as.factor(all.dat20$treatment)
 levels(all.dat20$treatment)
 all.dat20$treat <- factor(all.dat20$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
-
 #---
 
 ##CHECKING FOR COLINEARITY----
-samp1<-all.dat100[,-c(1:8)]#cat vars
-samp1<-samp1[,-4]#remove second herb var   #SRW: getting an error here, there is no col 4
+samp1<-all.dat100[,-c(1,2,4:9,11:13)]#cat vars
 
 L1 <- cor(samp1)#correlation matrix
 corrplot(L1, method = "circle")
 corrplot(L1, method = "number")
 #low colinearity
 
-check1 <- lm(prop_gro ~ prop_herb+prop_dw+stage+treat, data=all.dat)
+check1 <- lm(prop_gro ~ prop_herb+pdw+stage+treatment, data=all.dat100)
 summary(check1)
 vif(check1)
-
 
 
 ##JULY ANALYSIS----
 ##QUESTION 1----
 
 #GROWTH
-#all.dat, N=20, only one measurement per plant/per chamber
+#all treatments, n=25
+mod.gro1<-(betareg(prop_gro~treatment, dat=all.dat25))
+Anova(mod.gro1)
+#p=0.5431, no effect of treatment on growth, no effect of chamber
+shapiro.test(resid(mod.gro1)) #residuals  normally distributed
 
-#levels(all.dat3$treatment) <- factor(all.dat3$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2"))
+#growth plot, n=25
+ggplot(data=all.dat25, aes(x=treatment, y=prop_gro))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
 
-Anova(betareg(prop_gro~treatment, dat=all.dat3))
+#four treatment data
+mod.gro2<-(betareg(prop_gro~treatment, dat=all.dat20))
+Anova(mod.gro2)
 #p=0.82, no effect of treatment 
+shapiro.test(resid(mod.gro2)) #residuals  normally distributed
 
-
-shapiro.test(resid(betareg(prop_gro~treatment, dat=all.dat3)))
-#residuals normally distributed
-
-#growth plot
-plot(all.dat3$prop_gro~all.dat3$treatment)
-
-
-##SRW: To send to Maaike, it might be good to also include some alternative plots/analyses with the natural 
-#control as well. I did a quick check on this just not running that line above (L35) and using this code
-
-grow$prop_gro <- grow$per_gro/100
-Anova(betareg(prop_gro~Treatment, dat=grow))
-#p=0.54, no effect of treatment 
-
-
-shapiro.test(resid(betareg(prop_gro~Treatment, dat=grow)))
-#residuals normally distributed
-
-#growth plot
-boxplot(grow$prop_gro~grow$Treatment)
-
-
-
+#growth plot, n=20
+ggplot(data=all.dat20, aes(x=treatment, y=prop_gro))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
 
 #CHEMISTRY
-#all.dat, N=40, leaves of same stage on each plant were combined for chem analysis
-all.dat$treat <- factor(all.dat$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
-Anova(betareg(prop_dw~treat, dat=all.dat))
-#p=0.76, no effect of treatment
+library(glmmTMB)
 
-shapiro.test(resid(betareg(prop_dw~treat, dat=all.dat)))
-#residuals normally distributed
+#all treatments, n=50
+chem.mod1 <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat50, family = "beta_family")
+summary(chem.mod1)
+Anova(chem.mod1)
+#treatment p=0.54
+drop1(chem.mod1, test="Chisq")
+#treatment p=0.57
 
-#chemistry plot
-plot(all.dat$prop_dw~all.dat$treat)
+#chemistry plot, n=50
+ggplot(data=all.dat50, aes(x=treatment, y=pdw))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
+
+#four treatments, n=40
+chem.mod2 <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40, family = "beta_family")
+summary(chem.mod2)
+Anova(chem.mod2)
+#treatment p=0.76
+drop1(chem.mod2, test="Chisq")
+#treatment p=0.77
+
+#chemistry plot, n=40
+ggplot(data=all.dat40, aes(x=treatment, y=pdw))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
 
 
+
+#HERBIVORY
+
+all.dat100$prop_herb1<-all.dat100$prop_herb+0.0001
+all.dat80$prop_herb1<-all.dat80$prop_herb+0.0001
+
+#all treatments, n=100
+herb.mod1 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat100, family = "beta_family")
+summary(herb.mod1)
+Anova(herb.mod1)
+#treatment p=0.62
+drop1(herb.mod1, test="Chisq")
+#treatment p=0.61
+
+#herbivory plot, n=50
+ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
+
+#four treatments, n=80
+herb.mod2 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80, family = "beta_family")
+summary(herb.mod2)
+Anova(herb.mod2)
+#treatment p=0.68
+drop1(herb.mod2, test="Chisq")
+#treatment p=0.68
+#kind of strange the temp+co2 treatment isn't coming out significant
+
+#herbivory plot, n=80
+ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
+
+
+##QUESTION 2A----
+
+#Data not including natural control, n=40
+chem.mod2a <- glmmTMB(pdw ~ treatment + stage + (1|chamber), data = all.dat40, family = "beta_family")
+summary(chem.mod2a)
+#stage p<0.00001
+Anova(chem.mod2a)
+#stage p<0.00001, treatment p=0.71
+drop1(chem.mod2a, test="Chisq")
+#stage p<0.00001, treatment p=0.72
+
+#PHENOLICS SUMMARY STATS
+phen.tab <- ddply(all.dat40, c("stage"), summarise,
+				  N    = length(pdw),
+				  mean = mean(pdw),
+				  sd   = sd(pdw),
+				  se   = sd / sqrt(N))
+phen.tab
+
+#young leaf avg pdw/old leaf avg pdw-old leaf avg pdw
+(0.06859805-0.04970515)/0.04970515
+#0.380099
+#Young leaves had an average of 38% times more total phenolics than mature leaves
+
+#plot
+all.dat40 %>%
+	ggplot(aes(stage,pdw, color=treatment)) +
+	geom_point(aes(fill=treatment),size=3) +
+	geom_line(aes(group = chamber))+
+	theme_classic()
+
+##QUESTION 2B----
+#Growth-defense trade-off
+
+#Opcion uno
+grow.mod2b<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40, family = "beta_family")
+summary(grow.mod2b)
+#based on summary, temp treatment (p=0.01) and it's interaction with growth (p=0.02) are sig
+Anova(grow.mod2b)
+#However, not based on an ANOVA, growth p=0.33, treatment p=0.82, interaction p=0.12
+drop1(grow.mod2b, test="Chisq")
+#Or drop1, growth p=0.34, treatment p=0.83, interaction p=0.14
+
+joint_tests((grow.mod2b), by = "treatment")
+#significant effect of growth on defense in  temperature treatment
+#while usually there is a negative relationship between growth and defense, 
+#plants in the temp treatment that grew more also had higher defenses in mature leaves
+
+#Growth*defense plot, all leaves
+all.dat40 %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+#Opcion dos
+#Two models, where leaf age is split
+all.dat40<- all.dat40[order(all.dat40$stage),]
+all.dat40_m <- all.dat40[c(1:20),]
+all.dat40_y <- all.dat40[c(21:40),]
+
+#mature leaves, interactive model
+grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
+summary(grow.mod2m_i)
+Anova(grow.mod2m_i)
+#treatment p=.93, growth=0.45, interaction p=0.034
+
+joint_tests((grow.mod2m_i), by = "treatment")
+#significant effect of growth on defense in  temperature treatment
+#while usually there is a negative relationship between growth and defense, 
+#for mature leaves in temperature experiment, plants that grew more also had higher defenses in mature leaves
+
+#Growth*defense plot, young leaves
+all.dat40_m %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+#young leaves, interactive model
+grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
+summary(grow.mod2y_i)
+Anova(grow.mod2y_i)
+#treatment p=.42, chemistry p=0.23, interaction p=0.055
+
+joint_tests((grow.mod2y_i), by = "treatment")
+#marginally significant effect of growth on defense in combo treatment
+#while usually there is a negative relationship between growth and defense, 
+#young leaves in combo treatment, plants that grew more also had higher defenses in young leaves
+
+#Growth*defense plot, young leaves
+all.dat40_y %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+
+##SRW: I guess I like the opcion uno better for this one?? But we could say it is mostly driven by the 
+#young leaves and could even show those separately in a supplement. 
+#I am still struggling with how to interpret this though...basically when you have increased temp, 
+#plants that do better just do better in terms of everything...growth and phenolics, but there is no "trade-off"
+#i.e. a negative relationship for any of the plants or treatments.
+#Maybe this just has to do with physiological differences across individuals in heat tolerance?? Where those
+#that are tolerant of higher temps just do better generally
+
+#I would also be curious to see the data for the no chamber control here...though it would probably just make things
+#more confusing
+
+#WITH ALL TREATMENTS
+#Opcion uno
+grow.mod2b_all<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat50, family = "beta_family")
+summary(grow.mod2b_all)
+#again, based on summary, temp treatment and it's interaction with growth are sig
+Anova(grow.mod2b_all)
+#However, not based on an ANOVA
+
+joint_tests((grow.mod2b_all), by = "treatment")
+#same result, significant effect of growth on defense in  temperature treatment
+#while usually there is a negative relationship between growth and defense, 
+#plants in the temp treatment that grew more also had higher defenses in mature leaves
+
+#Growth*defense plot, all leaves
+all.dat50 %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_point()+
+	geom_smooth(method="lm")
+
+##QUESTION 2C----
+#Relative change in the effectiveness of defense
+
+herb.chem.mod2c<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80, family = "beta_family")
+summary(herb.chem.mod2c)
+Anova(herb.chem.mod2c)
+#chemistry p=0.0003, treatment p=0.22, interaction p=0.28
+
+
+#Chem plot
+all.dat80 %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1))+
+	geom_point(aes(color=stage))+
+	geom_smooth(method = 'lm')
+
+
+#Option 2, split leave ages
+all.dat80<- all.dat80[order(all.dat80$stage),]
+all.dat80_m <- all.dat80[c(1:40),]
+all.dat80_y <- all.dat80[c(41:80),]
+
+#Young leaves
+herb.chem.mod2c_y<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_y, family = "beta_family")
+summary(herb.chem.mod2c_y)
+Anova(herb.chem.mod2c_y)
+#nothing significant
+
+#Mature leaves
+herb.chem.mod2c_m<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_m, family = "beta_family")
+summary(herb.chem.mod2c_m)
+Anova(herb.chem.mod2c_m)
+#treatment significant p=0.047, chemistry marg sig p=0.053, interaction not sig
+#in mature leaves, increasing defenses had a marginally sign neg effect on herbivory
+#in mature leaves, 
+
+#Chem plot
+all.dat80_m %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1))+
+	geom_point(aes(color=stage))+
+	geom_smooth(method = 'lm')
+
+#herbivory plot, n=80
+ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()
+
+m2c<-emmeans(herb.chem.mod2c_m,pairwise~treatment, type="response")
+cld(m2c$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
+#all in same group
+
+#SUMMARY STATS
+sum.tab <- ddply(all.dat80_m, c("treatment"), summarise,
+				  N    = length(prop_herb1),
+				  mean = mean(prop_herb1),
+				  sd   = sd(prop_herb1),
+				  se   = sd / sqrt(N))
+sum.tab
+
+summary(glht(herb.chem.mod2c_m, linfct=mcp(treatment="Tukey")))
+
+
+
+##OLD ANALYSES/BRAIN DUMPS----
+#SRW: there is one outlier here, which I would remove--I feel something
+#definitely went wrong with that one...prob should remove from aggregate values also
+d.temp <- phen.all[which(phen.all$pdw>0),]
+hist(d.temp$pdw)  #also this is beautifully normal, so we I don't think we need betareg anyway
 #SRW: another approach for these initial Q1 analyses--don't aggregate any given
 #dataset, i.e. use all the phenolics samples you have when that is the response
 #I think we discussed this and a major issue was that you can't use the random effects in the betareg. 
@@ -278,51 +529,8 @@ plot(all.dat$prop_dw~all.dat$treat)
 #Douma and Weedon 2019: https://besjournals.onlinelibrary.wiley.com/doi/10.1111/2041-210X.13234
 #they give some examples of beta regression with random effects using the package glmmTMB
 
-#I also have the feeling that age should always be in the models
-#since we know it has such a huge effect on everything
-
-#Playing around with these things below...
-
-hist(phen$pdw)
-
-#there is one outlier here, which I would remove--I feel something
-#definitely went wrong with that one...prob should remove from aggregate values also
-d.temp <- phen[which(phen$pdw>0),]
-hist(d.temp$pdw)  #also this is beautifully normal, so we I don't think we need betareg anyway
-
-
-library(glmmTMB)
-
-d.temp$prop_dw <- d.temp$pdw/100
-
-m1 <- glmmTMB(prop_dw ~ treat + stage + (1|chamber), data = d.temp, family = "beta_family")
-#I am getting some warnings here about the way family is specified, but it is running
-
-summary(m1)
-drop1(m1, test="Chisq")
-library(car)
-Anova(m1)
-
-
-#Also could try with lmer, since the data are so normal
-m1 <- lmer(pdw ~ treat + stage + (1|chamber), data=d.temp)
-summary(m1)
-drop1(m1, test="Chisq")
-boxplot(pdw ~ treat, data=d.temp)
-
-
-
-
-
-#HERBIVORY
-#pg1 data, N=80, all herbivory data
-#pg1$treatment <- factor(pg1$treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
-pg1$treatment<-as.factor(pg1$treatment)
-#adding small number to avoid error (must be between 0,1)
-pg1$prop_herb1<-pg1$prop_herb+0.0001
-
 #note in the paper I mention above, they suggest rescaling the dataset instead of just adding a constant
-#From the paper, Appendix S3-------------------
+#From the paper, Appendix S3--
 #A suggested rescaling equation is:
 #	x∗i=xi(n−1)+0.5n
 #Where x∗i is the transformation of xi and n is the total number of observations in the dataset.
@@ -333,31 +541,6 @@ pg1$prop_herb1<-pg1$prop_herb+0.0001
 #andrew2$ALGAE.scaled <- transform01(andrew2$ALGAE.mean)
 
 #I did not mess with this...
-
-Anova(betareg(prop_herb1~treatment, dat=pg1))#p=0.6813, no effect of treatment
-shapiro.test(resid(betareg(prop_herb1~treatment, dat=pg1)))
-#residuals NOT normally distributed
-
-#herbivory plot N=80
-plot(pg1$prop_herb1~pg1$treatment)
-
-#running model where leaves of each stage of combined, N=40, all.dat
-all.dat$prop_herb1<-all.dat$prop_herb+0.0001
-Anova(betareg(prop_herb1~treat, dat=all.dat))#p=0.772
-shapiro.test(resid(betareg(prop_herb1~treat, dat=all.dat)))
-#residuals still not normally distributed, but less non normal...
-
-#herbivory plot N=40
-plot(all.dat$prop_herb1~all.dat$treat)
-
-all.dat3$prop_herb1<-all.dat3$prop_herb+0.0001
-Anova(betareg(prop_herb1~treatment, dat=all.dat3))#p=0.6528
-shapiro.test(resid(betareg(prop_herb1~treatment, dat=all.dat3)))
-#residuals normally distributed
-
-#herbivory plot N=20
-plot(all.dat3$prop_herb1~all.dat3$treat)
-
 
 #SRW: I like using all the data, but it really bugs me that we can't use a random
 #effect with the betareg because without it the data are pseudoreplicated. Maybe we could try running this with
@@ -395,36 +578,38 @@ drop1(m2, test="Chisq") #no effect
 #up in our lives!
 
 
+#I also have the feeling that age should always be in the models
+#since we know it has such a huge effect on everything
+
+#Playing around with these things below...
+
+hist(phen$pdw)
+
+#there is one outlier here, which I would remove--I feel something
+#definitely went wrong with that one...prob should remove from aggregate values also
+d.temp <- phen[which(phen$pdw>0),]
+hist(d.temp$pdw)  #also this is beautifully normal, so we I don't think we need betareg anyway
 
 
+library(glmmTMB)
 
-##QUESTION 2A----
+d.temp$prop_dw <- d.temp$pdw/100
 
-#N=40, only data choice for this analysis
-Anova(betareg(prop_dw~stage*treat, dat=all.dat))
-#stage signficant p<0.0001
-shapiro.test(resid(betareg(prop_dw~stage*treat, dat=all.dat)))#normal
+m1 <- glmmTMB(prop_dw ~ treat + stage + (1|chamber), data = d.temp, family = "beta_family")
+#I am getting some warnings here about the way family is specified, but it is running
 
-#plot
-library(dplyr)
-all.dat %>%
-	ggplot(aes(stage,pdw, color=treat)) +
-	geom_point(aes(fill=treat),size=3) +
-	geom_line(aes(group = chamber))
+summary(m1)
+drop1(m1, test="Chisq")
+library(car)
+Anova(m1)
 
 
-#SRW: see above, would be great to do this with the random effect included.
-#also the chem data are so normal, could also do this with lmer
-hist(all.dat$prop_dw)
-Anova(lmer(pdw~stage*treat + (1|chamber), dat=all.dat))
-#not that it matters, I just hate ignoring the random effects
+#Also could try with lmer, since the data are so normal
+m1 <- lmer(pdw ~ treat + stage + (1|chamber), data=d.temp)
+summary(m1)
+drop1(m1, test="Chisq")
+boxplot(pdw ~ treat, data=d.temp)
 
-
-
-##QUESTION 2B----
-#Growth-defense trade-off
-#Because only one measurement for growth, N must be 20 since we aren't including random effects
-#to account for repeated measurements
 
 #Option uno
 #N=20, all leaves in each chamber are combined
@@ -447,135 +632,9 @@ all.dat3 %>%
 	geom_point()+
 	geom_smooth(method="lm")
 
-#Option dos
-#Two models, where leaf age is split
-
-#Mature leaves
-Anova((betareg(growth~treat*prop_dw_Mature, data = all.dat2)))
-#no significance
-shapiro.test(resid(betareg(growth~treat*prop_dw_Mature, data = all.dat2)))#normal
-
-#Young leaves
-Anova((betareg(growth~treat*prop_dw_Young, data = all.dat2)))
-#interaction sig, p=0.0065
-shapiro.test(resid(betareg(growth~treat*prop_dw_Young, data = all.dat2)))#normal
-
-joint_tests((betareg(growth~treat*prop_dw_Young, data = all.dat2)), by = "treat")
-#significant effect of phenolics on growth in both temperature treatments
-#defense decreased faster as growth increased in temp treatments
-
-#Growth*defense plot, young leaves
-all.dat2 %>%
-	ggplot(aes(x=growth, 
-			   y=prop_dw_Young,
-			   color=treat))+
-	geom_point()+
-	geom_smooth(method="lm")
 
 
-##SRW: I guess I like the opcion uno better for this one?? But we could say it is mostly driven by the 
-#young leaves and could even show those separately in a supplement. 
-#I am still struggling with how to interpret this though...basically when you have increased temp, 
-#plants that do better just do better in terms of everything...growth and phenolics, but there is no "trade-off"
-#i.e. a negative relationship for any of the plants or treatments.
-#Maybe this just has to do with physiological differences across individuals in heat tolerance?? Where those
-#that are tolerant of higher temps just do better generally
-
-#I would also be curious to see the data for the no chamber control here...though it would probably just make things
-#more confusing
-
-
-
-
-
-##QUESTION 2C----
-#Defense-herbivory tradeoff
-
-#SRW: I guess we would not really think of this as a "trade-off" but as  relative change in the effectiveness
-#of defense
-
-#Option uno, N=20
-Anova((betareg(prop_herb~treatment*pdw, data = all.dat3)))
-#all are significant
-
-shapiro.test(resid(((betareg(prop_herb~treatment*pdw, data = all.dat3)))))#normal
-
-#Defense plot
-all.dat3 %>%
-	ggplot(aes(x=pdw, 
-			   y=prop_herb))+
-	geom_point()+
-	geom_smooth(method = 'lm')
-
-
-#Treatment plot
-all.dat3 %>%
-	ggplot(aes(x=treatment, 
-			   y=prop_herb))+
-	geom_boxplot()+
-	geom_point()
-
-#Defense*treatment plot
-all.dat3 %>%
-	ggplot(aes(x=pdw, 
-			   y=prop_herb,
-			   color=treatment))+
-	geom_point()+
-	geom_smooth(method="lm")
-
-#Option dos, N=40
-Anova((betareg(prop_herb1~treat*pdw, data = all.dat)))
-#only chemistry signficant, p<0.0001
-#this doesn't account/control for leaf age
-#Chem plot
-all.dat %>%
-	ggplot(aes(x=pdw, 
-			   y=prop_herb1))+
-	geom_point(aes(color=stage))+
-	geom_smooth(method = 'lm')
-
-
-#SRW: I think we need to account for leaf age in whatever we do, so this one doesn't really work. The pattern
-#here could just be driven by age (old leaves have lower pdw and also higher herbivory)--I added color to the
-#graph above to see this and it does seem to be the case
-
-
-#Option 3, split leave ages
-#Young leaves
-all.dat2$prop_herb_Young1<-all.dat2$prop_herb_Young+0.0001
-Anova((betareg(prop_herb_Young1~treat*prop_dw_Young, data = all.dat2)))
-#nothing signif
-shapiro.test(resid(betareg(prop_herb_Young1~treat*prop_dw_Young, data = all.dat2)))#normal
-
-#Mature leaves
-all.dat2$prop_herb_Mature1<-all.dat2$prop_herb_Mature+0.0001
-Anova((betareg(prop_herb_Mature1~treat*prop_dw_Mature, data = all.dat2)))
-#chemistry marginally signif
-shapiro.test(resid(betareg(prop_herb_Mature1~treat*prop_dw_Mature, data = all.dat2)))#normal
-
-#Plot, mature leaves defense-herbivory
-all.dat2 %>%
-	ggplot(aes(x=prop_dw_Mature, 
-			   y=prop_herb_Mature1,
-			   color=treat))+
-	geom_point()+
-	geom_smooth(method="lm")
-#purple line marginally signficant
-
-
-
-#SRW: Not sure what to make of this--we would basically have to conclude that phenolics are effective as a defense 
-#against herbivores only in a climate change scenario with T+CO2??? This does not really make sense to me and I am 
-#struggling because I think there are just not enough data to really conclude much...only 4 points for the 
-#T+CO2 treatment where we see that negative relationship
-
-
-
-
-##OLD ANALYSES/BRAIN DUMPS----
-
-
-###GROWTH (using data averaged across all four leaves)----
+###GROWTH (using data averaged across all four leaves)
 b10<-betareg(prop_gro~treatment+prop_herb+prop_dw, dat=all.dat3)
 shapiro.test(resid(b10)) #normal!!
 
@@ -628,7 +687,7 @@ summary(bmod)
 #y=mx+b, y= -8.95 - 0.65
 #Change in height decreased 8.95% with every 1% increase in herbivory
 
-###PHENOLICS----
+###PHENOLICS
 b3<-betareg(prop_dw~treat+stage, dat=all.dat)
 shapiro.test(resid(b3)) #normal
 
@@ -664,19 +723,7 @@ ggplot(data=all.dat, aes(x=stage, y=prop_dw))+
 				 fun = max, vjust = -1.5, size = 5.8)+
 	scale_y_continuous(limits = c(0,.115))
 
-#PHENOLICS SUMMARY STATS
-library(plyr)
-phen.tab <- ddply(all.dat, c("stage"), summarise,
-				  N    = length(prop_dw),
-				  mean = mean(prop_dw),
-				  sd   = sd(prop_dw),
-				  se   = sd / sqrt(N))
-phen.tab
 
-#young leaf avg pdw/old leaf avg pdw
-(0.06859805-0.04970515)/0.04970515
-#0.380099
-#Young leaves had an average of 38% times more total phenolics
 
 ###HERBIVORY---
 #young leaves
