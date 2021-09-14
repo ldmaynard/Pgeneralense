@@ -15,11 +15,11 @@ M,control chamber,60,66
 N,CO2,58,65
 O,control chamber,48.5,78
 P,T°C,60,86
-PL1,natural control,37,47
-PL2,natural control,54.2,82
-PL3,natural control,40,52
-PL4,natural control,33,47
-PL5,natural control,65,89
+1,natural control,37,47
+2,natural control,54.2,82
+3,natural control,40,52
+4,natural control,33,47
+5,natural control,65,89
 Q,T°C,48,52
 R,CO2,40.8,60
 S,T°C + CO2,57.5,63

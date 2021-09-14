@@ -22,32 +22,34 @@ library(ggsignif)
 
 #load growth data
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
-table(grow$Treatment)   #SRW: Why are there 6 T chambers and 4 T+CO2???
-colnames(grow)[1] <- "Casa"
+table(grow$Treatment)   
+#SRW: Why are there 6 T chambers and 4 T+CO2???
+#LDM: Unsure, but its consistent across all data. Assuming the CO2 failed in one of the T+CO2 treatments
 
-grow$Treatment[which(grow$Treatment=="TÂ°C")] <- "T°C"
-grow$Treatment[which(grow$Treatment=="TÂ°C + CO2")] <- "T°C + CO2"
+#renaming column
+colnames(grow)[1] <- "chamber"
 
 grow$total_gro <- grow$ht.2018.09.cm-grow$ht.2018.04.cm
 grow$rel_gro<-grow$total_gro/grow$ht.2018.04.cm
 grow$per_gro<-grow$rel_gro*100
 
+#creating dataset with all treatments
+grow.all<-grow
+
+#creating dataset without "No chamber" treatment
 grow <- grow[order(grow$Treatment),]
 grow<-grow[-c(11:15),] #removing control (no chamber)
 
-hist(grow$rel_gro)  #SW: not normal, this is a typical proportion
-shapiro.test(grow$rel_gro)#LM: it is technically normal
+hist(grow$rel_gro) 
+shapiro.test(grow$rel_gro)#normal
 hist(grow$total_gro)
-shapiro.test(grow$total_gro)#LM: but so is this one. Both yield the same results, no treatment effect
-
-#re-ordering factor levels so lm will compare everything to control
-grow$Treatment[]
-grow$Treatment <- factor(grow$Treatment, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+shapiro.test(grow$total_gro)#so is this one. Both yield the same results
 
 
 ##CHEMISTRY
 
-#Load standard curve data
+##Stanard curve math
+{#Load standard curve data
 ga <- read.csv(file = "GA_StandardCurve.csv", head=T)
 
 ga.ab<-lm(ga$abs_avg~ga$ab_val_mg)
@@ -59,6 +61,7 @@ ga.conc<-lm(ga$abs_avg~ga$concen_mgml)
 summary(ga.conc)
 plot(ga$abs_avg~ga$concen_mgml)
 #y=mx+b, y=0.702271 +0.056570 , R^2=0.9974
+}
 
 ##--
 ##Load total phenolics data
@@ -66,14 +69,17 @@ phen <- read.csv(file = "Piper_phenolics.csv", head=T)
 
 #delete blanks/negative controls
 phen <- phen[order(phen$sample),]
-phen<-phen[-c(1:4),]
+phen<-phen[-c(1:4),] 
 
-#create new col for abs value in well
+#create new col for abs value in well, using standard curve results from above
 phen$ab_val_mg<-(phen$abs_avg-0.056570)/3.511354
-phen$ab_val_mg<-as.numeric(phen$ab_val_mg)
+
+#defining data types
+{phen$ab_val_mg<-as.numeric(phen$ab_val_mg)
 phen$abs_avg<-as.numeric(phen$abs_avg)
 phen$start_wt<-as.character(phen$start_wt)
 phen$start_wt<-as.numeric(phen$start_wt)
+}
 
 #create column for absolute value/%dw
 #ab_val/0.2mL (vol in well) = y/1.1mL (total volume in tube)
@@ -87,93 +93,122 @@ phen$stage<-as.character(phen$stage)
 phen$stage[phen$stage=="y"]="Young"
 phen$stage[phen$stage=="m"]="Mature"
 
-phen<-phen[-c(1:30),]#removing control (no chamber)
-phen <- phen[order(phen$treat),]#check removed correct rows
-ggplot(phen, aes(x=treat, y=concen))+geom_boxplot()+geom_point()
-
 #average triplicate readings for concentration
-phen_ag<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
+phen.all_conc<-aggregate(concen~treat+sample+stage+chamber, data=phen, FUN=mean)
 
-#combine triplicate readings for %dw
-phen_ag2<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
-#SRW: removed row below, I think you did this above?? I was getting an error
-#phen_ag$pdw<-(phen_ag$pdw)*100
+#average triplicate readings for %dw, n=50
+phen.all<-aggregate(pdw~treat+sample+stage+chamber, data=phen, FUN=mean)
 
-#re-ordering factors
-phen_ag2$treat <- factor(phen_ag2$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+#aggregate by chamber, n=25
+phen.25<-aggregate(pdw~treat+chamber, data=phen.all, FUN=mean)
+
+#create dataset without control (no chamber), n=40
+phen.40<-phen.all[-c(1:10),]#removing control (no chamber)
+
+#aggregating by chamber, n=20
+phen.20<-aggregate(pdw~chamber+treat,data=phen.40,FUN=mean)
+
 
 ##HERBIVORY
 
 #load herbivory data
-pg <- read.csv(file="Piper_herbivory.csv",head=TRUE)
-pg$treatment[which(pg$treatment=="TÂ°C")] <- "T°C"
-pg$treatment[which(pg$treatment=="TÂ°C + CO2")] <- "T°C + CO2"
+herb.all <- read.csv(file="Piper_herbivory.csv",head=TRUE)
 
 #creating col for proportion herbivory
-pg$percent_herbivory<-as.numeric(pg$percent_herbivory)
-pg$prop_herb<-(pg$percent_herbivory/100)
-pg$prop_herb<-as.numeric(pg$prop_herb)
+herb.all$percent_herbivory<-as.numeric(herb.all$percent_herbivory)
+herb.all$prop_herb<-(herb.all$percent_herbivory/100)
+herb.all$prop_herb<-as.numeric(herb.all$prop_herb)
 
-pg <- pg[order(pg$treatment),]
-pg1<-pg[-c(41:60),]#removing control (no chamber)
-pg2<-aggregate(percent_herbivory~chamber + age + treatment,data=pg1,FUN=mean)#aggregate data
+#creating dataset aggregated by leaf age  by age (n=40)
+herb.50<-aggregate(prop_herb~chamber + age + treatment +sample,data=herb.all,FUN=mean)
 
-#get two datasets ready to combine
-phen_ag2 <- phen_ag2[order(phen_ag2$sample),]
-pg2 <- pg2[order(pg2$chamber),]
+#aggregating by chamber, n=20
+herb.25<-aggregate(prop_herb~chamber+treatment,data=herb.all,FUN=mean)
 
-#combine aggregated herbivory and chemistry datasets
-ph <- cbind(phen_ag2, percent_herbivory = pg2$percent_herbivory) 
+#creating dataset without control (no chamber) = herb.80 (n=80)
+herb.all <- herb.all[order(herb.all$treatment),]
+herb.80<-herb.all[-c(41:60),]#removing control (no chamber)
 
-#combining all data
-ph <- ph[order(ph$stage),]
-grow$Casa<-as.factor(grow$Casa)
-levels(grow$Casa)
-grow <- grow[order(grow$Casa),]
-all.dat<-cbind(ph, growth = grow$total_gro) 
-all.dat<-cbind(all.dat, per_gro = grow$per_gro)
+#creating dataset with average herbivory  by age (n=40)
+herb.40<-aggregate(prop_herb~chamber + age + treatment+sample,data=herb.80,FUN=mean)
 
+#aggregating by chamber, n=20
+herb.20<-aggregate(prop_herb~chamber+treatment,data=herb.80,FUN=mean)
 
-#creating columns for proportions
-all.dat$prop_herb<-all.dat$percent_herbivory/100
-all.dat$prop_dw<-all.dat$pdw/100
-all.dat$prop_gro<-all.dat$per_gro/100
+##CREATING COMBINED DATASETS----
 
-#write.csv(all.dat, "all.dat.csv")
+#all data, n=100
+all.dat100<-merge(phen.all, herb.all, by="sample", all = F)
+head(all.dat100)
+#this creates two chamber columns=chamber.x and chamber.y
+colnames(all.dat100)[4] <- "chamber"
+all.dat100<-merge(all.dat100, grow.all, by="chamber", all=T)
+#cleaning up, selecting columns
+all.dat100<-select(all.dat100, chamber, stage, pdw, treatment, sample, ID, total.area.cm2,
+				   real.area.cm2, percent_herbivory, prop_herb, ht.2018.04.cm, ht.2018.09.cm,
+				   total_gro, rel_gro)
 
-#reordering
-all.dat$treat <- factor(all.dat$treat, levels=c("control_chamber", "CO2", "TC", "TC+CO2" ))
+#all treatment data, aggregated by leaf age, n=50
+##adding prop dry weight column to herbivory data
+all.dat50<-merge(phen.all, herb.50, by="sample", all = T)
+head(all.dat50)
+colnames(all.dat50)[4] <- "chamber"
+all.dat50<-merge(all.dat50, grow.all, by="chamber", all=T)
+#cleaning up, selecting columns
+all.dat50<-select(all.dat50, chamber, stage, pdw, treatment, sample, 
+				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, rel_gro)
 
-##Spreading data — young and mature leaves = all.dat2
-library(data.table)
-chem_herb_spread<-dcast(setDT(all.dat), chamber ~ stage, 
-						value.var = c('treat', 'prop_dw', 'prop_herb'))
-chem_herb_spread<-chem_herb_spread[,-2]#remove one of treatment cols??
-colnames(chem_herb_spread)[2] <- "treat"
+#all treatment data, aggregated by chamber, n=25
+all.dat25<-merge(grow.all, herb.25,by="chamber", all = T)
+all.dat25<-merge(all.dat25, phen.25,by="chamber", all = T)
+#cleaning up, selecting columns
+all.dat25<-select(all.dat25, chamber, pdw, treatment, 
+				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, rel_gro)
 
-#combine with growth data
-all.dat2 <- cbind(chem_herb_spread, growth = grow$rel_gro) 
+#four treatment data, not aggregated, n=80
+all.dat80<-merge(herb.80, phen.40, by="sample", all = T)
+head(all.dat80)
+colnames(all.dat80)[4] <- "chamber"
+all.dat80<-merge(all.dat80, grow, by="chamber", all=T)
+#cleaning up, selecting columns
+all.dat80<-select(all.dat80, chamber, stage, pdw, treatment, sample, ID, total.area.cm2,
+				   real.area.cm2, percent_herbivory, prop_herb, ht.2018.04.cm, ht.2018.09.cm,
+				   total_gro, rel_gro)
 
-##Averaging all data = all.dat3
-#aggregate herbivory by plant/chamber
-herb_20<-aggregate(prop_herb~chamber+treatment,data=pg1,FUN=mean)
+#four treatment data, aggregated by leaf age, n=40
+all.dat40<-merge(herb.40, phen.40, by="sample", all = T)
+head(all.dat40)
+colnames(all.dat40)[2] <- "chamber"
+all.dat40<-merge(all.dat40, grow, by="chamber", all=T)
+#cleaning up, selecting columns
+all.dat40<-select(all.dat40, chamber, stage, pdw, treatment, sample, prop_herb, ht.2018.04.cm, 
+				  ht.2018.09.cm, total_gro, rel_gro)
 
-#aggregate phenolics by plant/chamber
-phen_ag20<-aggregate(pdw~chamber+treat,data=phen_ag2,FUN=mean)
+#four treatment data, aggregated by chamber, n=20
+all.dat20<-merge(herb.20, phen.20, by="chamber", all = T)
+all.dat20<-merge(all.dat20, grow, by="chamber", all=T)
+#cleaning up, selecting columns
+all.dat20<-select(all.dat20, chamber, pdw, treatment, 
+				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, rel_gro)
 
-phen_ag20 <- phen_ag20[order(phen_ag20$chamber),]
-herb_20 <- herb_20[order(herb_20$chamber),]
-grow <- grow[order(grow$Casa),]
-herb_gro1 <- cbind(herb_20, prop_gro = grow$rel_gro) 
-all.dat3 <-cbind(herb_gro1, pdw = phen_ag20$pdw)
-all.dat3$prop_dw<-all.dat3$pdw/100 #proportion phenolics
-all.dat3$treatment<-as.factor(all.dat3$treatment)
+#for four treatment data, re-ordering factor levels so model will compare everything to control chamber
+all.dat80$treatment<-as.factor(all.dat80$treatment)
+levels(all.dat80$treatment)
+all.dat80$treat <- factor(all.dat80$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+
+all.dat40$treatment<-as.factor(all.dat40$treatment)
+levels(all.dat40$treatment)
+all.dat40$treat <- factor(all.dat40$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+
+all.dat20$treatment<-as.factor(all.dat20$treatment)
+levels(all.dat20$treatment)
+all.dat20$treat <- factor(all.dat20$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
 
 
 #---
 
 ##CHECKING FOR COLINEARITY----
-samp1<-all.dat[,-c(1:8)]#cat vars
+samp1<-all.dat100[,-c(1:8)]#cat vars
 samp1<-samp1[,-4]#remove second herb var   #SRW: getting an error here, there is no col 4
 
 L1 <- cor(samp1)#correlation matrix
