@@ -235,7 +235,7 @@ shapiro.test(resid(mod.gro1)) #residuals  normally distributed
 
 #growth plot, n=25
 ggplot(data=all.dat25, aes(x=treatment, y=prop_gro))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()
 
@@ -247,7 +247,7 @@ shapiro.test(resid(mod.gro2)) #residuals  normally distributed
 
 #growth plot, n=20
 ggplot(data=all.dat20, aes(x=treatment, y=prop_gro))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()
 
@@ -264,9 +264,10 @@ drop1(chem.mod1, test="Chisq")
 
 #chemistry plot, n=50
 ggplot(data=all.dat50, aes(x=treatment, y=pdw))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
-	theme_classic()
+	theme_classic()+
+	labs(y="Phenolics (proportion dw)")
 
 #four treatments, n=40
 chem.mod2 <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40, family = "beta_family")
@@ -278,9 +279,10 @@ drop1(chem.mod2, test="Chisq")
 
 #chemistry plot, n=40
 ggplot(data=all.dat40, aes(x=treatment, y=pdw))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
-	theme_classic()
+	theme_classic()+
+	labs(y="Phenolics (proportion dw)")
 
 
 
@@ -297,11 +299,12 @@ Anova(herb.mod1)
 drop1(herb.mod1, test="Chisq")
 #treatment p=0.61
 
-#herbivory plot, n=50
+#herbivory plot, n=100
 ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
-	theme_classic()
+	theme_classic()+
+	labs(y="Proportion herbivory")
 
 #four treatments, n=80
 herb.mod2 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80, family = "beta_family")
@@ -314,9 +317,10 @@ drop1(herb.mod2, test="Chisq")
 
 #herbivory plot, n=80
 ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
-	theme_classic()
+	theme_classic()+
+	labs(y="Proportion herbivory")
 
 
 ##QUESTION 2A----
@@ -348,7 +352,8 @@ all.dat40 %>%
 	ggplot(aes(stage,pdw, color=treatment)) +
 	geom_point(aes(fill=treatment),size=3) +
 	geom_line(aes(group = chamber))+
-	theme_classic()
+	theme_classic()+
+	labs(y="Total phenolics (prop. dw)")
 
 ##QUESTION 2B----
 #Growth-defense trade-off
@@ -392,13 +397,15 @@ joint_tests((grow.mod2m_i), by = "treatment")
 #while usually there is a negative relationship between growth and defense, 
 #for mature leaves in temperature experiment, plants that grew more also had higher defenses in mature leaves
 
-#Growth*defense plot, young leaves
+#Growth*defense plot, mature leaves
 all.dat40_m %>%
 	ggplot(aes(x=prop_gro, 
 			   y=pdw,
 			   color=treatment))+
 	geom_point()+
-	geom_smooth(method="lm")
+	geom_smooth(method="lm")+
+	labs(title = "Mature leaves", y="Total phenolics (prop. dw)", x="Proportion growth")+
+	theme_classic()
 
 #young leaves, interactive model
 grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
@@ -417,7 +424,10 @@ all.dat40_y %>%
 			   y=pdw,
 			   color=treatment))+
 	geom_point()+
-	geom_smooth(method="lm")
+	geom_smooth(method="lm")+
+	labs(title = "Young leaves", y="Total phenolics (prop. dw)", 
+		 	x="Proportion growth")+
+	theme_classic()
 
 
 ##SRW: I guess I like the opcion uno better for this one?? But we could say it is mostly driven by the 
@@ -466,7 +476,9 @@ all.dat80 %>%
 	ggplot(aes(x=pdw, 
 			   y=prop_herb1))+
 	geom_point(aes(color=stage))+
-	geom_smooth(method = 'lm')
+	geom_smooth(method = 'lm')+
+	labs(x="Total phenolics (prop. dw)", y="Proportion herbivory")+
+	theme_classic()
 
 
 #Option 2, split leave ages
@@ -499,11 +511,20 @@ all.dat80_m %>%
 ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
-	theme_classic()
+	theme_classic()+
+	theme(legend.position = "none")+
+	labs(y="Proportion herbivory", title="Mature leaves")
 
+#clds
 m2c<-emmeans(herb.chem.mod2c_m,pairwise~treatment, type="response")
-cld(m2c$emmeans,  Letters ='ABCDEFGHIJKLMNOPQRS')
+cld(m2c$emmeans,  Letters ='abcde')
 #all in same group
+
+#additive model
+a1<-glmmTMB(prop_herb1 ~ treatment + pdw + (1|chamber), data = all.dat80_m, family = "beta_family")
+a2<-emmeans(a1,pairwise~treatment, type="response")
+cld(a2$emmeans,  Letters ='abcde')
+#same result
 
 #SUMMARY STATS
 sum.tab <- ddply(all.dat80_m, c("treatment"), summarise,
@@ -513,8 +534,10 @@ sum.tab <- ddply(all.dat80_m, c("treatment"), summarise,
 				  se   = sd / sqrt(N))
 sum.tab
 
+#trying tukey
 summary(glht(herb.chem.mod2c_m, linfct=mcp(treatment="Tukey")))
-
+summary(glht(a1, linfct=mcp(treatment="Tukey")))
+#in additive model, combo treatment is sig higher than temp treatment
 
 
 ##OLD ANALYSES/BRAIN DUMPS----
