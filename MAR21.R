@@ -17,6 +17,8 @@ library(ggsignif)
 library(emmeans)
 library(multcomp)
 library(plyr)
+library(gridExtra)
+library(ggpubr)
 	}
 
 #LOADING & WRANGLING DATA----------------------------------------------------
@@ -234,10 +236,11 @@ Anova(mod.gro1)
 shapiro.test(resid(mod.gro1)) #residuals  normally distributed
 
 #growth plot, n=25
-ggplot(data=all.dat25, aes(x=treatment, y=prop_gro))+ 
+gro.plot<-ggplot(data=all.dat25, aes(x=treatment, y=prop_gro))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()
+gro.plot
 
 #four treatment data
 mod.gro2<-(betareg(prop_gro~treatment, dat=all.dat20))
@@ -263,11 +266,12 @@ drop1(chem.mod1, test="Chisq")
 #treatment p=0.57
 
 #chemistry plot, n=50
-ggplot(data=all.dat50, aes(x=treatment, y=pdw))+ 
+chem.plot<-ggplot(data=all.dat50, aes(x=treatment, y=pdw))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	labs(y="Phenolics (proportion dw)")
+chem.plot
 
 #four treatments, n=40
 chem.mod2 <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40, family = "beta_family")
@@ -299,12 +303,20 @@ Anova(herb.mod1)
 drop1(herb.mod1, test="Chisq")
 #treatment p=0.61
 
+treatment[treatment=="mysee"]="myse"
+
 #herbivory plot, n=100
-ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1))+ 
+herb.plot<-ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
-	labs(y="Proportion herbivory")
+	labs(y="Proportion herbivory", x="")+
+	scale_x_discrete(labels=c(CO2=expression(CO["2"]),
+							  "control chamber"="Control (chamber)",
+							  "natural control"="Control (no chamber)",
+							  "T°C"="Temperature",
+							  "T°C + CO2"=expression(CO["2"] + Temp)))
+herb.plot
 
 #four treatments, n=80
 herb.mod2 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80, family = "beta_family")
@@ -322,6 +334,53 @@ ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1))+
 	theme_classic()+
 	labs(y="Proportion herbivory")
 
+##Question 1 plot----
+gro.plot<-ggplot(data=all.dat25, aes(x=treatment, y=prop_gro, color=treatment))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()+
+	labs(y="Proportion growth", x="")+
+	theme(axis.text.x = element_blank(), 
+		  text = element_text(size=14), legend.position = "none")+
+	scale_color_viridis(discrete = T, option = "C")+
+	scale_x_discrete(limits=c("natural control", "control chamber", "CO2", "T°C", "T°C + CO2"))
+gro.plot
+
+chem.plot<-ggplot(data=all.dat50, aes(x=treatment, y=pdw, color=treatment))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()+
+	labs(y="Phenolics (proportion dw)", x="")+
+	theme(axis.text.x = element_blank(), 
+		  text = element_text(size=14), legend.position = "none")+
+	scale_color_viridis(discrete = T, option = "C")+
+	scale_x_discrete(limits=c("natural control", "control chamber", "CO2", "T°C", "T°C + CO2"))
+chem.plot
+
+herb.plot<-ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1, color=treatment))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()+
+	labs(y="Proportion herbivory", x="")+
+	theme(text = element_text(size=14), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
+		  legend.position = "none")+
+	scale_color_viridis(discrete = T, option = "C")
+herb.plot
+
+herb.plot1<-herb.plot+scale_x_discrete(limits=c("natural control", "control chamber", "CO2", "T°C", "T°C + CO2" ),
+	labels=c("natural control"=expression(atop("Control", paste("(no chamber)"))),
+			 "control chamber"=expression(atop("Control", paste("(chamber)"))),
+			 "T°C"="Temperature",
+			 CO2=expression(CO["2"]),
+			 "T°C + CO2"=expression(CO["2"] + Temp)))
+herb.plot1
+
+
+tiff('combo.tiff', units="in", width=5, height=10, res=300)
+ggarrange(gro.plot, chem.plot, herb.plot1,
+		  labels = c("a", "b", "c"),heights = c(2, 2, 2),
+		  ncol = 1, nrow = 3)
+dev.off()
 
 ##QUESTION 2A----
 
@@ -353,7 +412,8 @@ all.dat40 %>%
 	geom_point(aes(fill=treatment),size=3) +
 	geom_line(aes(group = chamber))+
 	theme_classic()+
-	labs(y="Total phenolics (prop. dw)")
+	labs(y="Total phenolics (prop. dw)")+
+	scale_color_viridis(discrete = T, option = "C")
 
 ##QUESTION 2B----
 #Growth-defense trade-off
@@ -405,7 +465,9 @@ all.dat40_m %>%
 	geom_point()+
 	geom_smooth(method="lm")+
 	labs(title = "Mature leaves", y="Total phenolics (prop. dw)", x="Proportion growth")+
-	theme_classic()
+	theme_classic()+
+	scale_color_viridis(discrete = T, option = "C")+
+	theme(legend.title = element_blank(), text = element_text(size=14))
 
 #young leaves, interactive model
 grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
