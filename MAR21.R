@@ -401,19 +401,28 @@ phen.tab <- ddply(all.dat40, c("stage"), summarise,
 				  se   = sd / sqrt(N))
 phen.tab
 
+library(flextable)
+myft.phen<-flextable(phen.tab)
+myft.phen
+
 #young leaf avg pdw/old leaf avg pdw-old leaf avg pdw
 (0.06859805-0.04970515)/0.04970515
 #0.380099
 #Young leaves had an average of 38% times more total phenolics than mature leaves
 
 #plot
+leg.lab <- c(expression(CO["2"]),
+			 "Control (chamber)",
+			 "Temperature",
+			 expression(CO["2"] + Temp))
 all.dat40 %>%
 	ggplot(aes(stage,pdw, color=treatment)) +
-	geom_point(aes(fill=treatment),size=3) +
+	geom_point(aes(color=treatment),size=2.5, alpha=0.6) +
 	geom_line(aes(group = chamber))+
 	theme_classic()+
-	labs(y="Total phenolics (prop. dw)")+
-	scale_color_viridis(discrete = T, option = "C")
+	labs(y="Total phenolics (prop. dw GAE)", x="Leaf age")+
+	scale_color_viridis(discrete = T, option = "C", labels=leg.lab)+
+	theme(legend.position = "top", legend.title = element_blank(), text = element_text(size = 14))
 
 ##QUESTION 2B----
 #Growth-defense trade-off
@@ -463,11 +472,11 @@ all.dat40_m %>%
 			   y=pdw,
 			   color=treatment))+
 	geom_point()+
-	geom_smooth(method="lm")+
-	labs(title = "Mature leaves", y="Total phenolics (prop. dw)", x="Proportion growth")+
+	geom_smooth(method="lm", fill="light grey")+
+	labs(title = "Mature leaves", y="Total phenolics (prop. dw GAE)", x="Proportion growth")+
 	theme_classic()+
-	scale_color_viridis(discrete = T, option = "C")+
-	theme(legend.title = element_blank(), text = element_text(size=14))
+	scale_color_viridis(discrete = T, option = "C", labels=leg.lab)+
+	theme(legend.title = element_blank(), text = element_text(size=14), legend.position = "top")
 
 #young leaves, interactive model
 grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
@@ -486,10 +495,11 @@ all.dat40_y %>%
 			   y=pdw,
 			   color=treatment))+
 	geom_point()+
-	geom_smooth(method="lm")+
-	labs(title = "Young leaves", y="Total phenolics (prop. dw)", 
-		 	x="Proportion growth")+
-	theme_classic()
+	geom_smooth(method="lm", fill="light grey")+
+	labs(title = "Young leaves", y="Total phenolics (prop. dw GAE)", x="Proportion growth")+
+	theme_classic()+
+	scale_color_viridis(discrete = T, option = "C", labels=leg.lab)+
+	theme(legend.title = element_blank(), text = element_text(size=14), legend.position = "top")
 
 
 ##SRW: I guess I like the opcion uno better for this one?? But we could say it is mostly driven by the 
@@ -565,17 +575,28 @@ Anova(herb.chem.mod2c_m)
 #Chem plot
 all.dat80_m %>%
 	ggplot(aes(x=pdw, 
-			   y=prop_herb1))+
-	geom_point(aes(color=stage))+
-	geom_smooth(method = 'lm')
+			   y=prop_herb1))+ 
+	geom_point(alpha=0.6, size=2.5)+
+	geom_smooth(method = 'lm', fill="light grey", linetype="dashed", color="#440154FF")+
+	theme_classic()+
+	labs(y="Proportion herbivory", x="Total phenolics (prop. dw GAE)")+
+	theme(text = element_text(size=14))
 
-#herbivory plot, n=80
+#herbivory plot mature
 ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, aes(color=treatment), size=2.5)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.6, aes(color=treatment), size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	theme(legend.position = "none")+
-	labs(y="Proportion herbivory", title="Mature leaves")
+	labs(y="Proportion herbivory", title="Mature leaves", x="")+
+	theme(text = element_text(size=14), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
+	legend.position = "none")+
+	scale_color_viridis(discrete = T, option = "C")+
+	scale_x_discrete(limits=c("CO2", "control chamber", "T°C", "T°C + CO2"),
+					 labels=c("control chamber"=expression(atop("Control", paste("(chamber)"))),
+					 "T°C"="Temperature",
+					 CO2=expression(CO["2"]),
+					 "T°C + CO2"=expression(CO["2"] + Temp)))
 
 #clds
 m2c<-emmeans(herb.chem.mod2c_m,pairwise~treatment, type="response")
@@ -589,12 +610,21 @@ cld(a2$emmeans,  Letters ='abcde')
 #same result
 
 #SUMMARY STATS
-sum.tab <- ddply(all.dat80_m, c("treatment"), summarise,
-				  N    = length(prop_herb1),
-				  mean = mean(prop_herb1),
-				  sd   = sd(prop_herb1),
+sum.tab.m <- ddply(all.dat80_m, c("treatment"), summarise,
+				  N    = length(prop_herb),
+				  mean = mean(prop_herb),
+				  sd   = sd(prop_herb),
 				  se   = sd / sqrt(N))
-sum.tab
+sum.tab.m
+#combo herbivory/temp herb - temp herb
+(0.10493750/0.02531667)-0.02531667
+#mature leaves in combo treatments had 4.12 times more herbivory than leaves in control
+
+(0.10493750/0.03472000)-0.03472000
+#mature leaves in combo treatment had 2.99 times more herbivory than leaves in control
+
+myft.herb.m<-flextable(sum.tab.m)
+myft.herb.m
 
 #trying tukey
 summary(glht(herb.chem.mod2c_m, linfct=mcp(treatment="Tukey")))
