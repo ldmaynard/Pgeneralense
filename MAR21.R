@@ -1,5 +1,4 @@
-#Interactive effects of climate change, leaf age, and secondary metabolites 
-#on plant growth, defense, and herbivory.
+#Effects of climate change on allocation to growth and defense in a neotropical shrub
 
 #LOADING LIBRARIES----------------------------------------------------
 {library(lme4)
@@ -23,22 +22,26 @@ library(ggpubr)
 
 #LOADING & WRANGLING DATA----------------------------------------------------
 
-##GROWTH
+##GROWTH DATA----
 
 #load growth data
 grow <- read.csv(file="Piper_growth.csv",head=TRUE)
 table(grow$Treatment)   
-#SRW: Why are there 6 T chambers and 4 T+CO2???
-#LDM: Unsure, but its consistent across all data. Assuming the CO2 failed in one of the T+CO2 treatments
+#Note: there 6 T chambers and 4 T+CO2
+#Assuming the CO2 failed in one of the T+CO2 treatments? Follow up with Maaike
 
 #renaming column
 colnames(grow)[1] <- "chamber"
 
+#creating columns for: 
+#total growth
 grow$total_gro <- grow$ht.2018.09.cm-grow$ht.2018.04.cm
+#proportion/relative growth
 grow$prop_gro<-grow$total_gro/grow$ht.2018.04.cm
+#percent growth
 grow$per_gro<-grow$prop_gro*100
 
-#creating dataset with all treatments
+#renaming dataset with all treatments
 grow.all<-grow
 
 #creating dataset without "No chamber" treatment
@@ -47,11 +50,10 @@ grow<-grow[-c(11:15),] #removing control (no chamber)
 
 hist(grow$prop_gro) 
 shapiro.test(grow$prop_gro)#normal
-hist(grow$total_gro)
-shapiro.test(grow$total_gro)#so is this one. Both yield the same results
+qqnorm(grow$prop_gro)
 
 
-##CHEMISTRY
+##CHEMISTRY DATA----
 
 ##Stanard curve math
 {#Load standard curve data
@@ -115,7 +117,7 @@ phen.40<-phen.all[-c(1:10),]#removing control (no chamber)
 phen.20<-aggregate(pdw~chamber+treat,data=phen.40,FUN=mean)
 
 
-##HERBIVORY
+##HERBIVORY----
 
 #load herbivory data
 herb.all <- read.csv(file="Piper_herbivory.csv",head=TRUE)
@@ -228,6 +230,16 @@ vif(check1)
 ##JULY ANALYSIS----
 ##QUESTION 1----
 
+#chamber effect?
+
+#creating datasets with only two control treatments
+grow.all <- grow.all[order(grow.all$Treatment),]
+grow.control.c <-grow.all[c(6:10),]
+grow.control.nc <-grow.all[c(11:15),]
+t.test(grow.control.c$prop_gro, grow.control.nc$prop_gro, paired = T)
+#t = -1.2959, df = 4, p-value = 0.2647
+#no chamber effect on growth
+
 #GROWTH
 #all treatments, n=25
 mod.gro1<-(betareg(prop_gro~treatment, dat=all.dat25))
@@ -256,6 +268,15 @@ ggplot(data=all.dat20, aes(x=treatment, y=prop_gro))+
 
 #CHEMISTRY
 library(glmmTMB)
+
+#creating datasets with only two control treatments
+all.dat50 <- all.dat50[order(all.dat50$treatment),]
+all.dat50.cc <- all.dat50[c(11:20),]
+all.dat50.nc <- all.dat50[c(21:30),]
+t.test(all.dat50.cc$pdw, all.dat50.nc$pdw, paired = T)
+#t = -1.3253, df = 9, p-value = 0.2177
+
+
 
 #all treatments, n=50
 chem.mod1 <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat50, family = "beta_family")
@@ -292,6 +313,14 @@ ggplot(data=all.dat40, aes(x=treatment, y=pdw))+
 
 #HERBIVORY
 
+#creating datasets with only two control treatments
+all.dat100 <- all.dat100[order(all.dat100$treatment),]
+all.dat100.cc <- all.dat100[c(21:40),]
+all.dat100.nc <- all.dat100[c(41:60),]
+t.test(all.dat100.cc$prop_herb, all.dat100.nc$prop_herb, paired = T)
+#t = -1.4956, df = 19, p-value = 0.1512
+
+#adding small amount to herbivory to help beta regressions run with high number of zeros
 all.dat100$prop_herb1<-all.dat100$prop_herb+0.0001
 all.dat80$prop_herb1<-all.dat80$prop_herb+0.0001
 
