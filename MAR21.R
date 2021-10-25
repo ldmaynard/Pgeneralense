@@ -277,7 +277,6 @@ t.test(all.dat50.cc$pdw, all.dat50.nc$pdw, paired = T)
 #t = -1.3253, df = 9, p-value = 0.2177
 
 
-
 #all treatments, n=50
 chem.mod1 <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat50, family = "beta_family")
 summary(chem.mod1)
@@ -364,7 +363,7 @@ ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1))+
 	labs(y="Proportion herbivory")
 
 ##Question 1 plot----
-gro.plot<-ggplot(data=all.dat25, aes(x=treatment, y=prop_gro, color=treatment))+ 
+gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
@@ -372,22 +371,22 @@ gro.plot<-ggplot(data=all.dat25, aes(x=treatment, y=prop_gro, color=treatment))+
 	theme(axis.text.x = element_blank(), 
 		  text = element_text(size=14), legend.position = "none")+
 	scale_color_viridis(discrete = T, option = "C")+
-	scale_x_discrete(limits=c("natural control", "control chamber", "CO2", "T°C", "T°C + CO2"))
+	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))
 gro.plot
 
-chem.plot<-ggplot(data=all.dat50, aes(x=treatment, y=pdw, color=treatment))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
+chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
+	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
-	labs(y="Phenolics (proportion dw)", x="")+
+	labs(y="Total phenolics (prop dw GAE)", x="")+
 	theme(axis.text.x = element_blank(), 
 		  text = element_text(size=14), legend.position = "none")+
 	scale_color_viridis(discrete = T, option = "C")+
-	scale_x_discrete(limits=c("natural control", "control chamber", "CO2", "T°C", "T°C + CO2"))
+	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))
 chem.plot
 
-herb.plot<-ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1, color=treatment))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
+herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment))+ 
+	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	labs(y="Proportion herbivory", x="")+
@@ -396,9 +395,8 @@ herb.plot<-ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1, color=treatmen
 	scale_color_viridis(discrete = T, option = "C")
 herb.plot
 
-herb.plot1<-herb.plot+scale_x_discrete(limits=c("natural control", "control chamber", "CO2", "T°C", "T°C + CO2" ),
-	labels=c("natural control"=expression(atop("Control", paste("(no chamber)"))),
-			 "control chamber"=expression(atop("Control", paste("(chamber)"))),
+herb.plot1<-herb.plot+scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2" ),
+	labels=c("control chamber"=expression(atop("Control")),
 			 "T°C"="Temperature",
 			 CO2=expression(CO["2"]),
 			 "T°C + CO2"=expression(CO["2"] + Temp)))
@@ -483,6 +481,9 @@ all.dat40 %>%
 all.dat40<- all.dat40[order(all.dat40$stage),]
 all.dat40_m <- all.dat40[c(1:20),]
 all.dat40_y <- all.dat40[c(21:40),]
+
+t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = T)
+#t = -7.8569, df = 19, p-value = 2.189e-07
 
 #mature leaves, interactive model
 grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
@@ -586,6 +587,9 @@ all.dat80 %>%
 all.dat80<- all.dat80[order(all.dat80$stage),]
 all.dat80_m <- all.dat80[c(1:40),]
 all.dat80_y <- all.dat80[c(41:80),]
+
+t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = T)
+#t = 3.65, df = 39, p-value = 0.0007674
 
 #Young leaves
 herb.chem.mod2c_y<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_y, family = "beta_family")
