@@ -309,7 +309,8 @@ gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+
 	theme(axis.text.x = element_blank(), 
 		  text = element_text(size=14), legend.position = "none")+
 	scale_color_viridis(discrete = T, option = "C")+
-	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))
+	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))+
+	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
 gro.plot
 
 chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
@@ -333,7 +334,9 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=14), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
 		  legend.title = element_blank(), legend.position = "none")+
-	scale_color_viridis(discrete = T, option = "C")
+	scale_color_viridis(discrete = T, option = "C")+
+	scale_y_continuous(labels = scales::number_format(accuracy = 0.01), 
+					   limits = c(0, 0.30))
 herb.plot
 
 herb.plot1<-herb.plot+scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2" ),
