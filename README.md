@@ -1,16 +1,41 @@
-# Pgeneralense
-Piper generalense: effects of climate change on growth, herbivory, and phytochemistry
+Data from "Piper generalense: effects of climate change on growth, herbivory, and phytochemistry" 
+by L.D. Maynard, E. Moureau, M.Y. Bader, D. Salazar, S.R. Whitehead
 
-All data were collected at La Selva Biological Station, Heredia Province, Costa Rica (Organization for Tropical Studies)
+Published in X
+Article DOI TBD
+Zenodo DOI TBD
 
-Info on installations
 
-Five treatments: open control (n=5), control chamber (n=5), increase temperature chamber (n=6), 
-increase CO2 chamber (n=5), increase temperature and CO2 chamber (n=4). One Piper generalense plant in each 
-chamber/plot (n=25 plants). Four leaves collected per plant (n=100 leaves). 
+All data were collected at La Selva Biological Station, Heredia Province, Costa Rica 
+(Organization for Tropical Studies)
 
-##Piper_grwoth.csv##
+##Piper_growth.csv##
+Casa = individual chamber ID (A-T and 1-5)
+Treatment = climate treatment (natural control, control chamber, CO2, T°C, T°C + CO2)
+ht.2018.04.cm = plant height on x Apr 2018 (cm)
+ht.2018.09.cm = plant height on x Sep 2018 (cm)
 
+##Piper_phenolics.csv
+chamber = individual chamber ID (A-T and 1-5)
+sample = individual sample ID (pg+chamber ID+leaf age)
+stage = leaf ag (m=mature, y=young)
+plate = plate ID (in absorbance reading)
+well = individual well ID (well-plate)
+id = individual sample ID (well-sample)
+start wt = starting aliquot of dried leaf tissue
+abs1 = first absorbance reading
+abs2 = second absorbance reading
+abs3 = third absorbance reading
+abs_avg = average of abs1:3
 
 ##Piper_herbivory.csv##
-Data were collected m 2018 
+ID = individual leaf ID (PG-#)
+sample = phenolics sample individual ID (pg+chamber ID+leaf age)
+age = leaf ag (M=mature, Y=young)
+chamber = individual chamber ID (A-T and 1-5)
+treatment = climate treatment (natural control, control chamber, CO2, T°C, T°C + CO2)
+total area cm2 = total leaf area (cm^2)
+real area cm2 = observed leaf area (cm^2)
+percent_herbivory = amount of leaf missing/herbivore damage (%)
+wt_mg = weight of collected leaf (mg)
+

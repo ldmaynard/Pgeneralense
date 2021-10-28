@@ -1,4 +1,44 @@
 ID,sample,age,chamber,treatment,total area cm2,real area cm2,percent_herbivory,wt_mg
+PG-50,pgBm,M,B,CO2,50.9,46.7,8.25,18.126
+PG-51,pgBm,M,B,CO2,88.9,85,4.39,33.962
+PG-48,pgBy,Y,B,CO2,0,0,0,2.318
+PG-49,pgBy,Y,B,CO2,0,0,0,17.421
+PG-15,pgDm,M,D,CO2,0,0,0,17.485
+PG-16,pgDm,M,D,CO2,58.6,57.1,2.56,21.949
+PG-13,pgDy,Y,D,CO2,45,44.8,0.44,10.447
+PG-14,pgDy,Y,D,CO2,0,0,0,9.486
+PG-84,pgKm,M,K,CO2,86.3,83,3.82,37.315
+PG-85,pgKm,M,K,CO2,69.8,56.8,18.62,22.809
+PG-82,pgKy,Y,K,CO2,0,0,0,5.829
+PG-83,pgKy,Y,K,CO2,54.6,54.4,0.37,16.529
+PG-117,pgNm,M,N,CO2,31.7,31.3,1.26,14.615
+PG-118,pgNm,M,N,CO2,0,0,0,14.044
+PG-115,pgNy,Y,N,CO2,44.3,43.5,1.81,11.484
+PG-116,pgNy,Y,N,CO2,0,0,0,5.949
+PG-63,pgRm,M,R,CO2,0,0,0,20.096
+PG-64,pgRm,M,R,CO2,32.36,24.8,23.36,9.948
+PG-61,pgRy,Y,R,CO2,0,0,0,11.068
+PG-62,pgRy,Y,R,CO2,0,0,0,14.159
+PG-34,pgCm,M,C,control chamber,78,76.9,1.41,30.21
+PG-35,pgCm,M,C,control chamber,68.6,60.2,12.24,23.535
+PG-32,pgCy,Y,C,control chamber,0,0,0,4.494
+PG-33,pgCy,Y,C,control chamber,52.3,48.4,7.46,14.437
+PG-19,pgEm,M,E,control chamber,66.7,66,1.05,22.803
+PG-20,pgEm,M,E,control chamber,69.8,63.3,9.31,22.091
+PG-17,pgEy,Y,E,control chamber,0,0,0,1.743
+PG-18,pgEy,Y,E,control chamber,0,0,0,10.819
+PG-113,pgJm,M,J,control chamber,87.1,81.7,6.2,31.733
+PG-114,pgJm,M,J,control chamber,98.4,95.5,2.95,35.758
+PG-111,pgJy,Y,J,control chamber,67,66.6,0.6,14.294
+PG-112,pgJy,Y,J,control chamber,50.9,48.5,4.72,11.906
+PG-68,pgMm,M,M,control chamber,78.07,77.8,0.35,30.3
+PG-69,pgMm,M,M,control chamber,49.8,49.5,0.6,19.282
+PG-66,pgMy,Y,M,control chamber,0,0,0,2.671
+PG-67,pgMy,Y,M,control chamber,0,0,0,12.781
+PG-108,pgOm,M,O,control chamber,0,0,0,23.144
+PG-109,pgOm,M,O,control chamber,65.7,65.3,0.61,17.65
+PG-106,pgOy,Y,O,control chamber,0,0,0,5.634
+PG-107,pgOy,Y,O,control chamber,0,0,0,12.595
 PG-73,pg1m,M,1,natural control,47.8,31.8,33.47,13.079
 PG-74,pg1m,M,1,natural control,34.8,30.6,12.07,11.012
 PG-71,pg1y,Y,1,natural control,50,48.2,3.6,13.71
@@ -19,83 +59,43 @@ PG-56,pg5m,M,5,natural control,0,0,0,39.137
 PG-57,pg5m,M,5,natural control,0,0,0,40.794
 PG-54,pg5y,Y,5,natural control,0,0,0,6.034
 PG-55,pg5y,Y,5,natural control,38.3,35.9,6.27,11.528
-PG-11,pgAm,M,A,T째C + CO2,41.4,30.2,27.05,13.061
-PG-12,pgAm,M,A,T째C + CO2,67.8,55.6,17.99,23.004
-PG-10,pgAy,Y,A,T째C + CO2,0,0,0,10.068
-PG-9,pgAy,Y,A,T째C + CO2,0,0,0,3.478
-PG-50,pgBm,M,B,CO2,50.9,46.7,8.25,18.126
-PG-51,pgBm,M,B,CO2,88.9,85,4.39,33.962
-PG-48,pgBy,Y,B,CO2,0,0,0,2.318
-PG-49,pgBy,Y,B,CO2,0,0,0,17.421
-PG-34,pgCm,M,C,control chamber,78,76.9,1.41,30.21
-PG-35,pgCm,M,C,control chamber,68.6,60.2,12.24,23.535
-PG-32,pgCy,Y,C,control chamber,0,0,0,4.494
-PG-33,pgCy,Y,C,control chamber,52.3,48.4,7.46,14.437
-PG-15,pgDm,M,D,CO2,0,0,0,17.485
-PG-16,pgDm,M,D,CO2,58.6,57.1,2.56,21.949
-PG-13,pgDy,Y,D,CO2,45,44.8,0.44,10.447
-PG-14,pgDy,Y,D,CO2,0,0,0,9.486
-PG-19,pgEm,M,E,control chamber,66.7,66,1.05,22.803
-PG-20,pgEm,M,E,control chamber,69.8,63.3,9.31,22.091
-PG-17,pgEy,Y,E,control chamber,0,0,0,1.743
-PG-18,pgEy,Y,E,control chamber,0,0,0,10.819
-PG-7,pgFm,M,F,T째C,0,0,0,20.195
-PG-8,pgFm,M,F,T째C,41.8,41.6,0.48,15.766
-PG-5,pgFy,Y,F,T째C,0,0,0,7.234
-PG-6,pgFy,Y,F,T째C,0,0,0,4.447
-PG-3,pgGm,M,G,T째C,84.6,84.5,0.12,28.154
-PG-4,pgGm,M,G,T째C,47.2,46.1,2.33,16.778
-PG-1,pgGy,Y,G,T째C,0,0,0,7.101
-PG-2,pgGy,Y,G,T째C,0,0,0,11.833
-PG-79,pgHm,M,H,T째C + CO2,69,67.5,2.17,25.785
-PG-80,pgHm,M,H,T째C + CO2,61.5,59.3,3.58,22.797
-PG-77,pgHy,Y,H,T째C + CO2,0,0,0,15.383
-PG-78,pgHy,Y,H,T째C + CO2,0,0,0,15.343
-PG-123,pgIm,M,I,T째C + CO2,42.8,42.3,1.17,16.034
-PG-124,pgIm,M,I,T째C + CO2,94.5,94.2,0.32,32.736
-PG-121,pgIy,Y,I,T째C + CO2,0,0,0,22.515
-PG-122,pgIy,Y,I,T째C + CO2,0,0,0,13.964
-PG-113,pgJm,M,J,control chamber,87.1,81.7,6.2,31.733
-PG-114,pgJm,M,J,control chamber,98.4,95.5,2.95,35.758
-PG-111,pgJy,Y,J,control chamber,67,66.6,0.6,14.294
-PG-112,pgJy,Y,J,control chamber,50.9,48.5,4.72,11.906
-PG-84,pgKm,M,K,CO2,86.3,83,3.82,37.315
-PG-85,pgKm,M,K,CO2,69.8,56.8,18.62,22.809
-PG-82,pgKy,Y,K,CO2,0,0,0,5.829
-PG-83,pgKy,Y,K,CO2,54.6,54.4,0.37,16.529
-PG-88,pgLm,M,L,T째C,72.5,72.1,0.55,30.314
-PG-89,pgLm,M,L,T째C,92.6,89.7,3.13,37.692
-PG-86,pgLy,Y,L,T째C,0,0,0,14.354
-PG-87,pgLy,Y,L,T째C,0,0,0,11.922
-PG-68,pgMm,M,M,control chamber,78.07,77.8,0.35,30.3
-PG-69,pgMm,M,M,control chamber,49.8,49.5,0.6,19.282
-PG-66,pgMy,Y,M,control chamber,0,0,0,2.671
-PG-67,pgMy,Y,M,control chamber,0,0,0,12.781
-PG-117,pgNm,M,N,CO2,31.7,31.3,1.26,14.615
-PG-118,pgNm,M,N,CO2,0,0,0,14.044
-PG-115,pgNy,Y,N,CO2,44.3,43.5,1.81,11.484
-PG-116,pgNy,Y,N,CO2,0,0,0,5.949
-PG-108,pgOm,M,O,control chamber,0,0,0,23.144
-PG-109,pgOm,M,O,control chamber,65.7,65.3,0.61,17.65
-PG-106,pgOy,Y,O,control chamber,0,0,0,5.634
-PG-107,pgOy,Y,O,control chamber,0,0,0,12.595
-PG-93,pgPm,M,P,T째C,0,0,0,26.643
-PG-94,pgPm,M,P,T째C,88.1,87.2,1.02,31.225
-PG-91,pgPy,Y,P,T째C,0,0,0,7.396
-PG-92,pgPy,Y,P,T째C,38.5,38.2,0.78,8.393
-PG-98,pgQm,M,Q,T째C,68,60.4,11.18,26.003
-PG-99,pgQm,M,Q,T째C,85.4,76.5,10.42,33.511
-PG-96,pgQy,Y,Q,T째C,0,0,0,13.369
-PG-97,pgQy,Y,Q,T째C,0,0,0,8.228
-PG-63,pgRm,M,R,CO2,0,0,0,20.096
-PG-64,pgRm,M,R,CO2,32.36,24.8,23.36,9.948
-PG-61,pgRy,Y,R,CO2,0,0,0,11.068
-PG-62,pgRy,Y,R,CO2,0,0,0,14.159
-PG-45,pgSm,M,S,T째C + CO2,34.8,29,16.67,11.836
-PG-46,pgSm,M,S,T째C + CO2,44,37.4,15,16.009
-PG-43,pgSy,Y,S,T째C + CO2,0,0,0,11.017
-PG-44,pgSy,Y,S,T째C + CO2,38.7,29,25.06,9.754
-PG-23,pgTm,M,T,T째C,52,51.4,1.15,15.608
-PG-24,pgTm,M,T,T째C,0,0,0,19.529
-PG-21,pgTy,Y,T,T째C,0,0,0,4.356
-PG-22,pgTy,Y,T,T째C,0,0,0,5.38
+PG-7,pgFm,M,F,T좧,0,0,0,20.195
+PG-8,pgFm,M,F,T좧,41.8,41.6,0.48,15.766
+PG-5,pgFy,Y,F,T좧,0,0,0,7.234
+PG-6,pgFy,Y,F,T좧,0,0,0,4.447
+PG-3,pgGm,M,G,T좧,84.6,84.5,0.12,28.154
+PG-4,pgGm,M,G,T좧,47.2,46.1,2.33,16.778
+PG-1,pgGy,Y,G,T좧,0,0,0,7.101
+PG-2,pgGy,Y,G,T좧,0,0,0,11.833
+PG-88,pgLm,M,L,T좧,72.5,72.1,0.55,30.314
+PG-89,pgLm,M,L,T좧,92.6,89.7,3.13,37.692
+PG-86,pgLy,Y,L,T좧,0,0,0,14.354
+PG-87,pgLy,Y,L,T좧,0,0,0,11.922
+PG-93,pgPm,M,P,T좧,0,0,0,26.643
+PG-94,pgPm,M,P,T좧,88.1,87.2,1.02,31.225
+PG-91,pgPy,Y,P,T좧,0,0,0,7.396
+PG-92,pgPy,Y,P,T좧,38.5,38.2,0.78,8.393
+PG-98,pgQm,M,Q,T좧,68,60.4,11.18,26.003
+PG-99,pgQm,M,Q,T좧,85.4,76.5,10.42,33.511
+PG-96,pgQy,Y,Q,T좧,0,0,0,13.369
+PG-97,pgQy,Y,Q,T좧,0,0,0,8.228
+PG-23,pgTm,M,T,T좧,52,51.4,1.15,15.608
+PG-24,pgTm,M,T,T좧,0,0,0,19.529
+PG-21,pgTy,Y,T,T좧,0,0,0,4.356
+PG-22,pgTy,Y,T,T좧,0,0,0,5.38
+PG-11,pgAm,M,A,T좧 + CO2,41.4,30.2,27.05,13.061
+PG-12,pgAm,M,A,T좧 + CO2,67.8,55.6,17.99,23.004
+PG-10,pgAy,Y,A,T좧 + CO2,0,0,0,10.068
+PG-9,pgAy,Y,A,T좧 + CO2,0,0,0,3.478
+PG-79,pgHm,M,H,T좧 + CO2,69,67.5,2.17,25.785
+PG-80,pgHm,M,H,T좧 + CO2,61.5,59.3,3.58,22.797
+PG-77,pgHy,Y,H,T좧 + CO2,0,0,0,15.383
+PG-78,pgHy,Y,H,T좧 + CO2,0,0,0,15.343
+PG-123,pgIm,M,I,T좧 + CO2,42.8,42.3,1.17,16.034
+PG-124,pgIm,M,I,T좧 + CO2,94.5,94.2,0.32,32.736
+PG-121,pgIy,Y,I,T좧 + CO2,0,0,0,22.515
+PG-122,pgIy,Y,I,T좧 + CO2,0,0,0,13.964
+PG-45,pgSm,M,S,T좧 + CO2,34.8,29,16.67,11.836
+PG-46,pgSm,M,S,T좧 + CO2,44,37.4,15,16.009
+PG-43,pgSy,Y,S,T좧 + CO2,0,0,0,11.017
+PG-44,pgSy,Y,S,T좧 + CO2,38.7,29,25.06,9.754
