@@ -417,7 +417,7 @@ fig2<-all.dat40_m %>%
 fig2
 
 #EXPORT FIGURE 2
-tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=5, res=800)
+tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=5, res=500)
 fig2
 dev.off()
 
