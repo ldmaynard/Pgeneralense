@@ -1,6 +1,6 @@
 #Effects of climate change on allocation to growth and defense in a neotropical shrub
 
-#LOADING LIBRARIES----------------------------------------------------
+#LOADING LIBRARIES---
 {library(lme4)
 	library(ggplot2)
 	library(car)
@@ -13,7 +13,6 @@
 	library(glmmTMB)
 	library(RColorBrewer)
 }
-
 #LOADING & WRANGLING DATA----------------------------------------------------
 
 ##GROWTH DATA----
@@ -218,6 +217,9 @@ all.dat40<- all.dat40[order(all.dat40$stage),]
 all.dat40_m <- all.dat40[c(1:20),]
 all.dat40_y <- all.dat40[c(21:40),]
 
+#adding small amount to herbivory to help beta regressions run with high number of zeros
+all.dat80$prop_herb1<-all.dat80$prop_herb+0.00001
+
 #splitting herbivory data by leaf age
 all.dat80<- all.dat80[order(all.dat80$stage),]
 all.dat80_m <- all.dat80[c(1:40),]
@@ -281,9 +283,6 @@ Anova(chem.mod2m)
 #There is no effect of treatment on mature leaf chemical defense
 
 #1C. HERBIVORY----
-#adding small amount to herbivory to help beta regressions run with high number of zeros
-all.dat80$prop_herb1<-all.dat80$prop_herb+0.00001
-
 herb.mod2 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber) + (1|stage), data = all.dat80, family = "beta_family")
 Anova(herb.mod2)
 #df=3, chisq=1.39,  p=0.71
@@ -301,7 +300,7 @@ Anova(herb.mod2m)
 #df=3, chisq=0.78,  p=0.85
 #There is no effect of treatment on mature leaf chemical defense
 
-##Question 1 plot----
+##QUESTION 1 PLOT----
 gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=4, shape=18)+
 	stat_summary(shape=18,fun.data = "mean_se", colour="black", size=1.25)+
@@ -355,7 +354,7 @@ dev.off()
 
 
 
-#QUESTION 2: 
+#QUESTION 2---- 
 #mature leaves, interactive model
 grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
 Anova(grow.mod2m_i)
@@ -481,27 +480,9 @@ sum.tab.m
 
 (0.10493750/0.06226000)-0.06226000
 #mature leaves in combo treatment had 1.62 times more herbivory relative to leaves in CO2
-
-#Figure 4. Herbivory~chemistry plot
-#R^2 data
-summary(lm(data = all.dat80_m, prop_herb1~pdw))#Multiple R-squared:  0.03
-#y=mx+b, y=0.076605x + 0.024217
-plot(all.dat80_m$prop_herb1~all.dat80_m$pdw)
-#Mature leaves in elevated temperatures grew 0.07% with every 1% increase in growth
-
-all.dat80_m %>%
-	ggplot(aes(x=pdw, 
-			   y=prop_herb1))+ 
-	geom_point(alpha=0.6, size=2.5)+
-	geom_smooth(method = 'lm', fill="light grey", linetype="solid", color="#440154FF")+
-	theme_classic()+
-	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
-	theme(text = element_text(size=16))+
-	annotate("text", x = 0.068, y = 0.26,
-			 label = "paste(italic(R) ^ 2, \" = 0.03\")", parse = TRUE, size =5)
 	
 
-#Figure 3. Herbivory~treatment plot
+#FIGURE 3. Herbivory~treatment plot
 #herbivory plot mature
 ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, aes(color=treatment), size=2.5)+
@@ -520,3 +501,23 @@ ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+
 	stat_summary(geom = 'text', label = c("ab","ab","a","b"),
 				 fun = max, vjust = -0.8, size=5.5)+
 	scale_y_continuous(limits = c(0, 0.3))
+
+#FIGURE 4. Herbivory~chemistry plot
+#R^2 data
+mod1<-lm(data = all.dat80_m, prop_herb1~pdw)
+summary(mod1)#Multiple R-squared:  0.07...
+#y=mx+b, y=-1.03027 + 0.10405
+plot(all.dat80_m$prop_herb1~all.dat80_m$pdw)
+#Mature leaves in experienced 1.03% less herbivory with every 1% increase in total phenolics
+
+all.dat80_m %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1))+ 
+	geom_point(alpha=0.6, size=2.5)+
+	geom_smooth(method = 'lm', fill="light grey", linetype="solid", color="#440154FF")+
+	theme_classic()+
+	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
+	theme(text = element_text(size=16))+
+	annotate("text", x = 0.068, y = 0.26,
+			 label = "paste(italic(R) ^ 2, \" = 0.07\")", parse = TRUE, size =5)
+
