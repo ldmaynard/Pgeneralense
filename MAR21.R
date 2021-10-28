@@ -256,6 +256,7 @@ gro.plot
 
 #four treatment data
 mod.gro2<-(betareg(prop_gro~treatment, dat=all.dat20))
+summary(mod.gro2)
 Anova(mod.gro2)
 #p=0.82, no effect of treatment 
 shapiro.test(resid(mod.gro2)) #residuals  normally distributed
@@ -331,8 +332,6 @@ Anova(herb.mod1)
 drop1(herb.mod1, test="Chisq")
 #treatment p=0.61
 
-treatment[treatment=="mysee"]="myse"
-
 #herbivory plot, n=100
 herb.plot<-ggplot(data=all.dat100, aes(x=treatment, y=prop_herb1))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
@@ -364,8 +363,8 @@ ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1))+
 
 ##Question 1 plot----
 gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+ 
-	geom_point(position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
-	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=4, shape=18)+
+	stat_summary(shape=18,fun.data = "mean_se", colour="black", size=1.5)+
 	theme_classic()+
 	labs(y="Proportion growth", x="")+
 	theme(axis.text.x = element_blank(), 
@@ -375,23 +374,26 @@ gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+
 gro.plot
 
 chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
-	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
+			   size=2.5, show.legend = F)+
+	stat_summary(aes(group=stage, shape=stage),fun.data = "mean_se", size=1, color="black")+
 	theme_classic()+
 	labs(y="Total phenolics (prop dw GAE)", x="")+
-	theme(axis.text.x = element_blank(), 
-		  text = element_text(size=14), legend.position = "none")+
+	theme(axis.text.x = element_blank(), text = element_text(size=14), legend.title = element_blank(),
+		  legend.position = "none")+
 	scale_color_viridis(discrete = T, option = "C")+
 	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))
 chem.plot
 
+
 herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.4, size=2.5)+
-	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
+			   size=2.5, show.legend = F)+
+	stat_summary(aes(group=stage, shape=stage, color=stage),fun.data = "mean_se", colour="black", size=1)+
 	theme_classic()+
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=14), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
-		  legend.position = "none")+
+		  legend.title = element_blank(), legend.position = "bottom")+
 	scale_color_viridis(discrete = T, option = "C")
 herb.plot
 
@@ -403,7 +405,7 @@ herb.plot1<-herb.plot+scale_x_discrete(limits=c("control chamber", "CO2", "T°C"
 herb.plot1
 
 
-tiff('combo.tiff', units="in", width=5, height=10, res=300)
+tiff('combo.tiff', units="in", width=5, height=11, res=300)
 ggarrange(gro.plot, chem.plot, herb.plot1,
 		  labels = c("a", "b", "c"),heights = c(2, 2, 2),
 		  ncol = 1, nrow = 3)
@@ -487,7 +489,6 @@ t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = T)
 
 #mature leaves, interactive model
 grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
-summary(grow.mod2m_i)
 Anova(grow.mod2m_i)
 #treatment p=.93, growth=0.45, interaction p=0.034
 
@@ -566,7 +567,6 @@ all.dat50 %>%
 
 ##QUESTION 2C----
 #Relative change in the effectiveness of defense
-
 herb.chem.mod2c<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80, family = "beta_family")
 summary(herb.chem.mod2c)
 Anova(herb.chem.mod2c)
