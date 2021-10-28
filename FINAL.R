@@ -104,7 +104,7 @@ phen.40<-phen.all[-c(1:10),]#removing control (no chamber)
 phen.20<-aggregate(pdw~chamber+treat,data=phen.40,FUN=mean)
 
 
-##HERBIVORY----
+##HERBIVORY DATA----
 
 #load herbivory data
 herb.all <- read.csv(file="Piper_herbivory.csv",head=TRUE)
@@ -322,8 +322,8 @@ chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+
 	labs(y="Total phenolics (prop dw GAE)", x="")+
 	theme(axis.text.x = element_blank(), text = element_text(size=14), legend.title = element_blank(),
 		  legend.position = "none")+
-	scale_color_viridis(discrete = T, option = "C")+
-	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))
+	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1)
 chem.plot
 
 
@@ -335,9 +335,8 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=14), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
 		  legend.title = element_blank(), legend.position = "none")+
-	scale_color_viridis(discrete = T, option = "C")+
-	scale_y_continuous(labels = scales::number_format(accuracy = 0.01), 
-					   limits = c(0, 0.30))
+	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))+
+	scale_color_brewer(palette=9, type = "div", direction = 1)
 herb.plot
 
 herb.plot1<-herb.plot+scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2" ),
@@ -411,13 +410,14 @@ fig2<-all.dat40_m %>%
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
 		  legend.box.background = element_rect(colour = "black"))+
 	scale_linetype_manual(values = c("dashed", "dashed", "solid","dashed"))+
-	annotate("text", x = 0.38, y = 0.058,
+	annotate("text", x = 0.47, y = 0.055,
 			 label = "paste(italic(R) ^ 2, \" = 0.75\")", parse = TRUE, size =5)+
 	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+
 fig2
 
 #EXPORT FIGURE 2
-tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=5, res=500)
+tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=5, res=300)
 fig2
 dev.off()
 
@@ -430,10 +430,11 @@ all.dat40_y %>%
 	geom_point(alpha=0.6, size=2.5)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth")+
 	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=16), legend.position = "right",
-		  legend.text.align = 0)+
 	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
-	scale_color_brewer(palette=1, type = "div", direction = 1)
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
+	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"))
 
 #QUESTION 3----
 #Relative change in the effectiveness of defense
@@ -453,6 +454,7 @@ Anova(herb.chem.mod2_m)
 #treatment  chisq=8.5098, p=0.03657
 #chemistry  chisq=4.1599, p=0.04139
 #interaction chisq=0.4231, p=0.93543
+
 #in mature leaves, increasing defenses had a negative effect on chemistry 
 
 joint_tests((herb.chem.mod2_m), by = "treatment")
@@ -480,5 +482,32 @@ sum.tab.m
 (0.10493750/0.06226000)-0.06226000
 #mature leaves in combo treatment had 1.62 times more herbivory relative to leaves in CO2
 
+#Figure 4. Herbivory~chemistry plot
+all.dat80_m %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1))+ 
+	geom_point(alpha=0.6, size=2.5)+
+	geom_smooth(method = 'lm', fill="light grey", linetype="dashed", color="#440154FF")+
+	theme_classic()+
+	labs(y="Proportion herbivory", x="Total phenolics (prop. dw GAE)")+
+	theme(text = element_text(size=14))
 
-
+#Figure 3. Herbivory~treatment plot
+#herbivory plot mature
+ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+ 
+	geom_point(position=position_jitter(width = 0.025), alpha=0.6, aes(color=treatment), size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="black", size=1)+
+	theme_classic()+
+	theme(legend.position = "none")+
+	labs(y="Proportion herbivory", x="")+
+	theme(text = element_text(size=16), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
+		  legend.position = "none")+
+	scale_x_discrete(limits=c("control chamber","CO2", "T°C", "T°C + CO2"),
+					 labels=c("control chamber"=expression(atop("Control")),
+					 		 "T°C"="Temperature",
+					 		 CO2=expression(CO["2"]),
+					 		 "T°C + CO2"=expression(CO["2"] + Temp)))+
+	scale_color_brewer(palette=9, type = "div", direction = 1)+
+	stat_summary(geom = 'text', label = c("ab","ab","a","b"),
+				 fun = max, vjust = -0.8, size=5.5)+
+	scale_y_continuous(limits = c(0, 0.3))
