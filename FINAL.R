@@ -427,7 +427,7 @@ all.dat40_y %>%
 			   y=pdw,
 			   color=treatment))+
 	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.5, show.legend=F)+
-	geom_point(alpha=0.6, size=2.5)+
+	geom_point(alpha=0.6, size=2.8, shape=17)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth")+
 	theme_classic()+
 	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
@@ -483,14 +483,23 @@ sum.tab.m
 #mature leaves in combo treatment had 1.62 times more herbivory relative to leaves in CO2
 
 #Figure 4. Herbivory~chemistry plot
+#R^2 data
+summary(lm(data = all.dat80_m, prop_herb1~pdw))#Multiple R-squared:  0.03
+#y=mx+b, y=0.076605x + 0.024217
+plot(all.dat80_m$prop_herb1~all.dat80_m$pdw)
+#Mature leaves in elevated temperatures grew 0.07% with every 1% increase in growth
+
 all.dat80_m %>%
 	ggplot(aes(x=pdw, 
 			   y=prop_herb1))+ 
 	geom_point(alpha=0.6, size=2.5)+
-	geom_smooth(method = 'lm', fill="light grey", linetype="dashed", color="#440154FF")+
+	geom_smooth(method = 'lm', fill="light grey", linetype="solid", color="#440154FF")+
 	theme_classic()+
-	labs(y="Proportion herbivory", x="Total phenolics (prop. dw GAE)")+
-	theme(text = element_text(size=14))
+	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
+	theme(text = element_text(size=16))+
+	annotate("text", x = 0.068, y = 0.26,
+			 label = "paste(italic(R) ^ 2, \" = 0.03\")", parse = TRUE, size =5)
+	
 
 #Figure 3. Herbivory~treatment plot
 #herbivory plot mature
