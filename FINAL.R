@@ -11,6 +11,7 @@
 	library(emmeans)
 	library(ggpubr)
 	library(glmmTMB)
+	library(RColorBrewer)
 }
 
 #LOADING & WRANGLING DATA----------------------------------------------------
@@ -308,9 +309,9 @@ gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+
 	labs(y="Proportion growth", x="")+
 	theme(axis.text.x = element_blank(), 
 		  text = element_text(size=14), legend.position = "none")+
-	scale_color_viridis(discrete = T, option = "C")+
 	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))+
-	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))
+	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))+
+	scale_color_brewer(palette=9, type = "div", direction = 1)
 gro.plot
 
 chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
@@ -355,8 +356,6 @@ dev.off()
 
 
 
-
-
 #QUESTION 2: 
 #mature leaves, interactive model
 grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
@@ -394,26 +393,33 @@ plot(q2_temp_m$pdw~q2_temp_m$prop_gro)
 #Mature leaves in elevated temperatures grew 0.07% with every 1% increase in growth
 
 #legend text
-leg.lab <- c(expression(CO["2"]),
-			 "Control",
+leg.lab <- c("Control",
+			 expression(CO["2"]),
 			 "Temperature",
 			 expression(CO["2"] + Temp))
 
 #Growth*defense plot, mature leaves
-all.dat40_m %>%
+fig2<-all.dat40_m %>%
 	ggplot(aes(x=prop_gro, 
 			   y=pdw,
 			   color=treatment))+
-	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.5, show.legend=F)+
-	geom_point(alpha=0.6, size=2.5)+
+	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
+	geom_point(alpha=0.5, size=2.8)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth")+
 	theme_classic()+
-	scale_color_viridis(discrete = T, option = "C", labels=leg.lab)+
-	theme(legend.title = element_blank(), text = element_text(size=16), legend.position = "right",
-		  legend.text.align = 0)+
+	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"))+
 	scale_linetype_manual(values = c("dashed", "dashed", "solid","dashed"))+
-	annotate("text", x = 0.5, y = 0.054,
-			 label = "paste(italic(R) ^ 2, \" = 0.75\")", parse = TRUE, size =5)
+	annotate("text", x = 0.38, y = 0.058,
+			 label = "paste(italic(R) ^ 2, \" = 0.75\")", parse = TRUE, size =5)+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+fig2
+
+#EXPORT FIGURE 2
+tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=5, res=800)
+fig2
+dev.off()
 
 #Growth*defense plot, young leaves
 all.dat40_y %>%
@@ -424,10 +430,10 @@ all.dat40_y %>%
 	geom_point(alpha=0.6, size=2.5)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth")+
 	theme_classic()+
-	scale_color_viridis(discrete = T, option = "C", labels=leg.lab)+
 	theme(legend.title = element_blank(), text = element_text(size=16), legend.position = "right",
 		  legend.text.align = 0)+
-	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))
+	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
+	scale_color_brewer(palette=1, type = "div", direction = 1)
 
 #QUESTION 3----
 #Relative change in the effectiveness of defense
