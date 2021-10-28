@@ -279,7 +279,7 @@ Anova(chem.mod2m)
 #df=3, chisq=0.78,  p=0.85
 #There is no effect of treatment on mature leaf chemical defense
 
-#C. HERBIVORY
+#1C. HERBIVORY----
 #adding small amount to herbivory to help beta regressions run with high number of zeros
 all.dat80$prop_herb1<-all.dat80$prop_herb+0.00001
 
@@ -303,7 +303,7 @@ Anova(herb.mod2m)
 ##Question 1 plot----
 gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+ 
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=4, shape=18)+
-	stat_summary(shape=18,fun.data = "mean_se", colour="black", size=1.5)+
+	stat_summary(shape=18,fun.data = "mean_se", colour="black", size=1.25)+
 	theme_classic()+
 	labs(y="Proportion growth", x="")+
 	theme(axis.text.x = element_blank(), 
@@ -332,7 +332,7 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 	theme_classic()+
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=14), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
-		  legend.title = element_blank(), legend.position = "bottom")+
+		  legend.title = element_blank(), legend.position = "none")+
 	scale_color_viridis(discrete = T, option = "C")
 herb.plot
 
@@ -346,7 +346,7 @@ herb.plot1
 
 tiff('combo.tiff', units="in", width=5, height=11, res=300)
 ggarrange(gro.plot, chem.plot, herb.plot1,
-		  labels = c("a", "b", "c"),heights = c(2, 2, 2),
+		  labels = c("a", "b", "c"),heights = c(2, 2, 2.2),
 		  ncol = 1, nrow = 3)
 dev.off()
 
