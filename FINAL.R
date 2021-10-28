@@ -230,6 +230,17 @@ t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = T)
 t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = T)
 #t = 3.65, df = 39, p-value = 0.0007674
 
+#FIGURE S1, PHENOLICS BY LEAF AGE
+figS1<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
+	geom_boxplot()+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="red", size=1)+
+	theme_classic()+
+	theme(legend.position = "none")+
+	labs(y="Total phenolics (prop dw in GAE)", x="Leaf age")+
+	theme(text = element_text(size=16), axis.text.x = element_text(size=12))
+figS1
+
 #PHENOLICS SUMMARY STATS
 phen.tab <- ddply(all.dat40, c("stage"), summarise,
 				  N    = length(pdw),
@@ -241,6 +252,17 @@ phen.tab
 (0.06859805-0.04970515)/0.04970515
 #0.380099
 #Young leaves had an average of 38% times more total phenolics than mature leaves
+
+#FIGURE S2, HERBIVORY BY LEAF AGE
+figS2<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
+	geom_boxplot()+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
+	stat_summary(fun.data = "mean_se", colour="red", size=1)+
+	theme_classic()+
+	theme(legend.position = "none")+
+	labs(y="Proportion herbivory", x="Leaf age")+
+	theme(text = element_text(size=16), axis.text.x = element_text(size=12))
+figS2
 
 #HERBIVORY SUMMARY STATS
 herb.tab <- ddply(all.dat80, c("stage"), summarise,
