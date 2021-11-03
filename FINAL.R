@@ -140,6 +140,9 @@ all.dat80<-select(all.dat80, chamber, stage, pdw, treatment, sample, ID, total.a
 				  real.area.cm2, percent_herbivory, prop_herb, ht.2018.04.cm, ht.2018.09.cm,
 				  total_gro, prop_gro)}
 
+#adding small amount to herbivory to help beta regressions run with high number of zeros
+all.dat80$prop_herb1<-all.dat80$prop_herb+0.00001
+
 #four treatment data, aggregated by leaf age, n=40
 {all.dat40<-merge(herb.40, phen.40, by="sample", all = T)
 head(all.dat40)
@@ -215,9 +218,6 @@ t.test(herb.all.cc$prop_herb, herb.all.nc$prop_herb, paired = T)
 all.dat40<- all.dat40[order(all.dat40$stage),]
 all.dat40_m <- all.dat40[c(1:20),]
 all.dat40_y <- all.dat40[c(21:40),]
-
-#adding small amount to herbivory to help beta regressions run with high number of zeros
-all.dat80$prop_herb1<-all.dat80$prop_herb+0.00001
 
 #splitting herbivory data by leaf age
 all.dat80<- all.dat80[order(all.dat80$stage),]
@@ -406,7 +406,7 @@ joint_tests((grow.mod2y_i), by = "treatment")
 all.dat40_m <- all.dat40_m[order(all.dat40_m$treatment),]
 q2_temp_m<-slice(all.dat40_m, 11:16)
 sum.q2<-lm(data = q2_temp_m, pdw~prop_gro)
-summary(sum.q2)#Multiple R-squared:  0.7486
+summary(sum.q2)#Multiple R-squared:  0.7486, p=0.0260
 #y=mx+b, y=0.076605x + 0.024217
 plot(q2_temp_m$pdw~q2_temp_m$prop_gro)
 #Mature leaves in elevated temperatures grew 0.07% with every 1% increase in growth
@@ -441,20 +441,38 @@ tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=5, res=300)
 fig2
 dev.off()
 
+
 #Growth*defense plot, young leaves
-all.dat40_y %>%
+#R^2 data
+all.dat40_y <- all.dat40_y[order(all.dat40_y$treatment),]
+ydat_combo<-slice(all.dat40_y, 17:20)
+sum.q2S<-lm(data = ydat_combo, pdw~prop_gro)
+summary(sum.q2S)#Multiple R-squared:  0.8526, p=0.0766
+#y=mx+b, y=0.053937x + 0.049805
+plot(ydat_combo$pdw~ydat_combo$prop_gro)
+#Mature leaves in elevated temperatures grew 0.05% with every 1% increase in growth
+
+figS3<-all.dat40_y %>%
 	ggplot(aes(x=prop_gro, 
 			   y=pdw,
 			   color=treatment))+
-	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.5, show.legend=F)+
-	geom_point(alpha=0.6, size=2.8, shape=17)+
+	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
+	geom_point(alpha=0.5, size=3, shape=17)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth")+
 	theme_classic()+
-	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
-	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
 	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"))
+		  legend.box.background = element_rect(colour = "black"))+
+	scale_linetype_manual(values = c("dashed", "dashed", "dashed","F1"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
+	annotate("text", x = 0.53, y = 0.083,
+			 label = "paste(italic(R) ^ 2, \" = 0.85\")", parse = TRUE, size =5)
+figS3
+
+#EXPORT FIGURE S3
+tiff('Maynard_etal_FigS3.tiff', units="in", width=8, height=5, res=300)
+figS3
+dev.off()
 
 #QUESTION 3----
 #Relative change in the effectiveness of defense
