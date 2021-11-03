@@ -12,6 +12,7 @@
 	library(ggpubr)
 	library(glmmTMB)
 	library(RColorBrewer)
+	library(multcomp)
 }
 #LOADING & WRANGLING DATA----------------------------------------------------
 ##GROWTH DATA----
@@ -162,15 +163,15 @@ all.dat20<-select(all.dat20, chamber, pdw, treatment,
 #for four treatment data, re-ordering factor levels so model will compare everything to control chamber
 {all.dat80$treatment<-as.factor(all.dat80$treatment)
 levels(all.dat80$treatment)
-all.dat80$treat <- factor(all.dat80$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+all.dat80$treat <- factor(all.dat80$treat, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
 all.dat40$treatment<-as.factor(all.dat40$treatment)
 levels(all.dat40$treatment)
-all.dat40$treat <- factor(all.dat40$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))
+all.dat40$treat <- factor(all.dat40$treat, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
 all.dat20$treatment<-as.factor(all.dat20$treatment)
 levels(all.dat20$treatment)
-all.dat20$treat <- factor(all.dat20$treat, levels=c("control chamber", "CO2", "T°C", "T°C + CO2" ))}
+all.dat20$treat <- factor(all.dat20$treat, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))}
 
 #---
 
@@ -329,7 +330,7 @@ gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+
 	labs(y="Proportion growth", x="")+
 	theme(axis.text.x = element_blank(), 
 		  text = element_text(size=14), legend.position = "none")+
-	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))+
+	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))+
 	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)
 gro.plot
@@ -342,7 +343,7 @@ chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+
 	labs(y="Total phenolics (prop dw GAE)", x="")+
 	theme(axis.text.x = element_blank(), text = element_text(size=14), legend.title = element_blank(),
 		  legend.position = "none")+
-	scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2"))+
+	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)
 chem.plot
 
@@ -359,11 +360,11 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 	scale_color_brewer(palette=9, type = "div", direction = 1)
 herb.plot
 
-herb.plot1<-herb.plot+scale_x_discrete(limits=c("control chamber", "CO2", "T°C", "T°C + CO2" ),
+herb.plot1<-herb.plot+scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2" ),
 									   labels=c("control chamber"=expression(atop("Control")),
-									   		 "T°C"="Temperature",
+									   		 "TC"="Temperature",
 									   		 CO2=expression(CO["2"]),
-									   		 "T°C + CO2"=expression(CO["2"] + Temp)))
+									   		 "TC + CO2"=expression(CO["2"] + Temp)))
 herb.plot1
 
 
@@ -531,11 +532,11 @@ ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=16), axis.text.x = element_text(angle=20, hjust=0.9, size=12),
 		  legend.position = "none")+
-	scale_x_discrete(limits=c("control chamber","CO2", "T°C", "T°C + CO2"),
+	scale_x_discrete(limits=c("control chamber","CO2", "TC", "TC + CO2"),
 					 labels=c("control chamber"=expression(atop("Control")),
-					 		 "T°C"="Temperature",
+					 		 "TC"="Temperature",
 					 		 CO2=expression(CO["2"]),
-					 		 "T°C + CO2"=expression(CO["2"] + Temp)))+
+					 		 "TC + CO2"=expression(CO["2"] + Temp)))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)+
 	stat_summary(geom = 'text', label = c("ab","ab","a","b"),
 				 fun = max, vjust = -0.8, size=5.5)+
@@ -544,7 +545,7 @@ ggplot(data=all.dat80_m, aes(x=treatment, y=prop_herb1))+
 #FIGURE 4. Herbivory~chemistry plot
 #R^2 data
 mod1<-lm(data = all.dat80_m, prop_herb1~pdw)
-summary(mod1)#Multiple R-squared:  0.07...
+summary(mod1)#Multiple R-squared:  0.03...
 #y=mx+b, y=-1.03027 + 0.10405
 plot(all.dat80_m$prop_herb1~all.dat80_m$pdw)
 #Mature leaves in experienced 1.03% less herbivory with every 1% increase in total phenolics
@@ -558,5 +559,5 @@ all.dat80_m %>%
 	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
 	theme(text = element_text(size=16))+
 	annotate("text", x = 0.068, y = 0.26,
-			 label = "paste(italic(R) ^ 2, \" = 0.07\")", parse = TRUE, size =5)
+			 label = "paste(italic(R) ^ 2, \" = 0.03\")", parse = TRUE, size =5)
 

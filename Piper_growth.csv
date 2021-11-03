@@ -1,26 +1,26 @@
 ﻿Casa,Treatment,ht.2018.04.cm,ht.2018.09.cm
-A,T°C + CO2,37,44
 B,CO2,36.5,50
-C,control chamber,53,56
 D,CO2,38,53
-E,control chamber,45.5,56
-F,T°C,42.5,60
-G,T°C,43.2,49
-H,T°C + CO2,42.5,54
-I,T°C + CO2,41,65
-J,control chamber,54,66
 K,CO2,49.5,61
-L,T°C,50,65
-M,control chamber,60,66
 N,CO2,58,65
+R,CO2,40.8,60
+C,control chamber,53,56
+E,control chamber,45.5,56
+J,control chamber,54,66
+M,control chamber,60,66
 O,control chamber,48.5,78
-P,T°C,60,86
 1,natural control,37,47
 2,natural control,54.2,82
 3,natural control,40,52
 4,natural control,33,47
 5,natural control,65,89
-Q,T°C,48,52
-R,CO2,40.8,60
-S,T°C + CO2,57.5,63
-T,T°C,45,64
+F,TC,42.5,60
+G,TC,43.2,49
+L,TC,50,65
+P,TC,60,86
+Q,TC,48,52
+T,TC,45,64
+A,TC + CO2,37,44
+H,TC + CO2,42.5,54
+I,TC + CO2,41,65
+S,TC + CO2,57.5,63
