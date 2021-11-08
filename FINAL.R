@@ -390,7 +390,7 @@ joint_tests((grow.mod2m_i), by = "treatment")
 #while usually there is a negative relationship between growth and defense, 
 #for mature leaves in temperature experiment, plants that grew more also had higher defenses in mature leaves
 
-#mature leaves, interactive model
+#young leaves, interactive model
 grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
 Anova(grow.mod2y_i)
 #treatment, Chisq=2.8374, p=0.41738
