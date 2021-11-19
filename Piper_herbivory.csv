@@ -59,10 +59,10 @@ PG-56,pg5m,M,5,natural control,0,0,0,39.137
 PG-57,pg5m,M,5,natural control,0,0,0,40.794
 PG-54,pg5y,Y,5,natural control,0,0,0,6.034
 PG-55,pg5y,Y,5,natural control,38.3,35.9,6.27,11.528
-PG-7,pgFm,M,F,TC,0,0,0,20.195
-PG-8,pgFm,M,F,TC,41.8,41.6,0.48,15.766
-PG-5,pgFy,Y,F,TC,0,0,0,7.234
-PG-6,pgFy,Y,F,TC,0,0,0,4.447
+PG-7,pgFm,M,F,TC + CO2,0,0,0,20.195
+PG-8,pgFm,M,F,TC + CO2,41.8,41.6,0.48,15.766
+PG-5,pgFy,Y,F,TC + CO2,0,0,0,7.234
+PG-6,pgFy,Y,F,TC + CO2,0,0,0,4.447
 PG-3,pgGm,M,G,TC,84.6,84.5,0.12,28.154
 PG-4,pgGm,M,G,TC,47.2,46.1,2.33,16.778
 PG-1,pgGy,Y,G,TC,0,0,0,7.101

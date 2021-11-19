@@ -14,7 +14,7 @@ O,control chamber,48.5,78
 3,natural control,40,52
 4,natural control,33,47
 5,natural control,65,89
-F,TC,42.5,60
+F,TC + CO2,42.5,60
 G,TC,43.2,49
 L,TC,50,65
 P,TC,60,86
