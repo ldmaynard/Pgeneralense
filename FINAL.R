@@ -426,7 +426,8 @@ tiff('Maynard_etal_Fig3.tiff', units="in", width=7, height=5, res=300)
 fig3
 dev.off()
 
-##OLD QUESTION 1----
+##OTHER STUFF----
+#OLD QUESTION 1
 #1A. GROWTH----
 mod.gro2<-(betareg(prop_gro~treatment, dat=all.dat20))
 Anova(mod.gro2)
