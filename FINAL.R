@@ -544,39 +544,16 @@ gro.plot
 
 chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
 	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
-			   size=3, show.legend = F)+
-	stat_summary(aes(group=stage, shape=stage),fun.data = "mean_se", size=1, color="black")+
-	theme_classic()+
-	labs(y="Total phenolics (prop dw GAE)", x="")+
-	theme(axis.text.x = element_text(angle=20, hjust=0.9, size=12),
-		  text = element_text(size=14), legend.title = element_blank(),
-		  legend.position = "right")+
-	scale_color_brewer(palette=9, type = "div", direction = 1)+
-	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2" ),
-					 labels=c("control chamber"=expression(atop("Control")),
-					 		 "TC"="Temperature",
-					 		 CO2=expression(CO["2"]),
-					 		 "TC + CO2"=expression(CO["2"] + Temp)))
-chem.plot
-
-tiff('Fig1.tiff', units="in", width=6, height=8, res=300)
-ggarrange(gro.plot, chem.plot,
-		  labels = c("a", "b"),heights = c(2, 2.2),
-		  ncol = 1, nrow = 2)
-dev.off()
-
-chem.plot1<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
 			   size=4, show.legend = F)+
 	stat_summary(aes(group=stage, shape=stage),fun.data = "mean_se", size=1.1, color="black")+
 	theme_classic()+
-	labs(y="Total phenolics (prop dw GAE)", x="")+
+	labs(y="Total phenolics (pdw GAE)", x="")+
 	theme(axis.text.x = element_blank(),
-		  text = element_text(size=14), legend.title = element_blank(),
+		  text = element_text(size=15), legend.title = element_blank(),
 		  legend.position = "right")+
 	scale_color_brewer(palette=9, type = "div", direction = 1)+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))
-chem.plot1
+chem.plot
 
 herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment))+ 
 	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
@@ -596,10 +573,11 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 herb.plot
 
 
-tiff('combo.tiff', units="in", width=8, height=12, res=300)
-ggarrange(gro.plot, chem.plot1, herb.plot,
-		  labels = c("a", "b", "c"),heights = c(1.8,1.8, 2),
-		  ncol = 1, nrow = 3)
+tiff('combo.tiff', units="in", width=7, height=10, res=300)
+ggarrange(gro.plot, chem.plot, herb.plot,
+		  labels = c("a", "b", "c"),heights = c(1.5,1.5, 1.8),
+		  ncol = 1, nrow = 3,
+		  label.y = 1.025)
 dev.off()
 
 
