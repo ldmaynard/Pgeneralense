@@ -344,15 +344,18 @@ joint_tests((mod.gro2y), by = "treatment")
 #Extrapolating slopes from the mixed models
 coef(grow.mod2m_i)
 #Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth?
-#Or relative to control??
 coef(grow.mod2y_i)
 #Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth
+#or relative to control??
 
 #Extrapolating slopes from glms
 coef(mod.gro2m)
-#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth?
-#or relative to control?
+#2.2?
 coef(mod.gro2y)
+#.72
+summary(mod.gro2m)
+#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth?
+summary(mod.gro2y)
 #Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth
 #in CO2, -1.11
 
