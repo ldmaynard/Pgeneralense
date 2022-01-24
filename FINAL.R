@@ -290,6 +290,10 @@ herb.tab
 #QUESTION 1----
 #Q1A GROWTH
 
+gro.mod <- betareg(prop_gro ~ treatment, data = all.dat20)
+Anova(gro.mod)
+#treatment p=0.79
+
 #Q1B PHENOLICS
 #Ordering data so the models compare to the control treatment
 #mature leaves data
@@ -325,22 +329,35 @@ all.dat80_y$treatment<-as.factor(all.dat80_y$treatment)
 levels(all.dat80_y$treatment)
 all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
-herb.mod <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80, family = "beta_family")
-summary(herb.mod)
-Anova(herb.mod)
-#treatment p=0.90
+#analysis, mixed model
+#mauture leaves
+herb.mod.m <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_m, family = "beta_family")
+Anova(herb.mod.m)
+#treatment p=0.56
+
+#young leaves
+herb.mod.y <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_y, family = "beta_family")
+Anova(herb.mod.y)
+#treatment p=0.95
+
+#analysis, regular betareg with averaged leaves by age
+#mature leaves
+herb2.mod.m <- betareg(prop_herb1 ~ treatment, data = all.dat40_m)
+Anova(herb2.mod.m)
+#treatment p=0.80
+
+#young leaves
+herb2.mod.y <- betareg(prop_herb1 ~ treatment, data = all.dat40_y)
+Anova(herb2.mod.y)
+#treatment p=0.94
 
 #QUESTION 2---- 
 #Defense~growth * treatment
-
-
 
 #Models
 #mature leaves
 mod.gro2m<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_m))
 Anova(mod.gro2m)
-#treatment, Chisq=0.73, p=.87
-#growth, chisq=0.41, p=0.52
 #interaction, chisq=8.78, p=0.032
 joint_tests((mod.gro2m), by = "treatment")
 #temperature, F=6.56, p=0.0104 #sig (positive)
@@ -348,8 +365,6 @@ joint_tests((mod.gro2m), by = "treatment")
 #young leaves
 mod.gro2y<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_y))
 Anova(mod.gro2y)
-#treatment, Chisq=2.93, p=0.40
-#growth, chisq=1.09, p=0.30
 #interaction, chisq=8.31, p=0.040, significant
 joint_tests((mod.gro2y), by = "treatment")
 #co2, F=6.3.59, p=0.0580 #marg sig (also negative, more negative than control)
