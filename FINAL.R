@@ -287,9 +287,10 @@ herb.tab
 #Mature leaves had an average of over four times more herbivory than mature leaves
 
 
-#QUESTION 2---- 
-#Defense~growth * treatment
+#QUESTION 1----
+#Q1A GROWTH
 
+#Q1B PHENOLICS
 #Ordering data so the models compare to the control treatment
 #mature leaves data
 all.dat40_m$treatment<-as.factor(all.dat40_m$treatment)
@@ -300,6 +301,39 @@ all.dat40_m$treatment <- factor(all.dat40_m$treatment, levels=c("control chamber
 all.dat40_y$treatment<-as.factor(all.dat40_y$treatment)
 levels(all.dat40_y$treatment)
 all.dat40_y$treatment <- factor(all.dat40_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
+
+#analysis
+#mature leaves
+chem.mod.m <- betareg(pdw ~ treatment, data = all.dat40_m)
+Anova(chem.mod.m)
+#treatment p=0.70
+
+#young leaves
+chem.mod.y <- betareg(pdw ~ treatment, data = all.dat40_y)
+Anova(chem.mod.y)
+#treatment p=0.57
+
+
+#Q1C HERBIVORY
+#Ordering data so the models compare to the control treatment
+#mature leaves data
+all.dat80_m$treatment<-as.factor(all.dat80_m$treatment)
+levels(all.dat80_m$treatment)
+all.dat80_m$treatment <- factor(all.dat80_m$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
+#young leaves data
+all.dat80_y$treatment<-as.factor(all.dat80_y$treatment)
+levels(all.dat80_y$treatment)
+all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
+
+herb.mod <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80, family = "beta_family")
+summary(herb.mod)
+Anova(herb.mod)
+#treatment p=0.90
+
+#QUESTION 2---- 
+#Defense~growth * treatment
+
+
 
 #Models
 #mature leaves
@@ -331,16 +365,6 @@ summary(mod.gro2y)
 
 #QUESTION 3----
 #Climate change effects on herbivory and the effectiveness of defense
-
-#Ordering data so the models compare to the control treatment
-#mature leaves data
-all.dat80_m$treatment<-as.factor(all.dat80_m$treatment)
-levels(all.dat80_m$treatment)
-all.dat80_m$treatment <- factor(all.dat80_m$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
-#young leaves data
-all.dat80_y$treatment<-as.factor(all.dat80_y$treatment)
-levels(all.dat80_y$treatment)
-all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
 #Mature leaves
 herb.chem.mod2_m<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_m, family = "beta_family")
