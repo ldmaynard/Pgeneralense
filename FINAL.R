@@ -233,7 +233,7 @@ t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = T)
 #t = 3.65, df = 39, p-value = 0.0007674
 
 #FIGURE A1a, PHENOLICS BY LEAF AGE
-figS1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
+figA1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
 	geom_boxplot()+
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="red", size=1)+
@@ -241,10 +241,10 @@ figS1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+
 	theme(legend.position = "none")+
 	labs(y="Total phenolics (prop dw in GAE)", x="")+
 	theme(text = element_text(size=16), axis.text.x = element_blank())
-figS1a
+figA1a
 
 #FIGURE A1b, HERBIVORY BY LEAF AGE
-figS1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
+figA1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
 	geom_boxplot()+
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
 	stat_summary(fun.data = "mean_se", colour="red", size=1)+
@@ -252,11 +252,11 @@ figS1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+
 	theme(legend.position = "none")+
 	labs(y="Proportion herbivory", x="Leaf age")+
 	theme(text = element_text(size=16), axis.text.x = element_text(size=12))
-figS1b
+figA1b
 
 #Creating combined S1 figure
-tiff('Maynard_etal_S1Fig.tiff', units="in", width=6, height=9, res=300)
-ggarrange(figS1a, figS1b,
+tiff('Maynard_etal_A1Fig.tiff', units="in", width=6, height=9, res=300)
+ggarrange(figA1a, figA1b,
 		  labels = c("a", "b"),heights = c(2, 2.2),
 		  ncol = 1, nrow = 2)
 dev.off()
@@ -320,7 +320,7 @@ Anova(chem.mod.y)
 
 #Q1C HERBIVORY
 #Ordering data so the models compare to the control treatment
-#mature leaves data
+{#mature leaves data
 all.dat80_m$treatment<-as.factor(all.dat80_m$treatment)
 levels(all.dat80_m$treatment)
 all.dat80_m$treatment <- factor(all.dat80_m$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
@@ -328,9 +328,10 @@ all.dat80_m$treatment <- factor(all.dat80_m$treatment, levels=c("control chamber
 all.dat80_y$treatment<-as.factor(all.dat80_y$treatment)
 levels(all.dat80_y$treatment)
 all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
+}
 
 #analysis, mixed model
-#mauture leaves
+#mature leaves
 herb.mod.m <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_m, family = "beta_family")
 Anova(herb.mod.m)
 #treatment p=0.56
@@ -341,6 +342,10 @@ Anova(herb.mod.y)
 #treatment p=0.95
 
 #analysis, regular betareg with averaged leaves by age
+#adding small amount to herbivory to help beta regressions run with high number of zeros
+all.dat40_y$prop_herb1<-all.dat40_y$prop_herb+0.0001
+all.dat40_m$prop_herb1<-all.dat40_m$prop_herb+0.0001
+
 #mature leaves
 herb2.mod.m <- betareg(prop_herb1 ~ treatment, data = all.dat40_m)
 Anova(herb2.mod.m)
@@ -402,10 +407,6 @@ summary(herb.chem.mod2_m)
 #Mature leaves  experienced ~20% less herbivory with every 1% increase in total phenolics
 
 #non-mixed model (leaves averaged by age)
-#adding small amount to herbivory to help beta regressions run with high number of zeros
-all.dat40_y$prop_herb1<-all.dat40_y$prop_herb+0.0001
-all.dat40_m$prop_herb1<-all.dat40_m$prop_herb+0.0001
-
 mod.herb2m<-(betareg(prop_herb1~treatment*pdw, dat=all.dat40_m))
 Anova(mod.herb2m)
 #treatment  chisq=3.09, p=0.38
