@@ -232,7 +232,7 @@ t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = T)
 t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = T)
 #t = 3.65, df = 39, p-value = 0.0007674
 
-#FIGURE S1A, PHENOLICS BY LEAF AGE
+#FIGURE A1a, PHENOLICS BY LEAF AGE
 figS1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
 	geom_boxplot()+
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
@@ -243,7 +243,7 @@ figS1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+
 	theme(text = element_text(size=16), axis.text.x = element_blank())
 figS1a
 
-#FIGURE S1B, HERBIVORY BY LEAF AGE
+#FIGURE A1b, HERBIVORY BY LEAF AGE
 figS1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
 	geom_boxplot()+
 	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
@@ -287,142 +287,63 @@ herb.tab
 #Mature leaves had an average of over four times more herbivory than mature leaves
 
 
-#QUESTION 1---- 
+#QUESTION 2---- 
 #Defense~growth * treatment
 
+#Ordering data so the models compare to the control treatment
+#mature leaves data
 all.dat40_m$treatment<-as.factor(all.dat40_m$treatment)
 levels(all.dat40_m$treatment)
 all.dat40_m$treatment <- factor(all.dat40_m$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
+#young leaves data
 all.dat40_y$treatment<-as.factor(all.dat40_y$treatment)
 levels(all.dat40_y$treatment)
 all.dat40_y$treatment <- factor(all.dat40_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
-#mature leaves, interactive mixed model
-grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
-Anova(grow.mod2m_i)
-#treatment, Chisq=0.73, p=.87
-#growth, chisq=0.50, p=0.48
-#interaction, chisq=8.44, p=0.038
-
-joint_tests((grow.mod2m_i), by = "treatment")
-#temperature, F=8.32, p=0.016
-#significant effect of growth on defense in  temperature treatment
-#while usually there is a negative relationship between growth and defense, 
-#for mature leaves in temperature experiment, plants that grew more also had higher defenses in mature leaves
-
-#mature leaves, interactive model
+#Models
+#mature leaves
 mod.gro2m<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_m))
 Anova(mod.gro2m)
 #treatment, Chisq=0.73, p=.87
 #growth, chisq=0.41, p=0.52
 #interaction, chisq=8.78, p=0.032
 joint_tests((mod.gro2m), by = "treatment")
-#temperature, F=6.56, p=0.0104
+#temperature, F=6.56, p=0.0104 #sig (positive)
 
-#young leaves, interactive model
-grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
-Anova(grow.mod2y_i)
-#treatment, Chisq=2.93, p=0.40
-#growth, chisq=1.37, p=0.24
-#interaction, chisq=7.73, p=0.0519, marginally significant
-
-joint_tests((grow.mod2y_i), by = "treatment")
-#combo treatment marginally significant
-#F=4.88, p=0.0516
-
-#young leaves, interactive model
+#young leaves
 mod.gro2y<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_y))
 Anova(mod.gro2y)
 #treatment, Chisq=2.93, p=0.40
 #growth, chisq=1.09, p=0.30
 #interaction, chisq=8.31, p=0.040, significant
 joint_tests((mod.gro2y), by = "treatment")
-#co2, F=6.3.59, p=0.0580
-#combo, F-4.55, p=0.033
+#co2, F=6.3.59, p=0.0580 #marg sig (also negative, more negative than control)
+#combo, F-4.55, p=0.033 #sig (positive)
 
-#Extrapolating slopes from the mixed models
-coef(grow.mod2m_i)
-#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth?
-coef(grow.mod2y_i)
-#Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth
-#or relative to control??
-
-#Extrapolating slopes from glms
-coef(mod.gro2m)
-#2.2?
-coef(mod.gro2y)
-#.72
 summary(mod.gro2m)
-#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth?
+#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth(?)
+#Or is that number relative to the control treatment?
 summary(mod.gro2y)
-#Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth
+#Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth(?)
 #in CO2, -1.11
 
-##QUESTION 1 PLOTS----
 
-#legend text
-leg.lab <- c("Control",
-			 expression(CO["2"]),
-			 "Temperature",
-			 expression(CO["2"] + Temp))
-
-#Growth*defense plot, mature leaves
-gd_mature<-all.dat40_m %>%
-	ggplot(aes(x=prop_gro, 
-			   y=pdw,
-			   color=treatment))+
-	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
-	geom_point(alpha=0.5, size=2.8)+
-	labs(y="Total phenolics (prop dw GAE)", x="", title="Mature leaves")+
-	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
-		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
-	scale_linetype_manual(values = c("dashed", "dashed", "solid","dashed"))+
-	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
-
-gd_mature
-
-
-gd_young<-all.dat40_y %>%
-	ggplot(aes(x=prop_gro, 
-			   y=pdw,
-			   color=treatment))+
-	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
-	geom_point(alpha=0.5, size=3, shape=17)+
-	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Young leaves")+
-	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
-		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
-	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
-	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
-gd_young
-
-
-#Export Fig1
-tiff('Maynard_etal_Fig1.tiff', units="in", width=8, height=10, res=300)
-ggarrange(gd_mature, gd_young,
-		  labels = c("a", "b"),heights = c(2, 2),
-		  ncol = 1, nrow = 2)
-dev.off()
-
-gd_mature_r<-gd_mature+
-	annotate("text", x = 0.47, y = 0.055,
-			 label = "paste(italic(R) ^ 2, \" = 0.75\")", parse = TRUE, size =5)
-gd_mature_r
-gd_young_r<-gd_young+
-	annotate("text", x = 0.53, y = 0.083,
-			 label = "paste(italic(R) ^ 2, \" = 0.86\")", parse = TRUE, size =5)
-gd_young_r
-
-#QUESTION 2----
+#QUESTION 3----
 #Climate change effects on herbivory and the effectiveness of defense
+
+#Ordering data so the models compare to the control treatment
+#mature leaves data
+all.dat80_m$treatment<-as.factor(all.dat80_m$treatment)
+levels(all.dat80_m$treatment)
+all.dat80_m$treatment <- factor(all.dat80_m$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
+#young leaves data
+all.dat80_y$treatment<-as.factor(all.dat80_y$treatment)
+levels(all.dat80_y$treatment)
+all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
 #Mature leaves
 herb.chem.mod2_m<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_m, family = "beta_family")
-summary(herb.chem.mod2_m)
 Anova(herb.chem.mod2_m)
 #treatment  chisq=3.31, p=0.35
 #chemistry  chisq=3.97, p=0.0464
@@ -431,17 +352,15 @@ Anova(herb.chem.mod2_m)
 
 #Young leaves
 herb.chem.mod2_y<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_y, family = "beta_family")
-summary(herb.chem.mod2_y)
 Anova(herb.chem.mod2_y)
 #nothing significant
 #treatment, Chisq=0.53, p=0.91
 #chemistry, chisq=0.24, p=0.63
 #interaction, chisq=1.04, p=0.79
+#in young leaves, increases chemical defense did not have an effect on herbivory
 
-coef(herb.chem.mod2_m)
-((-0.8891659*20)+(-0.9263634*20)+(3.158472*20)+(-38.54286*20)+(18.63308*20)+(12.49492*20)+(-49.88072*20))/(20*7)
-#7.993234
-#Mature leaves  experienced 8% less herbivory with every 1% increase in total phenolics
+summary(herb.chem.mod2_m)
+#Mature leaves  experienced ~20% less herbivory with every 1% increase in total phenolics
 
 #non-mixed model (leaves averaged by age)
 #adding small amount to herbivory to help beta regressions run with high number of zeros
@@ -461,74 +380,9 @@ Anova(mod.herb2y)
 #chemistry  chisq=0.48, p=0.49
 #interaction chisq=2.78, p=0.43
 
+##GRAPHS Q1-3----
 
-#FIGURE 3. Herbivory~chemistry plot
-
-fig3<-all.dat80_m %>%
-	ggplot(aes(x=pdw, 
-			   y=prop_herb1))+ 
-	geom_point(alpha=0.6, size=2.5, aes(color=treatment))+
-	geom_smooth(method = 'lm', fill="light grey", linetype="solid", color="#440154FF")+
-	theme_classic()+
-	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
-	theme(text = element_text(size=16))+
-	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
-	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.8,0.88),
-		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"))
-fig3
-
-#EXPORT PLOT
-tiff('Maynard_etal_Fig3.tiff', units="in", width=7, height=5, res=300)
-fig3
-dev.off()
-
-##OTHER/OLDER STUFF----
-#OLD QUESTION 1
-#1A. GROWTH----
-mod.gro2<-(betareg(prop_gro~treatment, dat=all.dat20))
-Anova(mod.gro2)
-#df=3, chisq=1.0444, p=0.79
-#There is no effect of treatment on plant growth
-
-#1B. TOTAL PHENOLICS----
-#both leaf ages
-chem.mod2 <- glmmTMB(pdw ~ treatment + (1|chamber) + (1|stage), data = all.dat40, family = "beta_family")
-Anova(chem.mod2)
-#df=3, chisq=1.73,  p=0.63
-#There is no effect of treatment on leaf chemical defense
-
-#young leaves
-chem.mod2y <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40_y, family = "beta_family")
-Anova(chem.mod2y)
-#df=3, chisq=1.95,  p=0.58
-#There is no effect of treatment on young leaf chemical defense
-
-#mature leaves
-chem.mod2m <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40_m, family = "beta_family")
-Anova(chem.mod2m)
-#df=3, chisq=1.24,  p=0.74
-#There is no effect of treatment on mature leaf chemical defense
-
-#1C. HERBIVORY----
-herb.mod2 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber) + (1|stage), data = all.dat80, family = "beta_family")
-Anova(herb.mod2)
-#df=3, chisq=0.94,  p=0.82
-#There is no effect of treatment on leaf herbivory
-
-#young leaves
-herb.mod2y <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_y, family = "beta_family")
-Anova(herb.mod2y)
-#df=3, chisq=0.37,  p=0.95
-#There is no effect of treatment on young leaf herbivory
-
-#mature leaves
-herb.mod2m <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_m, family = "beta_family")
-Anova(herb.mod2m)
-#df=3, chisq=2.08,  p=0.56
-#There is no effect of treatment on mature leaf herbivory
-
-##OLD QUESTION 1 PLOT----
+##Q1 GRAPH----
 all.dat20$plant<-NA
 all.dat20$plant<-"Whole plant"
 
@@ -582,6 +436,123 @@ ggarrange(gro.plot, chem.plot, herb.plot,
 		  ncol = 1, nrow = 3,
 		  label.y = 1.025)
 dev.off()
+
+##Q2 GRAPH----
+
+#legend text
+leg.lab <- c("Control",
+			 expression(CO["2"]),
+			 "Temperature",
+			 expression(CO["2"] + Temp))
+
+#Growth*defense plot, mature leaves
+gd_mature<-all.dat40_m %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
+	geom_point(alpha=0.5, size=2.8)+
+	labs(y="Total phenolics (prop dw GAE)", x="", title="Mature leaves")+
+	theme_classic()+
+	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
+	scale_linetype_manual(values = c("dashed", "dashed", "solid","dashed"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+
+gd_mature
+
+
+gd_young<-all.dat40_y %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
+	geom_point(alpha=0.5, size=3, shape=17)+
+	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Young leaves")+
+	theme_classic()+
+	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
+	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+gd_young
+
+
+#Export Fig2
+tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=10, res=300)
+ggarrange(gd_mature, gd_young,
+		  labels = c("a", "b"),heights = c(2, 2),
+		  ncol = 1, nrow = 2,
+		  font.label=list(color="black",size=20))
+dev.off()
+
+
+##Q3 GRAPH----
+fig3<-all.dat80_m %>%
+	ggplot(aes(x=pdw, 
+			   y=prop_herb1))+ 
+	geom_point(alpha=0.6, size=2.5, aes(color=treatment))+
+	geom_smooth(method = 'lm', fill="light grey", linetype="solid", color="#440154FF")+
+	theme_classic()+
+	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
+	theme(text = element_text(size=16))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
+	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.8,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"))
+fig3
+
+#EXPORT PLOT
+tiff('Maynard_etal_Fig3.tiff', units="in", width=7, height=5, res=300)
+fig3
+dev.off()
+
+
+##OTHER/OLDER STUFF----
+#OLD QUESTION 1
+#1A. GROWTH----
+mod.gro2<-(betareg(prop_gro~treatment, dat=all.dat20))
+Anova(mod.gro2)
+#df=3, chisq=1.0444, p=0.79
+#There is no effect of treatment on plant growth
+
+#1B. TOTAL PHENOLICS----
+#both leaf ages
+chem.mod2 <- glmmTMB(pdw ~ treatment + (1|chamber) + (1|stage), data = all.dat40, family = "beta_family")
+Anova(chem.mod2)
+#df=3, chisq=1.73,  p=0.63
+#There is no effect of treatment on leaf chemical defense
+
+#young leaves
+chem.mod2y <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40_y, family = "beta_family")
+Anova(chem.mod2y)
+#df=3, chisq=1.95,  p=0.58
+#There is no effect of treatment on young leaf chemical defense
+
+#mature leaves
+chem.mod2m <- glmmTMB(pdw ~ treatment + (1|chamber), data = all.dat40_m, family = "beta_family")
+Anova(chem.mod2m)
+#df=3, chisq=1.24,  p=0.74
+#There is no effect of treatment on mature leaf chemical defense
+
+#1C. HERBIVORY----
+herb.mod2 <- glmmTMB(prop_herb1 ~ treatment + (1|chamber) + (1|stage), data = all.dat80, family = "beta_family")
+Anova(herb.mod2)
+#df=3, chisq=0.94,  p=0.82
+#There is no effect of treatment on leaf herbivory
+
+#young leaves
+herb.mod2y <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_y, family = "beta_family")
+Anova(herb.mod2y)
+#df=3, chisq=0.37,  p=0.95
+#There is no effect of treatment on young leaf herbivory
+
+#mature leaves
+herb.mod2m <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_m, family = "beta_family")
+Anova(herb.mod2m)
+#df=3, chisq=2.08,  p=0.56
+#There is no effect of treatment on mature leaf herbivory
 
 
 
@@ -644,3 +615,41 @@ summary(sum.q2S)#Multiple R-squared:  0.8526, p=0.0766
 #y=mx+b, y=0.053937x + 0.049805
 plot(ydat_combo$pdw~ydat_combo$prop_gro)
 #Chemical defense of Young leaves in combo treatments inc 0.05% with every 1% increase in growth
+
+#defense~growth*treatment
+#mature leaves, interactive mixed model
+grow.mod2m_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_m, family = "beta_family")
+Anova(grow.mod2m_i)
+#treatment, Chisq=0.73, p=.87
+#growth, chisq=0.50, p=0.48
+#interaction, chisq=8.44, p=0.038
+joint_tests((grow.mod2m_i), by = "treatment")
+#temperature, F=8.32, p=0.016
+#significant effect of growth on defense in  temperature treatment
+#while usually there is a negative relationship between growth and defense, 
+#for mature leaves in temperature experiment, plants that grew more also had higher defenses in mature leaves
+#young leaves, interactive model mixed model
+grow.mod2y_i<-glmmTMB(pdw ~ treatment * prop_gro + (1|chamber), data = all.dat40_y, family = "beta_family")
+Anova(grow.mod2y_i)
+#treatment, Chisq=2.93, p=0.40
+#growth, chisq=1.37, p=0.24
+#interaction, chisq=7.73, p=0.0519, marginally significant
+joint_tests((grow.mod2y_i), by = "treatment")
+#combo treatment marginally significant
+#F=4.88, p=0.0516
+
+#Extrapolating slopes from the mixed models
+coef(grow.mod2m_i)
+#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth?
+coef(grow.mod2y_i)
+#Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth
+#or relative to control??
+
+gd_mature_r<-gd_mature+
+	annotate("text", x = 0.47, y = 0.055,
+			 label = "paste(italic(R) ^ 2, \" = 0.75\")", parse = TRUE, size =5)
+gd_mature_r
+gd_young_r<-gd_young+
+	annotate("text", x = 0.53, y = 0.083,
+			 label = "paste(italic(R) ^ 2, \" = 0.86\")", parse = TRUE, size =5)
+gd_young_r
