@@ -470,7 +470,7 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 herb.plot
 
 
-tiff('combo.tiff', units="in", width=7, height=10, res=300)
+tiff('Maynard_etal_Fig1.tiff', units="in", width=7, height=10, res=300)
 ggarrange(gro.plot, chem.plot, herb.plot,
 		  labels = c("a", "b", "c"),heights = c(1.5,1.5, 1.8),
 		  ncol = 1, nrow = 3,
