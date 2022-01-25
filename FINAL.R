@@ -367,6 +367,11 @@ Anova(mod.gro2m)
 joint_tests((mod.gro2m), by = "treatment")
 #temperature, F=6.56, p=0.0104 #sig (positive)
 
+library(effects)
+allEffects(mod.gro2m)  
+#numerical interpretation (?)
+plot(allEffects(mod.gro2m)) #visual representation of your interactions
+
 #young leaves
 mod.gro2y<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_y))
 Anova(mod.gro2y)
