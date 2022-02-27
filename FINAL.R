@@ -133,36 +133,32 @@ herb.20<-aggregate(prop_herb~chamber+treatment,data=herb.80,FUN=mean)
 ##CREATING COMBINED DATASETS----
 
 #four treatment data, not aggregated, n=80
-{all.dat80<-merge(herb.80, phen.40, by="sample", all = T)
+all.dat80<-merge(herb.80, phen.40, by="sample", all = T)
 head(all.dat80)
 colnames(all.dat80)[4] <- "chamber"
 all.dat80<-merge(all.dat80, grow, by="chamber", all=T)
 #cleaning up, selecting columns
-all.dat80<-select(all.dat80, chamber, stage, pdw, treatment, sample, ID, total.area.cm2,
-				  real.area.cm2, percent_herbivory, prop_herb, ht.2018.04.cm, ht.2018.09.cm,
-				  total_gro, prop_gro)}
+all.dat80<-subset(all.dat80, select = -c(11,13,15))
 
 #adding small amount to herbivory to help beta regressions run with high number of zeros
 all.dat80$prop_herb1<-all.dat80$prop_herb+0.00001
 
 #four treatment data, aggregated by leaf age, n=40
-{all.dat40<-merge(herb.40, phen.40, by="sample", all = T)
+all.dat40<-merge(herb.40, phen.40, by="sample", all = T)
 head(all.dat40)
 colnames(all.dat40)[2] <- "chamber"
 all.dat40<-merge(all.dat40, grow, by="chamber", all=T)
 #cleaning up, selecting columns
-all.dat40<-select(all.dat40, chamber, stage, pdw, treatment, sample, prop_herb, ht.2018.04.cm, 
-				  ht.2018.09.cm, total_gro, prop_gro)}
+all.dat40<-subset(all.dat40, select = -c(8,10,15))
 
 #four treatment data, aggregated by chamber, n=20
-{all.dat20<-merge(herb.20, phen.20, by="chamber", all = T)
+all.dat20<-merge(herb.20, phen.20, by="chamber", all = T)
 all.dat20<-merge(all.dat20, grow, by="chamber", all=T)
 #cleaning up, selecting columns
-all.dat20<-select(all.dat20, chamber, pdw, treatment, 
-				  prop_herb, ht.2018.04.cm, ht.2018.09.cm,total_gro, prop_gro)}
+all.dat20<-subset(all.dat20, select = -c(4,6))
 
 #for four treatment data, re-ordering factor levels so model will compare everything to control chamber
-{all.dat80$treatment<-as.factor(all.dat80$treatment)
+all.dat80$treatment<-as.factor(all.dat80$treatment)
 levels(all.dat80$treatment)
 all.dat80$treat <- factor(all.dat80$treat, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
@@ -172,12 +168,12 @@ all.dat40$treat <- factor(all.dat40$treat, levels=c("control chamber", "CO2", "T
 
 all.dat20$treatment<-as.factor(all.dat20$treatment)
 levels(all.dat20$treatment)
-all.dat20$treat <- factor(all.dat20$treat, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))}
+all.dat20$treat <- factor(all.dat20$treat, levels=c("control chamber", "CO2", "TC", "TC + CO2" ))
 
 #---
 
 ##CHECKING FOR COLINEARITY----
-samp1<-all.dat80[,c(3,10,14)]#cat vars
+samp1<-all.dat80[,c(10,12,16)]#cat vars
 
 L1 <- cor(samp1)#correlation matrix
 corrplot(L1, method = "circle")
@@ -195,8 +191,8 @@ vif(check1)
 grow.all <- grow.all[order(grow.all$Treatment),]
 grow.control.c <-grow.all[c(6:10),]
 grow.control.nc <-grow.all[c(11:15),]
-t.test(grow.control.c$prop_gro, grow.control.nc$prop_gro, paired = T)
-#t = -1.2959, df = 4, p-value = 0.2647
+t.test(grow.control.c$prop_gro, grow.control.nc$prop_gro, paired = F)
+#t = -1.2361, df = 5.5473, p-value = 0.2662
 #no chamber effect on growth
 
 #Phenolics
@@ -204,16 +200,16 @@ t.test(grow.control.c$prop_gro, grow.control.nc$prop_gro, paired = T)
 phen.all <- phen.all[order(phen.all$treat),]
 phen.all.cc <- phen.all[c(11:20),]
 phen.all.nc <- phen.all[c(21:30),]
-t.test(phen.all.cc$pdw, phen.all.nc$pdw, paired = T)
-#t = -1.3253, df = 9, p-value = 0.2177
+t.test(phen.all.cc$pdw, phen.all.nc$pdw, paired = F)
+#t = -1.2182, df = 17.997, p-value = 0.2389
 
 #Herbivory
 #creating datasets with only two control treatments
 herb.all <- herb.all[order(herb.all$treatment),]
 herb.all.cc <- herb.all[c(21:40),]
 herb.all.nc <- herb.all[c(41:60),]
-t.test(herb.all.cc$prop_herb, herb.all.nc$prop_herb, paired = T)
-#t = -1.1543, df = 19, p-value = 0.2627
+t.test(herb.all.cc$prop_herb, herb.all.nc$prop_herb, paired = F)
+#t = -1.089, df = 27.355, p-value = 0.2857
 
 ##2) Does leaf age affect phenolics and/or chemical defense?
 #splitting phenolics data by leaf age
@@ -226,11 +222,11 @@ all.dat80<- all.dat80[order(all.dat80$stage),]
 all.dat80_m <- all.dat80[c(1:40),]
 all.dat80_y <- all.dat80[c(41:80),]
 
-t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = T)
-#t = -7.8569, df = 19, p-value = 2.189e-07
+t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = F)
+#t = -4.8008, df = 37.647, p-value = 2.516e
 
-t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = T)
-#t = 3.65, df = 39, p-value = 0.0007674
+t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = F)
+#t = 3.2495, df = 62.412, p-value = 0.001864
 
 #FIGURE A1a, PHENOLICS BY LEAF AGE
 figA1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
@@ -271,7 +267,7 @@ phen.tab
 #young leaf avg pdw/old leaf avg pdw-old leaf avg pdw
 (0.06859805-0.04970515)/0.04970515
 #0.380099
-#Young leaves had an average of 38% times more total phenolics than mature leaves
+#Young leaves had an average of 38% more total phenolics than mature leaves
 
 
 #HERBIVORY SUMMARY STATS
@@ -284,7 +280,7 @@ herb.tab
 #Mature leaf avg pdw/young leaf avg pdw-young leaf avg pdw
 (0.0528275-0.0103100)/0.0103100
 #4.123909
-#Mature leaves had an average of over four times more herbivory than mature leaves
+#Mature leaves had an average of over four times more herbivory than young leaves
 
 
 #QUESTION 1----
@@ -363,30 +359,57 @@ Anova(herb2.mod.y)
 #mature leaves
 mod.gro2m<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_m))
 Anova(mod.gro2m)
-#interaction, chisq=8.78, p=0.032
-joint_tests((mod.gro2m), by = "treatment")
-#temperature, F=6.56, p=0.0104 #sig (positive)
 
 library(effects)
-allEffects(mod.gro2m)  
-#numerical interpretation (?)
-plot(allEffects(mod.gro2m)) #visual representation of your interactions
+summary(allEffects(mod.gro2m))
+plot(allEffects(mod.gro2m))
+
+all.dat40_m <- all.dat40_m[order(all.dat40_m$treatment),]
+
+CO2<-slice(all.dat40_m, 1:5) #CO2
+control<-slice(all.dat40_m, 6:10) #control
+TC<-slice(all.dat40_m, 11:15) #temperature
+combo<-slice(all.dat40_m, 16:20) #combo treatment
+
+modco2<-(betareg(pdw~prop_gro, dat=CO2))
+modcon<-(betareg(pdw~prop_gro, dat=control))
+modtc<-(betareg(pdw~prop_gro, dat=TC))
+modcombo<-(betareg(pdw~prop_gro, dat=combo))
+
+summary(modco2)#z=-0.44,p=0.663
+summary(modcon)#z=-0.54, p=0.59
+summary(modtc)#z=3.44, p=0.000591; estimate=2.0
+#total phenolics increase 2% with every 1% increase in proportion growth in warmer environments
+summary(modcombo)#z=0.001, p=0.999
+
 
 #young leaves
 mod.gro2y<-(betareg(pdw~treatment*prop_gro, dat=all.dat40_y))
 Anova(mod.gro2y)
 #interaction, chisq=8.31, p=0.040, significant
-joint_tests((mod.gro2y), by = "treatment")
-#co2, F=6.3.59, p=0.0580 #marg sig (also negative, more negative than control)
-#combo, F-4.55, p=0.033 #sig (positive)
 
-summary(mod.gro2m)
-#Phenolics of Mature leaves in elevated temperatures inc 2.2% with every 1% increase in growth(?)
-#Or is that number relative to the control treatment?
-summary(mod.gro2y)
-#Chemical defense of Young leaves in combo treatments inc 0.72% with every 1% increase in growth(?)
-#in CO2, -1.11
+library(effects)
+summary(allEffects(mod.gro2y))
+plot(allEffects(mod.gro2y))
 
+all.dat40_y <- all.dat40_y[order(all.dat40_y$treatment),]
+
+CO2y<-slice(all.dat40_y, 1:5) #CO2
+controly<-slice(all.dat40_y, 6:10) #control
+TCy<-slice(all.dat40_y, 11:15) #temperature
+comboy<-slice(all.dat40_y, 16:20) #combo treatment
+
+modco2y<-(betareg(pdw~prop_gro, dat=CO2y))
+modcony<-(betareg(pdw~prop_gro, dat=controly))
+modtcy<-(betareg(pdw~prop_gro, dat=TCy))
+modcomboy<-(betareg(pdw~prop_gro, dat=comboy))
+
+summary(modco2y)#z=0.325,p=0.745
+summary(modcony)#z=-1.217, p=0.224
+summary(modtcy)#z=3.598, p=0.000321; estimate=0.48393
+#total phenolics increase 0.5% with every 1% increase in proportion growth in warmer environments
+summary(modcomboy)#z=5.183, p=2.19e-07; estimate=0.86345
+##total phenolics increase 0.9% with every 1% increase in proportion growth in combo environments
 
 #QUESTION 3----
 #Climate change effects on herbivory and the effectiveness of defense
@@ -499,10 +522,10 @@ gd_mature<-all.dat40_m %>%
 	geom_point(alpha=0.5, size=2.8)+
 	labs(y="Total phenolics (prop dw GAE)", x="", title="Mature leaves")+
 	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = c(0.88,0.88),
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
 		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
-	scale_linetype_manual(values = c("dashed", "dashed", "solid","dashed"))+
+	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
 	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
 
 gd_mature
@@ -516,10 +539,10 @@ gd_young<-all.dat40_y %>%
 	geom_point(alpha=0.5, size=3, shape=17)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Young leaves")+
 	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.88,0.88),
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = c(0.88,0.88),
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
 		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
-	scale_linetype_manual(values = c("dashed", "dashed", "dashed","solid"))+
+	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
 	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
 gd_young
 
