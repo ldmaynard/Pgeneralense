@@ -230,14 +230,18 @@ t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = F)
 
 #FIGURE A1a, PHENOLICS BY LEAF AGE
 figA1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
-	geom_boxplot()+
-	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
-	stat_summary(fun.data = "mean_se", colour="red", size=1)+
+	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
+	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=4)+
 	theme_classic()+
 	theme(legend.position = "none")+
 	labs(y="Total phenolics (prop dw in GAE)", x="")+
-	theme(text = element_text(size=16), axis.text.x = element_blank())
+	theme(text = element_text(size=18), axis.text.x =element_text(size = 18))
 figA1a
+
+#Export FigX
+tiff('Maynard_etal_FigA1.tiff', units="in", width=4.5, height=4.5, res=300)
+figA1a
+dev.off()
 
 #FIGURE A1b, HERBIVORY BY LEAF AGE
 figA1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
@@ -251,11 +255,12 @@ figA1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+
 figA1b
 
 #Creating combined S1 figure
-tiff('Maynard_etal_A1Fig.tiff', units="in", width=6, height=9, res=300)
-ggarrange(figA1a, figA1b,
-		  labels = c("a", "b"),heights = c(2, 2.2),
-		  ncol = 1, nrow = 2)
-dev.off()
+#tiff('Maynard_etal_A1Fig.tiff', units="in", width=6, height=9, res=300)
+#ggarrange(figA1a, figA1b,
+		  #labels = c("a", "b"),heights = c(2, 2.2),
+		  #ncol = 1, nrow = 2)
+#dev.off()
+	
 
 #PHENOLICS SUMMARY STATS
 phen.tab <- ddply(all.dat40, c("stage"), summarise,
@@ -417,10 +422,12 @@ summary(modcomboy)#z=5.183, p=2.19e-07; estimate=0.86345
 #Mature leaves
 herb.chem.mod2_m<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_m, family = "beta_family")
 Anova(herb.chem.mod2_m)
+summary(herb.chem.mod2_m)
 #treatment  chisq=3.31, p=0.35
 #chemistry  chisq=3.97, p=0.0464
 #interaction chisq=1.01, p=0.80
 #in mature leaves, increasing defenses had a negative effect on herbivory 
+#herbivory decreases 38.5% with every 1% increase in concentration of total phenolics
 
 #Young leaves
 herb.chem.mod2_y<-glmmTMB(prop_herb1 ~ treatment * pdw + (1|chamber), data = all.dat80_y, family = "beta_family")
