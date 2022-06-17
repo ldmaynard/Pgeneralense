@@ -1,4 +1,4 @@
-#Effects of climate change on allocation to growth and defense in a neotropical shrub
+#Effects of climate change on plant resource allocation and herbivore interactions in a Neotropical rainforest shrub
 
 #LOADING LIBRARIES---
 {library(lme4)
@@ -228,39 +228,34 @@ t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = F)
 t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = F)
 #t = 3.2495, df = 62.412, p-value = 0.001864
 
-#FIGURE A1a, PHENOLICS BY LEAF AGE
-figA1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
+#FIGURE 1a, PHENOLICS BY LEAF AGE
+fig1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
 	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
-	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=4)+
+	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
 	theme_classic()+
 	theme(legend.position = "none")+
-	labs(y="Total phenolics (prop dw in GAE)", x="")+
-	theme(text = element_text(size=18), axis.text.x =element_text(size = 18))
-figA1a
+	labs(x="", y="Total phenolics (prop dw in GAE)")+
+	theme(text = element_text(size=14), axis.text.x =element_blank(),
+		  axis.title.y = element_text(size=10))
+fig1a
 
-#Export FigX
-tiff('Maynard_etal_FigA1.tiff', units="in", width=4.5, height=4.5, res=300)
-figA1a
+#FIGURE 1b, HERBIVORY BY LEAF AGE
+fig1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
+	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
+	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
+	theme_classic()+
+	theme(legend.position = "none")+
+	labs(y="Proportion herbivory", x="")+
+	theme(text = element_text(size=14), axis.text.x=element_text(size = 15))
+fig1b
+
+#Creating combined figure
+tiff('Maynard_etal_Fig1.tiff', units="in", width=4, height=6, res=300)
+ggarrange(fig1a, fig1b,
+		  labels = c("a", "b"),heights = c(2, 2.2),
+		  ncol = 1, nrow = 2)
 dev.off()
 
-#FIGURE A1b, HERBIVORY BY LEAF AGE
-figA1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
-	geom_boxplot()+
-	geom_point(position=position_jitter(width = 0.025), alpha=0.6, size=2.5)+
-	stat_summary(fun.data = "mean_se", colour="red", size=1)+
-	theme_classic()+
-	theme(legend.position = "none")+
-	labs(y="Proportion herbivory", x="Leaf age")+
-	theme(text = element_text(size=16), axis.text.x = element_text(size=12))
-figA1b
-
-#Creating combined S1 figure
-#tiff('Maynard_etal_A1Fig.tiff', units="in", width=6, height=9, res=300)
-#ggarrange(figA1a, figA1b,
-		  #labels = c("a", "b"),heights = c(2, 2.2),
-		  #ncol = 1, nrow = 2)
-#dev.off()
-	
 
 #PHENOLICS SUMMARY STATS
 phen.tab <- ddply(all.dat40, c("stage"), summarise,
