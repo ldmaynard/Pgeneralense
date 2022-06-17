@@ -234,9 +234,9 @@ fig2a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+
 	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
 	theme_classic()+
 	theme(legend.position = "none")+
-	labs(x="", y="Total phenolics (prop dw in GAE)")+
+	labs(x="", y="Total phenolics (prop dw GAE)")+
 	theme(text = element_text(size=14), axis.text.x =element_blank(),
-		  axis.title.y = element_text(size=10))
+		  axis.title.y = element_text(size=11))
 fig2a
 
 #FIGURE 1b, HERBIVORY BY LEAF AGE
@@ -457,40 +457,43 @@ all.dat20$plant<-NA
 all.dat20$plant<-"Whole plant"
 
 gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+ 
-	geom_point(shape=18,aes(shape=plant),position=position_jitter(width = 0.025), alpha=0.6, 
+	geom_point(shape=18,aes(shape=plant),position=position_jitter(width = 0.1), alpha=0.6, 
 			   size=5, show.legend = F)+
 	stat_summary(aes(shape=plant),fun.data = "mean_se", size=1.1, color="black")+
 	theme_classic()+
 	labs(y="Proportion growth", x="")+
 	theme(axis.text.x = element_blank(), 
-		  text = element_text(size=16), legend.position = "right", legend.title = element_blank())+
+		  text = element_text(size=16), legend.position = "right", legend.title = element_blank(),
+		  axis.title.y = element_text(size=15))+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))+
 	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)
 gro.plot
 
 chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
+	geom_point(aes(shape=stage),position=position_jitter(width = 0.1), alpha=0.6, 
 			   size=4, show.legend = F)+
 	stat_summary(aes(group=stage, shape=stage),fun.data = "mean_se", size=1.1, color="black")+
 	theme_classic()+
 	labs(y="Total phenolics (pdw GAE)", x="")+
 	theme(axis.text.x = element_blank(),
 		  text = element_text(size=15), legend.title = element_blank(),
-		  legend.position = "right")+
+		  legend.position = "right",
+		  axis.title.y = element_text(size=11))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))
 chem.plot
 
 herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.025), alpha=0.6, 
+	geom_point(aes(shape=stage),position=position_jitter(width = 0.1), alpha=0.6, 
 			   size=4, show.legend = F)+
 	stat_summary(aes(group=stage, shape=stage, color=stage),fun.data = "mean_se", colour="black", size=1.1)+
 	theme_classic()+
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=16), axis.text.x = element_text(angle=20, hjust=0.9, size=16),
-		  legend.title = element_blank(), legend.position = "right")+
-	scale_y_continuous(labels = scales::number_format(accuracy = 0.01))+
+		  legend.title = element_blank(), legend.position = "right",
+		  axis.title.y = element_text(size=12))+
+	scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0, 0.3))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2" ),
 					 labels=c("control chamber"=expression(atop("Control")),
@@ -500,11 +503,11 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 herb.plot
 
 
-tiff('Maynard_etal_Fig3.tiff', units="in", width=7, height=10, res=300)
+tiff('Maynard_etal_Fig3.tiff', units="in", width=5, height=8, res=300)
 ggarrange(gro.plot, chem.plot, herb.plot,
 		  labels = c("a", "b", "c"),heights = c(1.5,1.5, 1.8),
 		  ncol = 1, nrow = 3,
-		  label.y = 1.025)
+		  label.y = 1.035)
 dev.off()
 
 ##Q2 GRAPH----
