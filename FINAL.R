@@ -229,7 +229,7 @@ t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = F)
 #t = 3.2495, df = 62.412, p-value = 0.001864
 
 #FIGURE 1a, PHENOLICS BY LEAF AGE
-fig1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
+fig2a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
 	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
 	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
 	theme_classic()+
@@ -237,21 +237,21 @@ fig1a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+
 	labs(x="", y="Total phenolics (prop dw in GAE)")+
 	theme(text = element_text(size=14), axis.text.x =element_blank(),
 		  axis.title.y = element_text(size=10))
-fig1a
+fig2a
 
 #FIGURE 1b, HERBIVORY BY LEAF AGE
-fig1b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
+fig2b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
 	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
 	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
 	theme_classic()+
 	theme(legend.position = "none")+
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=14), axis.text.x=element_text(size = 15))
-fig1b
+fig2b
 
-#Creating combined figure
-tiff('Maynard_etal_Fig1.tiff', units="in", width=4, height=6, res=300)
-ggarrange(fig1a, fig1b,
+#Creating combined Figure 2
+tiff('Maynard_etal_Fig2.tiff', units="in", width=4, height=6, res=300)
+ggarrange(fig2a, fig2b,
 		  labels = c("a", "b"),heights = c(2, 2.2),
 		  ncol = 1, nrow = 2)
 dev.off()
@@ -500,7 +500,7 @@ herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment
 herb.plot
 
 
-tiff('Maynard_etal_Fig1.tiff', units="in", width=7, height=10, res=300)
+tiff('Maynard_etal_Fig3.tiff', units="in", width=7, height=10, res=300)
 ggarrange(gro.plot, chem.plot, herb.plot,
 		  labels = c("a", "b", "c"),heights = c(1.5,1.5, 1.8),
 		  ncol = 1, nrow = 3,
@@ -549,8 +549,8 @@ gd_young<-all.dat40_y %>%
 gd_young
 
 
-#Export Fig2
-tiff('Maynard_etal_Fig2.tiff', units="in", width=8, height=10, res=300)
+#Export Fig4
+tiff('Maynard_etal_Fig4.tiff', units="in", width=8, height=10, res=300)
 ggarrange(gd_mature, gd_young,
 		  labels = c("a", "b"),heights = c(2, 2),
 		  ncol = 1, nrow = 2,
@@ -559,7 +559,7 @@ dev.off()
 
 
 ##Q3 GRAPH----
-fig3<-all.dat80_m %>%
+fig5<-all.dat80_m %>%
 	ggplot(aes(x=pdw, 
 			   y=prop_herb1))+ 
 	geom_point(alpha=0.6, size=2.5, aes(color=treatment))+
@@ -571,11 +571,11 @@ fig3<-all.dat80_m %>%
 	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.8,0.88),
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
 		  legend.box.background = element_rect(colour = "black"))
-fig3
+fig5
 
 #EXPORT PLOT
-tiff('Maynard_etal_Fig3.tiff', units="in", width=7, height=5, res=300)
-fig3
+tiff('Maynard_etal_Fig5.tiff', units="in", width=7, height=5, res=300)
+fig5
 dev.off()
 
 
