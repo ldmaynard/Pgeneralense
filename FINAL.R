@@ -228,31 +228,46 @@ t.test(all.dat40_m$pdw, all.dat40_y$pdw, paired = F)
 t.test(all.dat80_m$prop_herb, all.dat80_y$prop_herb, paired = F)
 #t = 3.2495, df = 62.412, p-value = 0.001864
 
-#FIGURE 1a, PHENOLICS BY LEAF AGE
+all.dat80$Stage<-NA
+all.dat80$Stage[all.dat80$stage=="Young"]="Young leaves"
+all.dat80$Stage[all.dat80$stage=="Mature"]="Mature leaves"
+
+#legend text
+leg.lab <- c("Control",
+			 expression(CO["2"]),
+			 "Temperature",
+			 expression(CO["2"] + Temp))
+
+#FIGURE 2a, PHENOLICS BY LEAF AGE
 fig2a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+ 
 	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
-	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
+	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3, aes(color=treatment))+
 	theme_classic()+
 	theme(legend.position = "none")+
 	labs(x="", y="Total phenolics (prop dw GAE)")+
 	theme(text = element_text(size=14), axis.text.x =element_blank(),
-		  axis.title.y = element_text(size=11))
+		  axis.title.y = element_text(size=12),legend.title = element_blank(), legend.position = "top",
+		  legend.text.align = 0, legend.text = element_text(size=10), legend.spacing.x = unit(0.01, 'cm'),
+		  legend.box.background = element_rect(colour = "black"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
 fig2a
 
-#FIGURE 1b, HERBIVORY BY LEAF AGE
-fig2b<-ggplot(data=all.dat80, aes(x=stage, y=prop_herb1))+ 
+#FIGURE 2b, HERBIVORY BY LEAF AGE
+fig2b<-ggplot(data=all.dat80, aes(x=str_wrap(Stage,4), y=prop_herb1))+ 
 	geom_boxplot(outlier.shape = NA, width=.5, lwd=1)+
-	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3)+
+	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3, aes(color=treatment))+
 	theme_classic()+
 	theme(legend.position = "none")+
 	labs(y="Proportion herbivory", x="")+
-	theme(text = element_text(size=14), axis.text.x=element_text(size = 15))
+	theme(text = element_text(size=14), axis.text.x=element_text(size = 15))+
+	scale_color_brewer(palette=9, type = "div", direction = 1)
+
 fig2b
 
 #Creating combined Figure 2
 tiff('Maynard_etal_Fig2.tiff', units="in", width=4, height=6, res=300)
 ggarrange(fig2a, fig2b,
-		  labels = c("a", "b"),heights = c(2, 2.2),
+		  labels = c("a", "b"),heights = c(2, 2),
 		  ncol = 1, nrow = 2)
 dev.off()
 
@@ -456,13 +471,14 @@ Anova(mod.herb2y)
 all.dat20$plant<-NA
 all.dat20$plant<-"Whole plant"
 
+library(stringr)
 gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+ 
 	geom_point(shape=18,aes(shape=plant),position=position_jitter(width = 0.1), alpha=0.6, 
 			   size=5, show.legend = F)+
-	stat_summary(aes(shape=plant),fun.data = "mean_se", size=1.1, color="black")+
+	stat_summary(aes(shape=str_wrap(plant,4)),fun.data = "mean_se", size=1.1, color="black")+
 	theme_classic()+
 	labs(y="Proportion growth", x="")+
-	theme(axis.text.x = element_blank(), 
+	theme(axis.text.x = element_blank(), legend.text = element_text(size=12),
 		  text = element_text(size=16), legend.position = "right", legend.title = element_blank(),
 		  axis.title.y = element_text(size=15))+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))+
@@ -470,40 +486,48 @@ gro.plot<-ggplot(data=all.dat20, aes(x=treatment, y=prop_gro, color=treatment))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)
 gro.plot
 
+all.dat40$Stage<-NA
+all.dat40$Stage[all.dat40$stage=="Young"]="Young leaves"
+all.dat40$Stage[all.dat40$stage=="Mature"]="Mature leaves"
+
 chem.plot<-ggplot(data=all.dat40, aes(x=treatment, y=pdw, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.1), alpha=0.6, 
+	geom_point(aes(shape=str_wrap(Stage,4)),position=position_jitter(width = 0.1), alpha=0.6, 
 			   size=4, show.legend = F)+
-	stat_summary(aes(group=stage, shape=stage),fun.data = "mean_se", size=1.1, color="black")+
+	stat_summary(aes(group=Stage, shape=str_wrap(Stage,4)),fun.data = "mean_se", size=1.1, color="black")+
 	theme_classic()+
 	labs(y="Total phenolics (pdw GAE)", x="")+
 	theme(axis.text.x = element_blank(),
 		  text = element_text(size=15), legend.title = element_blank(),
 		  legend.position = "right",
-		  axis.title.y = element_text(size=11))+
+		  axis.title.y = element_text(size=11), legend.text = element_text(size=11))+
+	guides(shape=guide_legend(keywidth=0.5,keyheight=0.5,
+		default.unit="inch"))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2"))
 chem.plot
 
 herb.plot<-ggplot(data=all.dat80, aes(x=treatment, y=prop_herb1, color=treatment))+ 
-	geom_point(aes(shape=stage),position=position_jitter(width = 0.1), alpha=0.6, 
+	geom_point(aes(shape=str_wrap(Stage,4)),position=position_jitter(width = 0.1), alpha=0.6, 
 			   size=4, show.legend = F)+
-	stat_summary(aes(group=stage, shape=stage, color=stage),fun.data = "mean_se", colour="black", size=1.1)+
+	stat_summary(aes(group=Stage, shape=str_wrap(Stage,4), color=Stage),fun.data = "mean_se", colour="black", size=1.1)+
 	theme_classic()+
 	labs(y="Proportion herbivory", x="")+
 	theme(text = element_text(size=16), axis.text.x = element_text(angle=20, hjust=0.9, size=16),
 		  legend.title = element_blank(), legend.position = "right",
-		  axis.title.y = element_text(size=12))+
+		  axis.title.y = element_text(size=12), legend.text = element_text(size=11))+
 	scale_y_continuous(labels = scales::number_format(accuracy = 0.01), limits = c(0, 0.3))+
 	scale_color_brewer(palette=9, type = "div", direction = 1)+
 	scale_x_discrete(limits=c("control chamber", "CO2", "TC", "TC + CO2" ),
 					 labels=c("control chamber"=expression(atop("Control")),
 					 		 "TC"="Temperature",
 					 		 CO2=expression(CO["2"]),
-					 		 "TC + CO2"=expression(CO["2"] + Temp)))
+					 		 "TC + CO2"=expression(CO["2"] + Temp)))+
+	guides(shape=guide_legend(keywidth=0.5,keyheight=0.5,
+							  default.unit="inch"))
 herb.plot
 
 
-tiff('Maynard_etal_Fig3.tiff', units="in", width=5, height=8, res=300)
+tiff('Maynard_etal_Fig3.tiff', units="in", width=5.5, height=8, res=300)
 ggarrange(gro.plot, chem.plot, herb.plot,
 		  labels = c("a", "b", "c"),heights = c(1.5,1.5, 1.8),
 		  ncol = 1, nrow = 3,
@@ -518,25 +542,25 @@ leg.lab <- c("Control",
 			 "Temperature",
 			 expression(CO["2"] + Temp))
 
-#Growth*defense plot, mature leaves
-gd_mature<-all.dat40_m %>%
+#Growth*defense plot, mature leaves (flat legend)
+gd_mature1<-all.dat40_m %>%
 	ggplot(aes(x=prop_gro, 
 			   y=pdw,
 			   color=treatment))+
 	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
 	geom_point(alpha=0.5, size=2.8)+
-	labs(y="Total phenolics (prop dw GAE)", x="", title="Mature leaves")+
+	labs(y="Total phenolics (prop dw GAE)", x=element_blank(), title="Mature leaves")+
 	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = c(0.88,0.88),
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "bottom",
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5),
+		  axis.title.y = element_text(size = 17))+
 	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
 	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
 
-gd_mature
+gd_mature1
 
-
-gd_young<-all.dat40_y %>%
+gd_young1<-all.dat40_y %>%
 	ggplot(aes(x=prop_gro, 
 			   y=pdw,
 			   color=treatment))+
@@ -544,20 +568,22 @@ gd_young<-all.dat40_y %>%
 	geom_point(alpha=0.5, size=3, shape=17)+
 	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Young leaves")+
 	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = c(0.88,0.88),
+	theme(legend.position = "none",text = element_text(size=20),
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5),
+		  axis.title.y = element_text(size = 17.5))+
 	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
-	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
-gd_young
+	scale_color_brewer(palette=9, type = "div", direction = 1)
+gd_young1
 
 
 #Export Fig4
-tiff('Maynard_etal_Fig4.tiff', units="in", width=8, height=10, res=300)
-ggarrange(gd_mature, gd_young,
+tiff('Maynard_etal_Fig4.tiff', units="in", width=7, height=9, res=300)
+ggarrange(gd_mature1, gd_young1,
 		  labels = c("a", "b"),heights = c(2, 2),
 		  ncol = 1, nrow = 2,
-		  font.label=list(color="black",size=20))
+		  font.label=list(color="black",size=20),
+		  label.y = 1.03)
 dev.off()
 
 
@@ -571,10 +597,12 @@ fig5<-all.dat80_m %>%
 	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
 	theme(text = element_text(size=16))+
 	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
-	theme(legend.title = element_blank(), text = element_text(size=18), legend.position = c(0.8,0.88),
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "top",
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
 		  legend.box.background = element_rect(colour = "black"))
 fig5
+
+#legend.position = c(0.8,0.88)
 
 #EXPORT PLOT
 tiff('Maynard_etal_Fig5.tiff', units="in", width=7, height=5, res=300)
@@ -726,3 +754,45 @@ gd_young_r<-gd_young+
 	annotate("text", x = 0.53, y = 0.083,
 			 label = "paste(italic(R) ^ 2, \" = 0.86\")", parse = TRUE, size =5)
 gd_young_r
+
+#Growth*defense plot, mature leaves
+gd_mature<-all.dat40_m %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
+	geom_point(alpha=0.5, size=2.8)+
+	labs(y="Total phenolics (prop dw GAE)", x="", title="Mature leaves")+
+	theme_classic()+
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = c(0.88,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
+	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+
+gd_mature
+
+gd_young<-all.dat40_y %>%
+	ggplot(aes(x=prop_gro, 
+			   y=pdw,
+			   color=treatment))+
+	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
+	geom_point(alpha=0.5, size=3, shape=17)+
+	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Young leaves")+
+	theme_classic()+
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = c(0.88,0.88),
+		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5))+
+	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+gd_young
+
+
+#Export Fig4
+tiff('Maynard_etal_Fig4x.tiff', units="in", width=8, height=10, res=300)
+ggarrange(gd_mature, gd_young,
+		  labels = c("a", "b"),heights = c(2, 2),
+		  ncol = 1, nrow = 2,
+		  font.label=list(color="black",size=20),
+		  label.y = 1.2)
+dev.off()
