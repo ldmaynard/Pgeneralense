@@ -548,15 +548,17 @@ gd_mature1<-all.dat40_m %>%
 			   y=pdw,
 			   color=treatment))+
 	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
-	geom_point(alpha=0.5, size=2.8)+
-	labs(y="Total phenolics (prop dw GAE)", x=element_blank(), title="Mature leaves")+
+	geom_point(alpha=0.5, size=3.5)+
+	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Mature leaves")+
 	theme_classic()+
-	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "bottom",
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "top",
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5),
-		  axis.title.y = element_text(size = 17))+
-	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
-	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5,face = "bold"),
+		  axis.title.y = element_text(size = 19), legend.text = element_text(size = 16),
+		  legend.spacing.x = unit(0.1, 'cm'))+
+	scale_linetype_manual(values = c("dashed", "dashed", "solid","dashed"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
+	expand_limits(x = 0)
 
 gd_mature1
 
@@ -565,25 +567,27 @@ gd_young1<-all.dat40_y %>%
 			   y=pdw,
 			   color=treatment))+
 	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
-	geom_point(alpha=0.5, size=3, shape=17)+
-	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Young leaves")+
+	geom_point(alpha=0.5, size=4, shape=17)+
+	labs(y=" ", x="Proportion growth", title="Young leaves")+
 	theme_classic()+
-	theme(legend.position = "none",text = element_text(size=20),
+	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "top",
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
-		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5),
-		  axis.title.y = element_text(size = 17.5))+
-	scale_linetype_manual(values = c("solid", "solid", "solid","solid"))+
-	scale_color_brewer(palette=9, type = "div", direction = 1)
+		  legend.box.background = element_rect(colour = "black"), plot.title = element_text(hjust = 0.5,face = "bold"),
+		  axis.title.y = element_text(size = 19), legend.text = element_text(size = 16),
+		  legend.spacing.x = unit(0.1, 'cm'))+
+	scale_linetype_manual(values = c("dashed", "dashed", "solid","solid"))+
+	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
+	expand_limits(x = 0)
 gd_young1
 
 
 #Export Fig4
-tiff('Maynard_etal_Fig4.tiff', units="in", width=7, height=9, res=300)
+tiff('Maynard_etal_Fig4.tiff', units="in", width=12, height=5, res=300)
 ggarrange(gd_mature1, gd_young1,
 		  labels = c("a", "b"),heights = c(2, 2),
-		  ncol = 1, nrow = 2,
+		  ncol = 2, nrow = 1,
 		  font.label=list(color="black",size=20),
-		  label.y = 1.03)
+		  label.y = 0.99)
 dev.off()
 
 
