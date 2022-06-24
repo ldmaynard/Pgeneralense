@@ -244,7 +244,7 @@ fig2a<-ggplot(data=all.dat40, aes(x=stage, y=pdw))+
 	geom_point(position=position_jitter(width = 0.1), alpha=0.6, size=3, aes(color=treatment))+
 	theme_classic()+
 	theme(legend.position = "none")+
-	labs(x="", y="Total phenolics (prop dw GAE)")+
+	labs(x="", y="Total phenolics (pdw GAE)")+
 	theme(text = element_text(size=14), axis.text.x =element_blank(),
 		  axis.title.y = element_text(size=12),legend.title = element_blank(), legend.position = "top",
 		  legend.text.align = 0, legend.text = element_text(size=10), legend.spacing.x = unit(0.01, 'cm'),
@@ -304,6 +304,8 @@ herb.tab
 gro.mod <- betareg(prop_gro ~ treatment, data = all.dat20)
 Anova(gro.mod)
 #treatment p=0.79
+
+Anova(gro.mod, test.statistic="F")
 
 #Q1B PHENOLICS
 #Ordering data so the models compare to the control treatment
@@ -549,7 +551,7 @@ gd_mature1<-all.dat40_m %>%
 			   color=treatment))+
 	geom_smooth(aes(linetype=treatment),method="lm", se=F, size=1.8, show.legend=F)+
 	geom_point(alpha=0.5, size=3.5)+
-	labs(y="Total phenolics (prop dw GAE)", x="Proportion growth", title="Mature leaves")+
+	labs(y="Total phenolics (pdw GAE)", x="Proportion growth", title="Mature leaves")+
 	theme_classic()+
 	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "top",
 		  legend.text.align = 0,legend.spacing.y = unit(0, "mm"),
@@ -598,7 +600,7 @@ fig5<-all.dat80_m %>%
 	geom_point(alpha=0.6, size=2.5, aes(color=treatment))+
 	geom_smooth(method = 'lm', fill="light grey", linetype="solid", color="#440154FF")+
 	theme_classic()+
-	labs(y="Proportion herbivory", x="Total phenolics (prop dw GAE)")+
+	labs(y="Proportion herbivory", x="Total phenolics (pdw GAE)")+
 	theme(text = element_text(size=16))+
 	scale_color_brewer(palette=9, type = "div", direction = 1, labels=leg.lab)+
 	theme(legend.title = element_blank(), text = element_text(size=20), legend.position = "top",
@@ -659,6 +661,46 @@ Anova(herb.mod2m)
 #df=3, chisq=2.08,  p=0.56
 #There is no effect of treatment on mature leaf herbivory
 
+#stats by leaf age 
+#mature, herbivory
+herb.tab.m <- ddply(all.dat80_m, c("treatment"), summarise,
+				   N    = length(prop_herb),
+				   mean = mean(prop_herb),
+				   sd   = sd(prop_herb),
+				   se   = sd / sqrt(N))
+herb.tab.m
+
+#herb, young leaves
+herb.tab.y <- ddply(all.dat80_y, c("treatment"), summarise,
+					N    = length(prop_herb),
+					mean = mean(prop_herb),
+					sd   = sd(prop_herb),
+					se   = sd / sqrt(N))
+herb.tab.y
+
+#chem, mature
+chem.tab.m <- ddply(all.dat40_m, c("treatment"), summarise,
+					N    = length(pdw),
+					mean = mean(pdw),
+					sd   = sd(pdw),
+					se   = sd / sqrt(N))
+chem.tab.m
+
+#chem, young
+chem.tab.y <- ddply(all.dat40_y, c("treatment"), summarise,
+					N    = length(pdw),
+					mean = mean(pdw),
+					sd   = sd(pdw),
+					se   = sd / sqrt(N))
+chem.tab.y
+
+#growth
+gro.tab<- ddply(all.dat20, c("treatment"), summarise,
+							 N    = length(prop_gro),
+							 mean = mean(prop_gro),
+							sd   = sd(pdw),
+							 se   = sd / sqrt(N))
+gro.tab
 
 
 ##Old stats----
