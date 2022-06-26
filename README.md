@@ -1,7 +1,8 @@
-Data from "Piper generalense: effects of climate change on growth, herbivory, and phytochemistry" 
-by L.D. Maynard, E. Moureau, M.Y. Bader, D. Salazar, S.R. Whitehead
+Data from "Effects of climate change on plant resource allocation and herbivore interactions 
+in a Neotropical rainforest shrub" 
+by L.D. Maynard, E. Moureau, M.Y. Bader, D. Salazar, G. Zotz, S.R. Whitehead
 
-Published in X
+Published in Ecology and Evolution
 Article DOI TBD
 Zenodo DOI TBD
 
