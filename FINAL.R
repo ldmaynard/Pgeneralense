@@ -259,8 +259,8 @@ herb.tab
 #QUESTION 1----
 #Q1A GROWTH
 gro.mod <- betareg(prop_gro ~ treatment, data = all.dat20)
-Anova(gro.mod, test.statistic = "F")
-#treatment p=0.79, F=0.35
+Anova(gro.mod, test.statistic = "Chisq")
+#treatment p=0.79
 
 #Q1B PHENOLICS
 #Ordering data so the models compare to the control treatment
@@ -277,13 +277,13 @@ all.dat40_y$treatment <- factor(all.dat40_y$treatment, levels=c("control chamber
 #analysis
 #mature leaves
 chem.mod.m <- betareg(pdw ~ treatment, data = all.dat40_m)
-Anova(chem.mod.m, test.statistic = "F")
-#treatment p=0.71, F=0.47
+Anova(chem.mod.m, test.statistic = "Chisq")
+#treatment p=0.70
 
 #young leaves
 chem.mod.y <- betareg(pdw ~ treatment, data = all.dat40_y)
-Anova(chem.mod.y, test.statistic = "F")
-#treatment p=0.59, F=0.66
+Anova(chem.mod.y, test.statistic = "Chisq")
+#treatment p=0.57
 
 
 #Q1C HERBIVORY
@@ -301,18 +301,13 @@ all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber
 #analysis, mixed model
 #mature leaves
 herb.mod.m <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_m, family = "beta_family")
-Anova(herb.mod.m)
+Anova(herb.mod.m, test.statistic = "Chisq")
 #treatment p=0.56, x^2=2.08
 
 #young leaves
 herb.mod.y <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_y, family = "beta_family")
-Anova(herb.mod.y)
+Anova(herb.mod.y, test.statistic = "Chisq")
 #treatment p=0.95, x^2=0.37
-
-#adding small amount to herbivory to help beta regressions run with high number of zeros
-all.dat40_y$prop_herb1<-all.dat40_y$prop_herb+0.0001
-all.dat40_m$prop_herb1<-all.dat40_m$prop_herb+0.0001
-
 
 #QUESTION 2---- 
 #Defense~growth * treatment
