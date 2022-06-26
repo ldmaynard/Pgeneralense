@@ -302,12 +302,12 @@ all.dat80_y$treatment <- factor(all.dat80_y$treatment, levels=c("control chamber
 #mature leaves
 herb.mod.m <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_m, family = "beta_family")
 Anova(herb.mod.m, test.statistic = "Chisq")
-#treatment p=0.56, x^2=2.08
+#treatment p=0.56, chisq=2.08
 
 #young leaves
 herb.mod.y <- glmmTMB(prop_herb1 ~ treatment + (1|chamber), data = all.dat80_y, family = "beta_family")
 Anova(herb.mod.y, test.statistic = "Chisq")
-#treatment p=0.95, x^2=0.37
+#treatment p=0.95, chisq=0.37
 
 #QUESTION 2---- 
 #Defense~growth * treatment
