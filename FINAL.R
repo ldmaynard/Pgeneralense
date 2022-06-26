@@ -321,9 +321,11 @@ Anova(mod.gro2m, type = 3, test.statistic = "Chisq")
 f1<-emmeans(mod.gro2m,pairwise~treatment, type="response")
 cld(f1$emmeans,  Letters ='abcde')
 
+#interaction effects
 summary(allEffects(mod.gro2m))
 plot(allEffects(mod.gro2m))
 
+#ordering and slicing my treatment
 all.dat40_m <- all.dat40_m[order(all.dat40_m$treatment),]
 
 control<-slice(all.dat40_m, 1:5) #control
@@ -331,11 +333,13 @@ CO2<-slice(all.dat40_m, 6:10) #CO2
 TC<-slice(all.dat40_m, 11:15) #temperature
 combo<-slice(all.dat40_m, 16:20) #combo treatment
 
+#individual models subset by treatment
 modco2<-(betareg(pdw~prop_gro, dat=CO2))
 modcon<-(betareg(pdw~prop_gro, dat=control))
 modtc<-(betareg(pdw~prop_gro, dat=TC))
 modcombo<-(betareg(pdw~prop_gro, dat=combo))
 
+#summaries for individual models
 summary(modco2)#z=-0.54,p=0.59
 summary(modcon)#z=-0.44, p=0.66
 summary(modtc)#z=3.44, p=0.000591; estimate=2.0
@@ -353,9 +357,11 @@ Anova(mod.gro2y, type = 3, test.statistic = "Chisq")
 f2<-emmeans(mod.gro2y,pairwise~treatment, type="response")
 cld(f2$emmeans,  Letters ='abcde')
 
+#interaction effects
 summary(allEffects(mod.gro2y))
 plot(allEffects(mod.gro2y))
 
+#ordering and slicing by treatment
 all.dat40_y <- all.dat40_y[order(all.dat40_y$treatment),]
 
 controly<-slice(all.dat40_y, 1:5) #control
@@ -363,11 +369,13 @@ CO2y<-slice(all.dat40_y, 6:10) #CO2
 TCy<-slice(all.dat40_y, 11:15) #temperature
 comboy<-slice(all.dat40_y, 16:20) #combo treatment
 
+#invidual models subset by treatment
 modco2y<-(betareg(pdw~prop_gro, dat=CO2y))
 modcony<-(betareg(pdw~prop_gro, dat=controly))
 modtcy<-(betareg(pdw~prop_gro, dat=TCy))
 modcomboy<-(betareg(pdw~prop_gro, dat=comboy))
 
+#summaries for individual models
 summary(modco2y)#z=-1.217, p=0.224
 summary(modcony)##z=0.325,p=0.745
 summary(modtcy)#z=3.598, p=0.000321; estimate=0.48393
@@ -400,10 +408,8 @@ Anova(herb.chem.mod2_y)
 #interaction, chisq=1.04, p=0.79
 #in young leaves, increases chemical defense did not have an effect on herbivory
 
-Anova(herb.chem.mod2_y, type=3)
 
-
-##GRAPHS----
+##FIGURES----
 
 ##FIGURE 2 ----
 all.dat80$Stage<-NA
