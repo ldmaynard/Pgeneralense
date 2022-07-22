@@ -4,9 +4,7 @@ Data from "Effects of climate change on plant resource allocation and herbivore 
 in a Neotropical rainforest shrub" 
 by L.D. Maynard, E. Moureau, M.Y. Bader, D. Salazar, G. Zotz, S.R. Whitehead
 
-Published in Ecology and Evolution
-Article DOI TBD
-Zenodo DOI TBD
+Published in Ecology and Evolution 2022
 
 All data were collected at La Selva Biological Station, Heredia Province, Costa Rica 
 (Organization for Tropical Studies)
