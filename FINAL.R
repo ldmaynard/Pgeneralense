@@ -43,7 +43,7 @@ grow<-grow[-c(11:15),] #removing control (no chamber)
 
 ##CHEMISTRY DATA----
 
-##Stanard curve math
+##Standard curve math
 {#Load standard curve data
 	ga <- read.csv(file = "GA_StandardCurve.csv", head=T)
 	
